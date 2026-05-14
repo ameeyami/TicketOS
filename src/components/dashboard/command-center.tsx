@@ -9,7 +9,6 @@ import {
   BadgeCheck,
   Bell,
   Bot,
-  CheckCircle2,
   ChevronDown,
   Clock3,
   Command,
@@ -26,9 +25,11 @@ import {
   Sparkles,
   Workflow,
 } from "lucide-react";
-import { auditRows, agents, insights, integrations, metrics, navItems, tickets, timeline } from "@/lib/demo-data";
+import type { LucideIcon } from "lucide-react";
+import { insights, navItems, ticketIcons, timelineIcons } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import type { DashboardData } from "@/lib/supabase/bootstrap";
 
 const graphNodes: Node[] = [
   { id: "intake", position: { x: 0, y: 64 }, data: { label: "Intake" }, type: "ticketNode" },
@@ -57,7 +58,7 @@ function TicketNode({ data }: { data: { label: string } }) {
 
 const nodeTypes = { ticketNode: TicketNode };
 
-export function CommandCenter() {
+export function CommandCenter({ data }: { data: DashboardData }) {
   return (
     <main className="min-h-screen bg-[#f6f7f2] text-[#151914]">
       <div className="flex min-h-screen">
@@ -115,14 +116,14 @@ export function CommandCenter() {
             <div className="flex items-center gap-2">
               <button className="hidden h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold md:inline-flex">
                 <Bell size={16} />
-                9 approvals
+                {data.metrics.find((metric) => metric.label === "Needs approval")?.value ?? "0"} approvals
               </button>
               <SignOutButton />
               <button className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white">
                 <Settings size={17} />
               </button>
               <button className="flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
-                Amee Labs
+                {data.organizationName}
                 <ChevronDown size={15} />
               </button>
             </div>
@@ -151,7 +152,7 @@ export function CommandCenter() {
             </div>
 
             <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {metrics.map((metric, index) => (
+              {data.metrics.map((metric, index) => (
                 <motion.div
                   key={metric.label}
                   initial={{ opacity: 0, y: 14 }}
@@ -182,11 +183,15 @@ export function CommandCenter() {
                   </button>
                 </div>
                 <div className="divide-y divide-black/8">
-                  {tickets.map((ticket) => (
+                  {data.tickets.map((ticket) => {
+                    const TicketIcon =
+                      ticketIcons[ticket.category as keyof typeof ticketIcons] ?? ticketIcons.Default;
+
+                    return (
                     <div key={ticket.id} className="grid gap-4 p-5 transition hover:bg-[#f8faf5] lg:grid-cols-[1fr_180px]">
                       <div className="flex gap-4">
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-                          <ticket.icon size={19} />
+                          <TicketIcon size={19} />
                         </span>
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
@@ -211,14 +216,15 @@ export function CommandCenter() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="space-y-6">
                 <Panel title="Active agents" icon={Bot}>
                   <div className="space-y-3">
-                    {agents.map((agent) => (
+                    {data.agents.map((agent) => (
                       <div key={agent.name} className="rounded-lg border border-black/10 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-semibold">{agent.name}</p>
@@ -235,9 +241,11 @@ export function CommandCenter() {
 
                 <Panel title="Approval queue" icon={BadgeCheck}>
                   <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p className="font-semibold text-amber-950">GitHub production repository access</p>
+                    <p className="font-semibold text-amber-950">
+                      {data.approval?.title ?? "No approvals waiting"}
+                    </p>
                     <p className="mt-2 text-sm leading-6 text-amber-900/72">
-                      Onboarding Agent paused execution until manager approval is recorded.
+                      {data.approval?.description ?? "TicketOS has no paused workflows right now."}
                     </p>
                     <div className="mt-4 flex gap-2">
                       <button className="h-9 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">Approve</button>
@@ -251,7 +259,11 @@ export function CommandCenter() {
             <section className="mt-6 grid gap-6 xl:grid-cols-[.9fr_1.1fr]">
               <Panel title="Execution timeline" icon={Clock3}>
                 <div className="space-y-4">
-                  {timeline.map((step, index) => (
+                  {data.timeline.map((step, index) => {
+                    const StepIcon =
+                      timelineIcons[step.label as keyof typeof timelineIcons] ?? Clock3;
+
+                    return (
                     <div key={step.label} className="flex gap-4">
                       <div className="flex flex-col items-center">
                         <span
@@ -262,9 +274,9 @@ export function CommandCenter() {
                               : "border-black/10 bg-white text-black/52",
                           )}
                         >
-                          <step.icon size={17} />
+                          <StepIcon size={17} />
                         </span>
-                        {index !== timeline.length - 1 && <span className="mt-2 h-10 w-px bg-black/10" />}
+                        {index !== data.timeline.length - 1 && <span className="mt-2 h-10 w-px bg-black/10" />}
                       </div>
                       <div className="min-w-0 pb-3">
                         <div className="flex items-center gap-2">
@@ -274,7 +286,8 @@ export function CommandCenter() {
                         <p className="mt-1 text-sm leading-6 text-black/55">{step.detail}</p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Panel>
 
@@ -330,7 +343,7 @@ export function CommandCenter() {
                     </div>
                   </div>
                   <div className="overflow-hidden rounded-lg border border-black/10">
-                    {auditRows.map((row) => (
+                    {data.auditRows.map((row) => (
                       <div key={`${row[0]}-${row[2]}`} className="grid grid-cols-[52px_1fr] gap-3 border-b border-black/8 p-3 last:border-b-0">
                         <span className="text-xs font-semibold text-black/42">{row[0]}</span>
                         <div>
@@ -358,13 +371,13 @@ export function CommandCenter() {
                 </button>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                {integrations.map((integration) => (
-                  <div key={integration} className="rounded-lg border border-black/10 p-4">
+                {data.integrations.map((integration) => (
+                  <div key={integration.name} className="rounded-lg border border-black/10 p-4">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold">{integration}</span>
+                      <span className="font-semibold">{integration.name}</span>
                       <ShieldCheck size={17} className="text-[#2f6f60]" />
                     </div>
-                    <p className="mt-3 text-xs leading-5 text-black/45">Actions, scopes, webhooks</p>
+                    <p className="mt-3 text-xs leading-5 text-black/45">{integration.status}</p>
                   </div>
                 ))}
               </div>
@@ -397,7 +410,7 @@ function Panel({
   children,
 }: {
   title: string;
-  icon: typeof CheckCircle2;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (

@@ -1,0 +1,540 @@
+import type { User } from "@supabase/supabase-js";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
+export type DashboardMetric = {
+  label: string;
+  value: string;
+  delta: string;
+};
+
+export type DashboardTicket = {
+  id: string;
+  title: string;
+  category: string;
+  priority: string;
+  status: string;
+  confidence: number;
+  summary: string;
+  agent: string;
+};
+
+export type DashboardAgent = {
+  name: string;
+  state: string;
+  load: string;
+  memory: string;
+};
+
+export type DashboardTimelineStep = {
+  label: string;
+  detail: string;
+  status: string;
+  time: string;
+};
+
+export type DashboardApproval = {
+  title: string;
+  description: string;
+};
+
+export type DashboardAuditRow = [string, string, string, string, string];
+
+export type DashboardIntegration = {
+  name: string;
+  status: string;
+};
+
+export type DashboardData = {
+  organizationName: string;
+  metrics: DashboardMetric[];
+  tickets: DashboardTicket[];
+  agents: DashboardAgent[];
+  timeline: DashboardTimelineStep[];
+  approval: DashboardApproval | null;
+  integrations: DashboardIntegration[];
+  auditRows: DashboardAuditRow[];
+};
+
+const demoAgents = [
+  {
+    name: "Access Agent",
+    description: "Executes identity, password reset, and app-access workflows.",
+    status: "Executing",
+    capabilities: ["Okta", "Google Workspace", "Slack"],
+    memory_scope: "Identity, Okta, Google Workspace",
+  },
+  {
+    name: "Onboarding Agent",
+    description: "Coordinates provisioning workflows for new employees.",
+    status: "Waiting",
+    capabilities: ["HRIS", "Slack", "Jira", "GitHub"],
+    memory_scope: "HRIS, Slack, Jira, device policy",
+  },
+  {
+    name: "Network Agent",
+    description: "Investigates VPN and device-connectivity incidents.",
+    status: "Investigating",
+    capabilities: ["VPN", "Device posture", "Office gateways"],
+    memory_scope: "VPN, device posture, office gateways",
+  },
+  {
+    name: "Security Agent",
+    description: "Handles deactivation, policy checks, and risky access escalations.",
+    status: "Blocked",
+    capabilities: ["Deactivation", "API keys", "Audit"],
+    memory_scope: "Security policy, API keys, contractor access",
+  },
+];
+
+const demoTickets = [
+  {
+    external_id: "TOS-1842",
+    title: "Reset Okta password for Priya Shah",
+    description: "Employee cannot access Okta after device replacement.",
+    requester_email: "priya@example.com",
+    requester_name: "Priya Shah",
+    source: "slack",
+    category: "Identity",
+    priority: "high",
+    status: "executing",
+    ai_summary:
+      "Identity verified through HRIS and Slack. Password reset workflow is executing with policy-compliant notification.",
+    ai_confidence: 96,
+    agentName: "Access Agent",
+  },
+  {
+    external_id: "TOS-1838",
+    title: "Provision Figma and GitHub for new designer",
+    description: "New product designer needs access before onboarding call.",
+    requester_email: "manager@example.com",
+    requester_name: "Design Manager",
+    source: "jira",
+    category: "Onboarding",
+    priority: "medium",
+    status: "approval_required",
+    ai_summary:
+      "Matched onboarding workflow. GitHub access requires manager approval because repository scope includes production assets.",
+    ai_confidence: 88,
+    agentName: "Onboarding Agent",
+  },
+  {
+    external_id: "TOS-1829",
+    title: "VPN failure for Singapore sales team",
+    description: "Several team members cannot connect to VPN gateway.",
+    requester_email: "sales@example.com",
+    requester_name: "Sales Ops",
+    source: "teams",
+    category: "Network",
+    priority: "high",
+    status: "triaging",
+    ai_summary:
+      "Detected regional gateway errors. Agent is collecting logs and preparing a routing workaround.",
+    ai_confidence: 81,
+    agentName: "Network Agent",
+  },
+  {
+    external_id: "TOS-1821",
+    title: "Deactivate contractor accounts",
+    description: "Deactivate contractor access after project completion.",
+    requester_email: "security@example.com",
+    requester_name: "Security Ops",
+    source: "manual",
+    category: "Security",
+    priority: "critical",
+    status: "blocked",
+    ai_summary:
+      "Policy blocked autonomous deactivation because one account owns active production API keys.",
+    ai_confidence: 64,
+    agentName: "Security Agent",
+  },
+];
+
+const integrationSeeds = [
+  ["slack", "Slack"],
+  ["teams", "Microsoft Teams"],
+  ["okta", "Okta"],
+  ["jira", "Jira"],
+  ["google-workspace", "Google Workspace"],
+  ["github", "GitHub"],
+];
+
+export async function getDashboardData(user: User): Promise<DashboardData> {
+  const supabase = await createSupabaseServerClient();
+  const organization = await ensureWorkspace(supabase, user);
+  await ensureDemoData(supabase, organization.id, user.id);
+
+  const [
+    { data: agents },
+    { data: tickets },
+    { data: approvalRequests },
+    { data: integrations },
+    { data: auditLogs },
+    { data: latestRun },
+  ] = await Promise.all([
+    supabase.from("agents").select("*").eq("organization_id", organization.id).order("created_at"),
+    supabase
+      .from("tickets")
+      .select("*, agents(name)")
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("approval_requests")
+      .select("*")
+      .eq("organization_id", organization.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase.from("integrations").select("*").eq("organization_id", organization.id).order("display_name"),
+    supabase
+      .from("audit_logs")
+      .select("*, agents(name)")
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("workflow_runs")
+      .select("id")
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const { data: steps } = latestRun?.id
+    ? await supabase
+        .from("workflow_run_steps")
+        .select("*")
+        .eq("workflow_run_id", latestRun.id)
+        .order("created_at")
+    : { data: [] };
+
+  const ticketRows = tickets ?? [];
+  const agentRows = agents ?? [];
+  const resolved = ticketRows.filter((ticket) => ticket.status === "resolved").length;
+  const approvalCount = ticketRows.filter((ticket) => ticket.status === "approval_required").length;
+  const confidenceAverage = ticketRows.length
+    ? Math.round(
+        ticketRows.reduce((sum, ticket) => sum + Number(ticket.ai_confidence ?? 0), 0) / ticketRows.length,
+      )
+    : 0;
+
+  return {
+    organizationName: organization.name,
+    metrics: [
+      {
+        label: "AI resolved",
+        value: ticketRows.length ? `${Math.round((resolved / ticketRows.length) * 100)}%` : "0%",
+        delta: "live data",
+      },
+      { label: "Avg confidence", value: `${confidenceAverage}%`, delta: "agent read" },
+      { label: "Tracked tickets", value: `${ticketRows.length}`, delta: "seeded queue" },
+      { label: "Needs approval", value: `${approvalCount}`, delta: "pending" },
+    ],
+    tickets: ticketRows.map((ticket) => ({
+      id: ticket.external_id ?? ticket.id.slice(0, 8),
+      title: ticket.title,
+      category: ticket.category ?? "Default",
+      priority: titleCase(ticket.priority),
+      status: displayTicketStatus(ticket.status),
+      confidence: Number(ticket.ai_confidence ?? 0),
+      summary: ticket.ai_summary ?? ticket.description ?? "",
+      agent: ticket.agents?.name ?? "Unassigned",
+    })),
+    agents: agentRows.map((agent) => ({
+      name: agent.name,
+      state: agent.status,
+      load: `${ticketRows.filter((ticket) => ticket.assigned_agent_id === agent.id).length} tasks`,
+      memory: agent.memory_scope ?? agent.capabilities?.join(", ") ?? "General operations",
+    })),
+    timeline: (steps ?? []).map((step) => ({
+      label: step.name,
+      detail: step.output?.detail ?? step.error_message ?? "Execution step recorded in Supabase.",
+      status: displayStepStatus(step.status),
+      time: step.created_at ? new Date(step.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Now",
+    })),
+    approval: approvalRequests?.[0]
+      ? {
+          title: approvalRequests[0].title,
+          description: approvalRequests[0].description ?? "An AI workflow paused for human approval.",
+        }
+      : null,
+    integrations: (integrations ?? []).map((integration) => ({
+      name: integration.display_name,
+      status: titleCase(integration.status.replaceAll("_", " ")),
+    })),
+    auditRows: (auditLogs ?? []).map((log) => [
+      log.created_at ? new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Now",
+      log.agents?.name ?? "TicketOS",
+      log.event_summary,
+      titleCase(log.event_type.replaceAll("_", " ")),
+      String(log.metadata?.policy ?? log.metadata?.source ?? "ticketos.live"),
+    ]),
+  };
+}
+
+async function ensureWorkspace(supabase: SupabaseClient, user: User) {
+  const { data: existingMembership } = await supabase
+    .from("organization_members")
+    .select("organizations(id, name, slug)")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  const existingOrganization = existingMembership?.organizations;
+  if (existingOrganization) {
+    return Array.isArray(existingOrganization) ? existingOrganization[0] : existingOrganization;
+  }
+
+  const fullName = readFullName(user);
+  await supabase.from("profiles").upsert({
+    id: user.id,
+    full_name: fullName,
+  });
+
+  const slug = `ticketos-${user.id.slice(0, 8)}`;
+  const { data: organization, error: orgError } = await supabase
+    .from("organizations")
+    .insert({
+      name: "Amee Labs",
+      slug,
+      created_by: user.id,
+    })
+    .select("id, name, slug")
+    .single();
+
+  if (orgError) {
+    throw orgError;
+  }
+
+  const { error: membershipError } = await supabase.from("organization_members").insert({
+    organization_id: organization.id,
+    user_id: user.id,
+    role: "owner",
+  });
+
+  if (membershipError) {
+    throw membershipError;
+  }
+
+  return organization;
+}
+
+async function ensureDemoData(supabase: SupabaseClient, organizationId: string, userId: string) {
+  const { count } = await supabase
+    .from("tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationId);
+
+  if (count && count > 0) {
+    return;
+  }
+
+  const { data: insertedAgents, error: agentsError } = await supabase
+    .from("agents")
+    .upsert(
+      demoAgents.map((agent) => ({
+        organization_id: organizationId,
+        ...agent,
+      })),
+      { onConflict: "organization_id,name" },
+    )
+    .select("id, name");
+
+  if (agentsError) {
+    throw agentsError;
+  }
+
+  const agentByName = new Map((insertedAgents ?? []).map((agent) => [agent.name, agent.id]));
+
+  const { data: insertedTickets, error: ticketsError } = await supabase
+    .from("tickets")
+    .upsert(
+      demoTickets.map(({ agentName, ...ticket }) => ({
+        organization_id: organizationId,
+        ...ticket,
+        assigned_agent_id: agentByName.get(agentName),
+      })),
+      { onConflict: "organization_id,external_id" },
+    )
+    .select("id, external_id, assigned_agent_id");
+
+  if (ticketsError) {
+    throw ticketsError;
+  }
+
+  await supabase.from("integrations").upsert(
+    integrationSeeds.map(([provider_key, display_name]) => ({
+      organization_id: organizationId,
+      provider_key,
+      display_name,
+      status: provider_key === "slack" || provider_key === "okta" ? "connected" : "not_connected",
+      scopes: ["read", "execute"],
+      connected_by: userId,
+      connected_at: new Date().toISOString(),
+    })),
+    { onConflict: "organization_id,provider_key" },
+  );
+
+  const { data: workflow } = await supabase
+    .from("workflows")
+    .upsert(
+      {
+        organization_id: organizationId,
+        name: "Identity password reset",
+        description: "Verify identity, check policy, reset password, notify employee, and verify result.",
+        trigger_type: "ticket_intent",
+      },
+      { onConflict: "organization_id,name" },
+    )
+    .select("id")
+    .single();
+
+  const { data: workflowVersion } = workflow
+    ? await supabase
+        .from("workflow_versions")
+        .upsert(
+          {
+            organization_id: organizationId,
+            workflow_id: workflow.id,
+            version: 1,
+            created_by: userId,
+            graph: {
+              nodes: ["intake", "analyze", "policy", "execute", "verify"],
+              edges: ["intake->analyze", "analyze->policy", "policy->execute", "execute->verify"],
+            },
+          },
+          { onConflict: "workflow_id,version" },
+        )
+        .select("id")
+        .single()
+    : { data: null };
+
+  const passwordResetTicket = insertedTickets?.find((ticket) => ticket.external_id === "TOS-1842");
+  const { data: run } =
+    workflow && passwordResetTicket
+      ? await supabase
+          .from("workflow_runs")
+          .insert({
+            organization_id: organizationId,
+            workflow_id: workflow.id,
+            workflow_version_id: workflowVersion?.id,
+            ticket_id: passwordResetTicket.id,
+            status: "running",
+            confidence: 96,
+            replay_snapshot: { source: "demo_seed", replayable: true },
+            started_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single()
+      : { data: null };
+
+  if (run) {
+    await supabase.from("workflow_run_steps").insert([
+      step(organizationId, run.id, "received", "Request received", "succeeded", "Parsed Slack request and linked employee record."),
+      step(organizationId, run.id, "analyzed", "Intent analyzed", "succeeded", "Classified as identity/password reset with 96% confidence."),
+      step(organizationId, run.id, "permission", "Permission checked", "succeeded", "Confirmed requester, manager relationship, and Okta scope."),
+      step(organizationId, run.id, "executing", "Workflow executing", "running", "Resetting password, rotating sessions, and preparing Slack notice."),
+      step(organizationId, run.id, "verify", "Resolution verified", "pending", "Awaiting Okta confirmation event."),
+    ]);
+
+    await supabase.from("policy_evaluations").insert({
+      organization_id: organizationId,
+      workflow_run_id: run.id,
+      ticket_id: passwordResetTicket?.id,
+      decision: "allow",
+      reason: "Requester identity and manager relationship passed policy checks.",
+      confidence: 96,
+      evaluated_context: { policy: "policy.identity.reset.v2" },
+    });
+  }
+
+  const onboardingTicket = insertedTickets?.find((ticket) => ticket.external_id === "TOS-1838");
+  await supabase.from("approval_requests").insert({
+    organization_id: organizationId,
+    ticket_id: onboardingTicket?.id,
+    requested_by_agent_id: agentByName.get("Onboarding Agent"),
+    title: "GitHub production repository access",
+    description: "Onboarding Agent paused execution until manager approval is recorded.",
+    status: "pending",
+  });
+
+  await supabase.from("audit_logs").insert([
+    audit(organizationId, agentByName.get("Access Agent"), passwordResetTicket?.id, "allowed", "Okta password reset", "policy.identity.reset.v2"),
+    audit(organizationId, null, passwordResetTicket?.id, "passed", "Manager relationship check", "hris.manager.match"),
+    audit(organizationId, agentByName.get("Security Agent"), null, "blocked", "Contractor deactivation", "api_key.owner.active"),
+    audit(organizationId, agentByName.get("Onboarding Agent"), onboardingTicket?.id, "approval", "GitHub team invite", "repo_scope.production"),
+  ]);
+}
+
+function step(
+  organizationId: string,
+  workflowRunId: string,
+  stepKey: string,
+  name: string,
+  status: string,
+  detail: string,
+) {
+  return {
+    organization_id: organizationId,
+    workflow_run_id: workflowRunId,
+    step_key: stepKey,
+    name,
+    status,
+    actor_type: "agent",
+    started_at: new Date().toISOString(),
+    output: { detail },
+  };
+}
+
+function audit(
+  organizationId: string,
+  agentId: string | null | undefined,
+  ticketId: string | null | undefined,
+  eventType: string,
+  summary: string,
+  policy: string,
+) {
+  return {
+    organization_id: organizationId,
+    actor_agent_id: agentId,
+    ticket_id: ticketId,
+    event_type: eventType,
+    event_summary: summary,
+    metadata: { policy },
+  };
+}
+
+function readFullName(user: User) {
+  const metadata = user.user_metadata as { full_name?: string; name?: string };
+  return metadata.full_name ?? metadata.name ?? user.email ?? "TicketOS Operator";
+}
+
+function titleCase(value: string) {
+  return value
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function displayTicketStatus(status: string) {
+  const labels: Record<string, string> = {
+    new: "New",
+    triaging: "Investigating",
+    approval_required: "Approval",
+    executing: "Resolving",
+    resolved: "Resolved",
+    failed: "Failed",
+    blocked: "Blocked",
+  };
+
+  return labels[status] ?? titleCase(status.replaceAll("_", " "));
+}
+
+function displayStepStatus(status: string) {
+  if (status === "succeeded") return "complete";
+  if (status === "running") return "active";
+  if (status === "blocked") return "blocked";
+  return "pending";
+}
