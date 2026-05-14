@@ -30,6 +30,7 @@ import Link from "next/link";
 import { insights, navItems, ticketIcons, timelineIcons } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { decideApproval } from "@/app/app/actions";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 
 const graphNodes: Node[] = [
@@ -251,10 +252,12 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                     <p className="mt-2 text-sm leading-6 text-amber-900/72">
                       {data.approval?.description ?? "TicketOS has no paused workflows right now."}
                     </p>
-                    <div className="mt-4 flex gap-2">
-                      <button className="h-9 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">Approve</button>
-                      <button className="h-9 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold">Reject</button>
-                    </div>
+                    {data.approval?.status === "pending" && (
+                      <div className="mt-4 flex gap-2">
+                        <ApprovalForm approval={data.approval} decision="approved" />
+                        <ApprovalForm approval={data.approval} decision="rejected" />
+                      </div>
+                    )}
                   </div>
                 </Panel>
               </div>
@@ -390,6 +393,34 @@ export function CommandCenter({ data }: { data: DashboardData }) {
         </section>
       </div>
     </main>
+  );
+}
+
+function ApprovalForm({
+  approval,
+  decision,
+}: {
+  approval: NonNullable<DashboardData["approval"]>;
+  decision: "approved" | "rejected";
+}) {
+  return (
+    <form action={decideApproval}>
+      <input type="hidden" name="approvalId" value={approval.id} />
+      <input type="hidden" name="ticketId" value={approval.ticketId} />
+      <input type="hidden" name="organizationId" value={approval.organizationId} />
+      <input type="hidden" name="decision" value={decision} />
+      <button
+        type="submit"
+        className={cn(
+          "h-9 rounded-lg px-3 text-sm font-semibold",
+          decision === "approved"
+            ? "bg-[#17211c] text-white"
+            : "border border-black/10 bg-white text-[#151914]",
+        )}
+      >
+        {decision === "approved" ? "Approve" : "Reject"}
+      </button>
+    </form>
   );
 }
 

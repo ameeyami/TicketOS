@@ -36,8 +36,12 @@ export type DashboardTimelineStep = {
 };
 
 export type DashboardApproval = {
+  id: string;
+  ticketId: string;
+  organizationId: string;
   title: string;
   description: string;
+  status: string;
 };
 
 export type DashboardAuditRow = [string, string, string, string, string];
@@ -258,8 +262,12 @@ export async function getDashboardData(user: User): Promise<DashboardData> {
     })),
     approval: approvalRequests?.[0]
       ? {
+          id: approvalRequests[0].id,
+          ticketId: approvalRequests[0].ticket_id,
+          organizationId: approvalRequests[0].organization_id,
           title: approvalRequests[0].title,
           description: approvalRequests[0].description ?? "An AI workflow paused for human approval.",
+          status: approvalRequests[0].status,
         }
       : null,
     integrations: (integrations ?? []).map((integration) => ({
