@@ -76,9 +76,9 @@ export function CommandCenter({ data }: { data: DashboardData }) {
           </div>
           <nav className="mt-8 space-y-1">
             {navItems.map((item, index) => (
-              <a
+              <Link
                 key={item.label}
-                href="#"
+                href={item.href}
                 className={cn(
                   "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/62 transition hover:bg-white/8 hover:text-white",
                   index === 0 && "bg-white/10 text-white",
@@ -86,7 +86,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
               >
                 <item.icon size={17} />
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="mt-8 rounded-xl border border-white/10 bg-white/[.06] p-4">
@@ -97,10 +97,13 @@ export function CommandCenter({ data }: { data: DashboardData }) {
             <p className="mt-3 text-sm leading-6 text-white/52">
               Autonomous actions are limited to low-risk identity and routing workflows.
             </p>
-            <button className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-white px-3 text-sm font-semibold text-[#111713]">
+            <Link
+              href="/app/workflows"
+              className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-white px-3 text-sm font-semibold text-[#111713]"
+            >
               Review rules
               <ArrowRight size={15} />
-            </button>
+            </Link>
           </div>
         </aside>
 
@@ -142,14 +145,20 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                 </h1>
               </div>
               <div className="flex gap-2">
-                <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold">
+                <Link
+                  href="/app?view=approvals"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
+                >
                   <Filter size={16} />
                   Filter
-                </button>
-                <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                </Link>
+                <Link
+                  href="/app/tickets/new"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                >
                   <Plus size={16} />
-                  New workflow
-                </button>
+                  New ticket
+                </Link>
               </div>
             </div>
 
@@ -372,10 +381,13 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                   <h2 className="text-lg font-semibold">Integration catalog</h2>
                   <p className="mt-1 text-sm text-black/52">Prepared UI for the systems TicketOS will execute against.</p>
                 </div>
-                <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold">
+                <Link
+                  href="/app/workflows"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
+                >
                   <LockKeyhole size={16} />
                   Manage scopes
-                </button>
+                </Link>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 {data.integrations.map((integration) => (

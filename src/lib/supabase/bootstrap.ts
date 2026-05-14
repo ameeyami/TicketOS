@@ -284,7 +284,7 @@ export async function getDashboardData(user: User): Promise<DashboardData> {
   };
 }
 
-async function ensureWorkspace(supabase: SupabaseClient, user: User) {
+export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
   const { data: existingMembership } = await supabase
     .from("organization_members")
     .select("organizations(id, name, slug)")

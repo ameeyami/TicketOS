@@ -17,13 +17,13 @@ import {
 } from "lucide-react";
 
 export const navItems = [
-  { label: "Overview", icon: Activity },
-  { label: "Queue", icon: MessageSquareText },
-  { label: "Agents", icon: Bot },
-  { label: "Workflows", icon: Workflow },
-  { label: "Approvals", icon: BadgeCheck },
-  { label: "Intelligence", icon: Sparkles },
-  { label: "Audit", icon: ShieldCheck },
+  { label: "Overview", icon: Activity, href: "/app" },
+  { label: "Queue", icon: MessageSquareText, href: "/app" },
+  { label: "Agents", icon: Bot, href: "/app" },
+  { label: "Workflows", icon: Workflow, href: "/app/workflows" },
+  { label: "Approvals", icon: BadgeCheck, href: "/app?view=approvals" },
+  { label: "Intelligence", icon: Sparkles, href: "/app" },
+  { label: "Audit", icon: ShieldCheck, href: "/app" },
 ];
 
 export const insights = [
