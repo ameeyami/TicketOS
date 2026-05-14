@@ -10,6 +10,7 @@ export type DashboardMetric = {
 };
 
 export type DashboardTicket = {
+  databaseId: string;
   id: string;
   title: string;
   category: string;
@@ -233,6 +234,7 @@ export async function getDashboardData(user: User): Promise<DashboardData> {
       { label: "Needs approval", value: `${approvalCount}`, delta: "pending" },
     ],
     tickets: ticketRows.map((ticket) => ({
+      databaseId: ticket.id,
       id: ticket.external_id ?? ticket.id.slice(0, 8),
       title: ticket.title,
       category: ticket.category ?? "Default",

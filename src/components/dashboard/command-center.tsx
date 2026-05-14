@@ -26,6 +26,7 @@ import {
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 import { insights, navItems, ticketIcons, timelineIcons } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -210,10 +211,13 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                           <p className="text-sm font-semibold">{ticket.agent}</p>
                           <p className="text-xs text-black/48">{ticket.confidence}% confidence</p>
                         </div>
-                        <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                        <Link
+                          href={`/app/tickets/${ticket.databaseId}`}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                        >
                           Inspect
                           <ArrowRight size={15} />
-                        </button>
+                        </Link>
                       </div>
                     </div>
                     );
