@@ -86,7 +86,7 @@ export function LandingPage() {
               <a href="#intelligence">Intelligence</a>
             </div>
             <Link
-              href="/app"
+              href="/auth/sign-in"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#24332b]"
             >
               Open command center
@@ -114,7 +114,7 @@ export function LandingPage() {
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/app"
+                  href="/auth/sign-in"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#17211c] px-5 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-[#26352d]"
                 >
                   View live prototype
@@ -251,7 +251,7 @@ export function LandingPage() {
             </p>
           </div>
           <Link
-            href="/app"
+            href="/auth/sign-in"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#17211c] px-5 text-sm font-semibold text-white"
           >
             Launch command center

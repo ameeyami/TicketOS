@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { auditRows, agents, insights, integrations, metrics, navItems, tickets, timeline } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
 const graphNodes: Node[] = [
   { id: "intake", position: { x: 0, y: 64 }, data: { label: "Intake" }, type: "ticketNode" },
@@ -116,6 +117,7 @@ export function CommandCenter() {
                 <Bell size={16} />
                 9 approvals
               </button>
+              <SignOutButton />
               <button className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white">
                 <Settings size={17} />
               </button>
