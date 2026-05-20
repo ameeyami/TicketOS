@@ -261,7 +261,11 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                 <Panel title="Active agents" icon={Bot}>
                   <div className="space-y-3">
                     {data.agents.map((agent) => (
-                      <div key={agent.name} className="rounded-lg border border-black/10 p-4">
+                      <Link
+                        key={agent.name}
+                        href="/app/agents"
+                        className="block rounded-lg border border-black/10 p-4 transition hover:bg-[#f8faf5]"
+                      >
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-semibold">{agent.name}</p>
                           <span className="rounded-md bg-[#edf5e9] px-2 py-1 text-xs font-semibold text-[#315f4f]">
@@ -270,7 +274,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                         </div>
                         <p className="mt-2 text-sm text-black/52">{agent.load}</p>
                         <p className="mt-1 text-xs text-black/42">{agent.memory}</p>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </Panel>
