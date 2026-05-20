@@ -21,7 +21,7 @@ export const navItems = [
   { label: "Queue", icon: MessageSquareText, href: "/app" },
   { label: "Agents", icon: Bot, href: "/app/agents" },
   { label: "Workflows", icon: Workflow, href: "/app/workflows" },
-  { label: "Approvals", icon: BadgeCheck, href: "/app?view=approvals" },
+  { label: "Approvals", icon: BadgeCheck, href: "/app/approvals" },
   { label: "Copilot", icon: Sparkles, href: "/app/copilot" },
   { label: "Audit", icon: ShieldCheck, href: "/app/audit" },
 ];

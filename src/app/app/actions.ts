@@ -10,7 +10,7 @@ export async function decideApproval(formData: FormData) {
   const decision = String(formData.get("decision") ?? "");
   const note = String(formData.get("note") ?? "").trim();
 
-  if (!approvalId || !ticketId || !organizationId || !["approved", "rejected"].includes(decision)) {
+  if (!approvalId || !organizationId || !["approved", "rejected"].includes(decision)) {
     throw new Error("Invalid approval decision.");
   }
 
@@ -39,12 +39,14 @@ export async function decideApproval(formData: FormData) {
     throw approvalError;
   }
 
-  const { error: ticketError } = await supabase
-    .from("tickets")
-    .update({
-      status: decision === "approved" ? "executing" : "blocked",
-    })
-    .eq("id", ticketId);
+  const { error: ticketError } = ticketId
+    ? await supabase
+        .from("tickets")
+        .update({
+          status: decision === "approved" ? "executing" : "blocked",
+        })
+        .eq("id", ticketId)
+    : { error: null };
 
   if (ticketError) {
     throw ticketError;
@@ -63,7 +65,7 @@ export async function decideApproval(formData: FormData) {
     throw auditError;
   }
 
-  if (note) {
+  if (note && ticketId) {
     await supabase.from("ticket_comments").insert({
       organization_id: organizationId,
       ticket_id: ticketId,
@@ -73,8 +75,12 @@ export async function decideApproval(formData: FormData) {
     });
   }
 
-  revalidatePath(`/app/tickets/${ticketId}`);
+  if (ticketId) {
+    revalidatePath(`/app/tickets/${ticketId}`);
+  }
   revalidatePath("/app");
+  revalidatePath("/app/approvals");
+  revalidatePath("/app/audit");
 }
 
 export async function updateTicketStatus(formData: FormData) {
