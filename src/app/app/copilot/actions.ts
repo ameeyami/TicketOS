@@ -1,0 +1,95 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export async function askCopilot(formData: FormData) {
+  const threadId = String(formData.get("threadId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const question = String(formData.get("question") ?? "").trim();
+
+  if (!threadId || !organizationId || !question) {
+    throw new Error("Ask a question before sending.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to use Copilot.");
+  }
+
+  await supabase.from("copilot_messages").insert({
+    organization_id: organizationId,
+    thread_id: threadId,
+    role: "user",
+    content: question,
+  });
+
+  const [{ data: tickets }, { data: approvals }, { data: audits }] = await Promise.all([
+    supabase.from("tickets").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }),
+    supabase
+      .from("approval_requests")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase.from("audit_logs").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
+  ]);
+
+  const answer = buildCopilotAnswer(question, tickets ?? [], approvals ?? [], audits ?? []);
+
+  await supabase.from("copilot_messages").insert({
+    organization_id: organizationId,
+    thread_id: threadId,
+    role: "assistant",
+    content: answer,
+    citations: [
+      { type: "tickets", count: tickets?.length ?? 0 },
+      { type: "approvals", count: approvals?.length ?? 0 },
+      { type: "audit_logs", count: audits?.length ?? 0 },
+    ],
+  });
+
+  revalidatePath("/app/copilot");
+}
+
+function buildCopilotAnswer(
+  question: string,
+  tickets: Array<{ status: string; title: string; external_id: string | null; ai_confidence: number | null }>,
+  approvals: Array<{ title: string }>,
+  audits: Array<{ event_summary: string }>,
+) {
+  const normalized = question.toLowerCase();
+  const unresolved = tickets.filter((ticket) => !["resolved"].includes(ticket.status));
+  const failedOrBlocked = tickets.filter((ticket) => ["failed", "blocked"].includes(ticket.status));
+
+  if (normalized.includes("failed") || normalized.includes("blocked")) {
+    if (failedOrBlocked.length === 0) {
+      return "I do not see failed or blocked tickets right now. The current operational risk is mostly pending approvals and in-progress execution.";
+    }
+
+    return `I found ${failedOrBlocked.length} blocked or failed ticket(s): ${failedOrBlocked
+      .map((ticket) => `${ticket.external_id ?? "Ticket"}: ${ticket.title}`)
+      .join("; ")}. Check the ticket detail page for policy and audit context.`;
+  }
+
+  if (normalized.includes("approval")) {
+    if (approvals.length === 0) {
+      return "There are no pending approvals. Agent workflows can continue without a human gate for the current queue.";
+    }
+
+    return `There ${approvals.length === 1 ? "is" : "are"} ${approvals.length} pending approval(s): ${approvals
+      .map((approval) => approval.title)
+      .join("; ")}.`;
+  }
+
+  if (normalized.includes("summarize") || normalized.includes("unresolved")) {
+    return `There are ${unresolved.length} unresolved ticket(s). Top items: ${unresolved
+      .slice(0, 4)
+      .map((ticket) => `${ticket.external_id ?? "Ticket"}: ${ticket.title} (${ticket.status})`)
+      .join("; ")}.`;
+  }
+
+  return `I reviewed ${tickets.length} ticket(s), ${approvals.length} pending approval(s), and ${audits.length} recent audit event(s). The queue is operational, with ${unresolved.length} unresolved item(s). Try asking “Summarize unresolved tickets” or “Show blocked workflows.”`;
+}

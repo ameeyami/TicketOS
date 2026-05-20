@@ -53,6 +53,7 @@ export type DashboardIntegration = {
 
 export type DashboardData = {
   organizationName: string;
+  filters: DashboardFilters;
   metrics: DashboardMetric[];
   tickets: DashboardTicket[];
   agents: DashboardAgent[];
@@ -60,6 +61,11 @@ export type DashboardData = {
   approval: DashboardApproval | null;
   integrations: DashboardIntegration[];
   auditRows: DashboardAuditRow[];
+};
+
+export type DashboardFilters = {
+  query?: string;
+  view?: string;
 };
 
 const demoAgents = [
@@ -165,7 +171,7 @@ const integrationSeeds = [
   ["github", "GitHub"],
 ];
 
-export async function getDashboardData(user: User): Promise<DashboardData> {
+export async function getDashboardData(user: User, filters: DashboardFilters = {}): Promise<DashboardData> {
   const supabase = await createSupabaseServerClient();
   const organization = await ensureWorkspace(supabase, user);
   await ensureDemoData(supabase, organization.id, user.id);
@@ -225,8 +231,11 @@ export async function getDashboardData(user: User): Promise<DashboardData> {
       )
     : 0;
 
+  const filteredTickets = filterTickets(ticketRows, filters);
+
   return {
     organizationName: organization.name,
+    filters,
     metrics: [
       {
         label: "AI resolved",
@@ -237,7 +246,7 @@ export async function getDashboardData(user: User): Promise<DashboardData> {
       { label: "Tracked tickets", value: `${ticketRows.length}`, delta: "seeded queue" },
       { label: "Needs approval", value: `${approvalCount}`, delta: "pending" },
     ],
-    tickets: ticketRows.map((ticket) => ({
+    tickets: filteredTickets.map((ticket) => ({
       databaseId: ticket.id,
       id: ticket.external_id ?? ticket.id.slice(0, 8),
       title: ticket.title,
@@ -282,6 +291,36 @@ export async function getDashboardData(user: User): Promise<DashboardData> {
       String(log.metadata?.policy ?? log.metadata?.source ?? "ticketos.live"),
     ]),
   };
+}
+
+function filterTickets<T extends { title: string; ai_summary: string | null; description: string | null; status: string; category: string | null; external_id: string | null }>(
+  tickets: T[],
+  filters: DashboardFilters,
+) {
+  let filtered = tickets;
+
+  if (filters.view === "approvals") {
+    filtered = filtered.filter((ticket) => ticket.status === "approval_required");
+  }
+
+  const query = filters.query?.trim().toLowerCase();
+  if (query) {
+    filtered = filtered.filter((ticket) =>
+      [
+        ticket.title,
+        ticket.ai_summary ?? "",
+        ticket.description ?? "",
+        ticket.category ?? "",
+        ticket.external_id ?? "",
+        ticket.status,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }
+
+  return filtered;
 }
 
 export async function ensureWorkspace(supabase: SupabaseClient, user: User) {

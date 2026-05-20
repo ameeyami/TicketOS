@@ -22,7 +22,7 @@ export const navItems = [
   { label: "Agents", icon: Bot, href: "/app" },
   { label: "Workflows", icon: Workflow, href: "/app/workflows" },
   { label: "Approvals", icon: BadgeCheck, href: "/app?view=approvals" },
-  { label: "Intelligence", icon: Sparkles, href: "/app" },
+  { label: "Copilot", icon: Sparkles, href: "/app/copilot" },
   { label: "Audit", icon: ShieldCheck, href: "/app" },
 ];
 

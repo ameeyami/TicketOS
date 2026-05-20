@@ -113,10 +113,18 @@ export function CommandCenter({ data }: { data: DashboardData }) {
               <button className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white lg:hidden">
                 <Command size={18} />
               </button>
-              <div className="hidden min-w-0 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 md:flex">
+              <form
+                action="/app"
+                className="hidden min-w-0 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 md:flex"
+              >
                 <Search size={16} className="text-black/42" />
-                <span className="w-72 text-sm text-black/42">Search tickets, agents, workflows...</span>
-              </div>
+                <input
+                  name="q"
+                  defaultValue={data.filters.query ?? ""}
+                  className="w-72 bg-transparent text-sm outline-none placeholder:text-black/42"
+                  placeholder="Search tickets, agents, workflows..."
+                />
+              </form>
             </div>
             <div className="flex items-center gap-2">
               <button className="hidden h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold md:inline-flex">
@@ -194,7 +202,13 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                 <div className="flex items-center justify-between border-b border-black/10 p-5">
                   <div>
                     <h2 className="text-lg font-semibold">AI operations queue</h2>
-                    <p className="mt-1 text-sm text-black/52">Requests grouped by execution state, not just status.</p>
+                    <p className="mt-1 text-sm text-black/52">
+                      {data.filters.query
+                        ? `Search results for "${data.filters.query}"`
+                        : data.filters.view === "approvals"
+                          ? "Showing tickets waiting on approval."
+                          : "Requests grouped by execution state, not just status."}
+                    </p>
                   </div>
                   <button className="flex size-9 items-center justify-center rounded-lg border border-black/10">
                     <MoreHorizontal size={17} />
@@ -360,10 +374,13 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                     <div className="mt-4 rounded-lg bg-white/8 p-3 text-sm leading-6 text-white/72">
                       Policy blocked autonomous deactivation because one contractor owns active production API keys.
                     </div>
-                    <div className="mt-4 flex h-10 items-center gap-2 rounded-lg border border-white/10 px-3 text-sm text-white/36">
+                    <Link
+                      href="/app/copilot"
+                      className="mt-4 flex h-10 items-center gap-2 rounded-lg border border-white/10 px-3 text-sm text-white/58 transition hover:bg-white/8 hover:text-white"
+                    >
                       Ask about unresolved tickets
                       <Send size={15} className="ml-auto" />
-                    </div>
+                    </Link>
                   </div>
                   <div className="overflow-hidden rounded-lg border border-black/10">
                     {data.auditRows.map((row) => (

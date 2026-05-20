@@ -3,7 +3,11 @@ import { getDashboardData } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function AppPage() {
+export default async function AppPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; view?: string }>;
+}) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -11,7 +15,11 @@ export default async function AppPage() {
     redirect("/auth/sign-in?message=Sign in to open the TicketOS command center.");
   }
 
-  const dashboardData = await getDashboardData(data.user);
+  const params = await searchParams;
+  const dashboardData = await getDashboardData(data.user, {
+    query: params.q,
+    view: params.view,
+  });
 
   return <CommandCenter data={dashboardData} />;
 }
