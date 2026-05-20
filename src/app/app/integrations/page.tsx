@@ -5,6 +5,7 @@ import { updateIntegrationStatus } from "@/app/app/integrations/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export default async function IntegrationsPage() {
   const supabase = await createSupabaseServerClient();
@@ -97,8 +98,8 @@ function IntegrationButton({
     <form action={updateIntegrationStatus}>
       <input type="hidden" name="integrationId" value={id} />
       <input type="hidden" name="status" value={status} />
-      <button
-        type="submit"
+      <PendingButton
+        pendingText={label === "Connect" ? "Connecting..." : "Disabling..."}
         className={cn(
           "inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold",
           status === "connected"
@@ -108,7 +109,7 @@ function IntegrationButton({
       >
         {icon === "check" ? <Icon size={15} /> : <LockKeyhole size={15} />}
         {label}
-      </button>
+      </PendingButton>
     </form>
   );
 }

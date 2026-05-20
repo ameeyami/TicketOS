@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { createTicket } from "@/app/app/tickets/new/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export default async function NewTicketPage() {
   const supabase = await createSupabaseServerClient();
@@ -105,13 +106,13 @@ export default async function NewTicketPage() {
               </label>
             </div>
 
-            <button
-              type="submit"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white"
+            <PendingButton
+              pendingText="Creating..."
+              className="h-12 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white"
             >
               <Plus size={17} />
               Create ticket
-            </button>
+            </PendingButton>
           </form>
         </section>
       </div>

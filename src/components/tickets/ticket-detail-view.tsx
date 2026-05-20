@@ -25,6 +25,7 @@ import {
   type TicketDetailData,
 } from "@/lib/supabase/ticket-detail";
 import { cn } from "@/lib/utils";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export function TicketDetailView({ data }: { data: TicketDetailData }) {
   const { ticket, latestRun, steps, approval, policies, auditLogs, comments } = data;
@@ -303,8 +304,8 @@ function TicketStatusForm({
         className="mb-2 w-full rounded-lg border border-black/10 px-2 py-2 text-xs outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
         placeholder="Optional note"
       />
-      <button
-        type="submit"
+      <PendingButton
+        pendingText={`${label}...`}
         className={cn(
           "h-9 w-full rounded-lg text-xs font-semibold",
           status === "resolved"
@@ -313,7 +314,7 @@ function TicketStatusForm({
         )}
       >
         {label}
-      </button>
+      </PendingButton>
     </form>
   );
 }
@@ -341,8 +342,8 @@ function ApprovalForm({
         className="mb-2 w-full rounded-lg border border-amber-200 bg-white px-2 py-2 text-xs outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10"
         placeholder="Optional note or ticket reference"
       />
-      <button
-        type="submit"
+      <PendingButton
+        pendingText={decision === "approved" ? "Approving..." : "Rejecting..."}
         className={cn(
           "h-9 rounded-lg px-3 text-sm font-semibold",
           decision === "approved"
@@ -351,7 +352,7 @@ function ApprovalForm({
         )}
       >
         {decision === "approved" ? "Approve" : "Reject"}
-      </button>
+      </PendingButton>
     </form>
   );
 }

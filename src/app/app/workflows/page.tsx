@@ -4,6 +4,7 @@ import { ArrowLeft, Play, ShieldCheck, Workflow } from "lucide-react";
 import { runWorkflow } from "@/app/app/workflows/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export default async function WorkflowsPage() {
   const supabase = await createSupabaseServerClient();
@@ -66,10 +67,13 @@ export default async function WorkflowsPage() {
                   <form action={runWorkflow}>
                     <input type="hidden" name="workflowId" value={workflow.id} />
                     <input type="hidden" name="organizationId" value={organization.id} />
-                    <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                    <PendingButton
+                      pendingText="Starting..."
+                      className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                    >
                       <Play size={16} />
                       Run workflow
-                    </button>
+                    </PendingButton>
                   </form>
                 </div>
               </div>

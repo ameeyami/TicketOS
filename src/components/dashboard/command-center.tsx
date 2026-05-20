@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { decideApproval } from "@/app/app/actions";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
+import { PendingButton } from "@/components/ui/pending-button";
 
 const graphNodes: Node[] = [
   { id: "intake", position: { x: 0, y: 64 }, data: { label: "Intake" }, type: "ticketNode" },
@@ -449,8 +450,8 @@ function ApprovalForm({
       <input type="hidden" name="ticketId" value={approval.ticketId} />
       <input type="hidden" name="organizationId" value={approval.organizationId} />
       <input type="hidden" name="decision" value={decision} />
-      <button
-        type="submit"
+      <PendingButton
+        pendingText={decision === "approved" ? "Approving..." : "Rejecting..."}
         className={cn(
           "h-9 rounded-lg px-3 text-sm font-semibold",
           decision === "approved"
@@ -459,7 +460,7 @@ function ApprovalForm({
         )}
       >
         {decision === "approved" ? "Approve" : "Reject"}
-      </button>
+      </PendingButton>
     </form>
   );
 }

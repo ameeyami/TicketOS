@@ -4,6 +4,7 @@ import { ArrowLeft, Bot, Send, Sparkles } from "lucide-react";
 import { askCopilot } from "@/app/app/copilot/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export default async function CopilotPage() {
   const supabase = await createSupabaseServerClient();
@@ -111,10 +112,13 @@ export default async function CopilotPage() {
               className="h-12 min-w-0 flex-1 rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
               placeholder="Ask TicketOS Copilot..."
             />
-            <button className="inline-flex h-12 items-center gap-2 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white">
+            <PendingButton
+              pendingText="Asking..."
+              className="h-12 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white"
+            >
               <Send size={17} />
               Ask
-            </button>
+            </PendingButton>
           </form>
         </section>
       </div>

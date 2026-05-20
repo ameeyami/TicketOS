@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, ShieldCheck } from "lucide-react";
 import { updateWorkspaceSettings } from "@/app/app/settings/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
@@ -54,9 +55,12 @@ export default async function SettingsPage() {
                 className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
               />
             </label>
-            <button className="h-10 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white">
+            <PendingButton
+              pendingText="Saving..."
+              className="h-10 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white"
+            >
               Save settings
-            </button>
+            </PendingButton>
           </form>
         </section>
 
