@@ -1,6 +1,7 @@
 import {
   Activity,
   BadgeCheck,
+  BarChart3,
   Bell,
   Bot,
   CheckCircle2,
@@ -22,6 +23,7 @@ export const navItems = [
   { label: "Agents", icon: Bot, href: "/app/agents" },
   { label: "Workflows", icon: Workflow, href: "/app/workflows" },
   { label: "Approvals", icon: BadgeCheck, href: "/app/approvals" },
+  { label: "Intelligence", icon: BarChart3, href: "/app/intelligence" },
   { label: "Copilot", icon: Sparkles, href: "/app/copilot" },
   { label: "Audit", icon: ShieldCheck, href: "/app/audit" },
 ];

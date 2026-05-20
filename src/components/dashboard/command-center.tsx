@@ -364,6 +364,13 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                     </div>
                   ))}
                 </div>
+                <Link
+                  href="/app/intelligence"
+                  className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
+                >
+                  Open intelligence
+                  <ArrowRight size={15} />
+                </Link>
               </Panel>
 
               <Panel title="Copilot and audit" icon={MessageSquareText}>
