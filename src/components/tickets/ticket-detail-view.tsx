@@ -16,6 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { decideApproval } from "@/app/app/tickets/[ticketId]/actions";
+import { updateTicketStatus } from "@/app/app/actions";
 import {
   displayStepStatus,
   displayTicketStatus,
@@ -66,6 +67,11 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 className="h-2 rounded-full bg-[#2f6f60]"
                 style={{ width: `${Number(ticket.ai_confidence)}%` }}
               />
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="resolved" label="Resolve" />
+              <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="executing" label="Reopen" />
+              <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="blocked" label="Block" />
             </div>
           </div>
         </div>
@@ -238,6 +244,37 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
         </section>
       </div>
     </main>
+  );
+}
+
+function TicketStatusForm({
+  ticketId,
+  organizationId,
+  status,
+  label,
+}: {
+  ticketId: string;
+  organizationId: string;
+  status: "executing" | "resolved" | "blocked";
+  label: string;
+}) {
+  return (
+    <form action={updateTicketStatus}>
+      <input type="hidden" name="ticketId" value={ticketId} />
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <input type="hidden" name="status" value={status} />
+      <button
+        type="submit"
+        className={cn(
+          "h-9 w-full rounded-lg text-xs font-semibold",
+          status === "resolved"
+            ? "bg-[#17211c] text-white"
+            : "border border-black/10 bg-white text-[#151914]",
+        )}
+      >
+        {label}
+      </button>
+    </form>
   );
 }
 

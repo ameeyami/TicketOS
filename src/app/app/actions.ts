@@ -64,3 +64,49 @@ export async function decideApproval(formData: FormData) {
   revalidatePath(`/app/tickets/${ticketId}`);
   revalidatePath("/app");
 }
+
+export async function updateTicketStatus(formData: FormData) {
+  const ticketId = String(formData.get("ticketId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const status = String(formData.get("status") ?? "");
+
+  if (!ticketId || !organizationId || !["executing", "resolved", "blocked"].includes(status)) {
+    throw new Error("Invalid ticket status update.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to update tickets.");
+  }
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({
+      status,
+      resolved_at: status === "resolved" ? new Date().toISOString() : null,
+    })
+    .eq("id", ticketId);
+
+  if (error) {
+    throw error;
+  }
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    ticket_id: ticketId,
+    event_type: `ticket_${status}`,
+    event_summary:
+      status === "resolved"
+        ? "Ticket marked resolved"
+        : status === "blocked"
+          ? "Ticket marked blocked"
+          : "Ticket reopened for execution",
+    metadata: { source: "ticket_status_action" },
+  });
+
+  revalidatePath(`/app/tickets/${ticketId}`);
+  revalidatePath("/app");
+}

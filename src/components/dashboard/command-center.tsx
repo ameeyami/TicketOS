@@ -124,13 +124,20 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                 {data.metrics.find((metric) => metric.label === "Needs approval")?.value ?? "0"} approvals
               </button>
               <SignOutButton />
-              <button className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white">
+              <Link
+                href="/app/settings"
+                className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white"
+                title="Workspace settings"
+              >
                 <Settings size={17} />
-              </button>
-              <button className="flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+              </Link>
+              <Link
+                href="/app/settings"
+                className="flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+              >
                 {data.organizationName}
                 <ChevronDown size={15} />
-              </button>
+              </Link>
             </div>
           </header>
 
@@ -382,7 +389,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                   <p className="mt-1 text-sm text-black/52">Prepared UI for the systems TicketOS will execute against.</p>
                 </div>
                 <Link
-                  href="/app/workflows"
+                  href="/app/integrations"
                   className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
                 >
                   <LockKeyhole size={16} />
@@ -391,13 +398,17 @@ export function CommandCenter({ data }: { data: DashboardData }) {
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 {data.integrations.map((integration) => (
-                  <div key={integration.name} className="rounded-lg border border-black/10 p-4">
+                  <Link
+                    href="/app/integrations"
+                    key={integration.name}
+                    className="rounded-lg border border-black/10 p-4 transition hover:bg-[#f8faf5]"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">{integration.name}</span>
                       <ShieldCheck size={17} className="text-[#2f6f60]" />
                     </div>
                     <p className="mt-3 text-xs leading-5 text-black/45">{integration.status}</p>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </section>
