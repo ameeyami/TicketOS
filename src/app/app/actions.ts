@@ -8,6 +8,7 @@ export async function decideApproval(formData: FormData) {
   const ticketId = String(formData.get("ticketId") ?? "");
   const organizationId = String(formData.get("organizationId") ?? "");
   const decision = String(formData.get("decision") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
 
   if (!approvalId || !ticketId || !organizationId || !["approved", "rejected"].includes(decision)) {
     throw new Error("Invalid approval decision.");
@@ -27,9 +28,10 @@ export async function decideApproval(formData: FormData) {
       decided_by: userData.user.id,
       decided_at: new Date().toISOString(),
       decision_note:
-        decision === "approved"
+        note ||
+        (decision === "approved"
           ? "Approved from TicketOS execution detail."
-          : "Rejected from TicketOS execution detail.",
+          : "Rejected from TicketOS execution detail."),
     })
     .eq("id", approvalId);
 
@@ -54,11 +56,21 @@ export async function decideApproval(formData: FormData) {
     ticket_id: ticketId,
     event_type: decision,
     event_summary: decision === "approved" ? "Approval request approved" : "Approval request rejected",
-    metadata: { source: "approval_action" },
+    metadata: { source: "approval_action", note: note || null },
   });
 
   if (auditError) {
     throw auditError;
+  }
+
+  if (note) {
+    await supabase.from("ticket_comments").insert({
+      organization_id: organizationId,
+      ticket_id: ticketId,
+      author_user_id: userData.user.id,
+      body: note,
+      metadata: { source: "approval_action", decision },
+    });
   }
 
   revalidatePath(`/app/tickets/${ticketId}`);
@@ -69,6 +81,7 @@ export async function updateTicketStatus(formData: FormData) {
   const ticketId = String(formData.get("ticketId") ?? "");
   const organizationId = String(formData.get("organizationId") ?? "");
   const status = String(formData.get("status") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
 
   if (!ticketId || !organizationId || !["executing", "resolved", "blocked"].includes(status)) {
     throw new Error("Invalid ticket status update.");
@@ -104,8 +117,18 @@ export async function updateTicketStatus(formData: FormData) {
         : status === "blocked"
           ? "Ticket marked blocked"
           : "Ticket reopened for execution",
-    metadata: { source: "ticket_status_action" },
+    metadata: { source: "ticket_status_action", note: note || null },
   });
+
+  if (note) {
+    await supabase.from("ticket_comments").insert({
+      organization_id: organizationId,
+      ticket_id: ticketId,
+      author_user_id: userData.user.id,
+      body: note,
+      metadata: { source: "ticket_status_action", status },
+    });
+  }
 
   revalidatePath(`/app/tickets/${ticketId}`);
   revalidatePath("/app");

@@ -25,6 +25,7 @@ export async function getTicketDetail(ticketId: string) {
     { data: approvalRequests },
     { data: policyEvaluations },
     { data: auditLogs },
+    { data: comments },
   ] = await Promise.all([
     supabase
       .from("workflow_runs")
@@ -46,6 +47,11 @@ export async function getTicketDetail(ticketId: string) {
       .select("*, agents(name)")
       .eq("ticket_id", ticket.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("ticket_comments")
+      .select("*")
+      .eq("ticket_id", ticket.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const latestRun = workflowRuns?.[0] ?? null;
@@ -65,6 +71,7 @@ export async function getTicketDetail(ticketId: string) {
     approval: approvalRequests?.[0] ?? null,
     policies: policyEvaluations ?? [],
     auditLogs: auditLogs ?? [],
+    comments: comments ?? [],
   };
 }
 

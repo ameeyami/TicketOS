@@ -12,6 +12,7 @@ import {
   LockKeyhole,
   ShieldCheck,
   Sparkles,
+  StickyNote,
   Workflow,
   XCircle,
 } from "lucide-react";
@@ -26,7 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function TicketDetailView({ data }: { data: TicketDetailData }) {
-  const { ticket, latestRun, steps, approval, policies, auditLogs } = data;
+  const { ticket, latestRun, steps, approval, policies, auditLogs, comments } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
 
@@ -68,10 +69,13 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 style={{ width: `${Number(ticket.ai_confidence)}%` }}
               />
             </div>
-            <div className="mt-5 grid grid-cols-3 gap-2">
-              <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="resolved" label="Resolve" />
-              <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="executing" label="Reopen" />
-              <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="blocked" label="Block" />
+            <div className="mt-5 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/42">Operator action</p>
+              <div className="grid gap-3">
+                <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="resolved" label="Resolve" />
+                <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="executing" label="Reopen" />
+                <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="blocked" label="Block" />
+              </div>
             </div>
           </div>
         </div>
@@ -146,8 +150,8 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
           </Panel>
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[.82fr_1.18fr]">
-          <div className="space-y-6">
+        <section className="mt-6">
+          <div className="grid gap-6 xl:grid-cols-2">
             <Panel title="Approval gate" icon={BadgeCheck}>
               {approval ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
@@ -159,7 +163,7 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                     Status: {titleCase(approval.status)}
                   </p>
                   {approval.status === "pending" && (
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 grid gap-3">
                       <ApprovalForm
                         approvalId={approval.id}
                         ticketId={ticket.id}
@@ -202,6 +206,32 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
             </Panel>
           </div>
 
+        </section>
+
+        <section className="mt-6 grid gap-6 xl:grid-cols-[.82fr_1.18fr]">
+          <Panel title="Operator notes" icon={StickyNote}>
+            <div className="space-y-3">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <div key={comment.id} className="rounded-lg border border-black/10 p-4">
+                    <p className="text-sm leading-6 text-black/68">{comment.body}</p>
+                    <p className="mt-2 text-xs text-black/38">
+                      {new Date(comment.created_at).toLocaleString([], {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      · {String(comment.metadata?.source ?? "operator_note").replaceAll("_", " ")}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <EmptyState text="No operator notes yet. Add a note while resolving, blocking, reopening, or deciding an approval." />
+              )}
+            </div>
+          </Panel>
+
           <Panel title="Audit trail" icon={LockKeyhole}>
             <div className="overflow-hidden rounded-lg border border-black/10">
               {auditLogs.length > 0 ? (
@@ -219,7 +249,7 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                       <p className="text-sm font-semibold">{log.event_summary}</p>
                       <p className="mt-1 text-xs text-black/45">
                         {log.agents?.name ?? "TicketOS"} · {titleCase(log.event_type.replaceAll("_", " "))} ·{" "}
-                        {String(log.metadata?.policy ?? log.metadata?.source ?? "audit")}
+                        {String(log.metadata?.note ?? log.metadata?.policy ?? log.metadata?.source ?? "audit")}
                       </p>
                     </div>
                   </div>
@@ -263,6 +293,16 @@ function TicketStatusForm({
       <input type="hidden" name="ticketId" value={ticketId} />
       <input type="hidden" name="organizationId" value={organizationId} />
       <input type="hidden" name="status" value={status} />
+      <label className="sr-only" htmlFor={`${status}-note`}>
+        Optional note for {label}
+      </label>
+      <textarea
+        id={`${status}-note`}
+        name="note"
+        rows={2}
+        className="mb-2 w-full rounded-lg border border-black/10 px-2 py-2 text-xs outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+        placeholder="Optional note"
+      />
       <button
         type="submit"
         className={cn(
@@ -295,6 +335,12 @@ function ApprovalForm({
       <input type="hidden" name="ticketId" value={ticketId} />
       <input type="hidden" name="organizationId" value={organizationId} />
       <input type="hidden" name="decision" value={decision} />
+      <textarea
+        name="note"
+        rows={2}
+        className="mb-2 w-full rounded-lg border border-amber-200 bg-white px-2 py-2 text-xs outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10"
+        placeholder="Optional note or ticket reference"
+      />
       <button
         type="submit"
         className={cn(
