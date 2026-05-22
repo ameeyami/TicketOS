@@ -34,6 +34,7 @@ export const navItems = [
   { label: "Runbooks", icon: BookOpenCheck, href: "/app/runbooks" },
   { label: "Policies", icon: ShieldAlert, href: "/app/policies" },
   { label: "Approvals", icon: BadgeCheck, href: "/app/approvals" },
+  { label: "Notifications", icon: Bell, href: "/app/notifications" },
   { label: "Intelligence", icon: BarChart3, href: "/app/intelligence" },
   { label: "Copilot", icon: Sparkles, href: "/app/copilot" },
   { label: "Audit", icon: ShieldCheck, href: "/app/audit" },
