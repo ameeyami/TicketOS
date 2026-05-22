@@ -109,5 +109,56 @@ export async function assignTicketToAgent(formData: FormData) {
 
   revalidatePath("/app");
   revalidatePath("/app/agents");
+  revalidatePath("/app/memory");
   revalidatePath(`/app/tickets/${ticket.id}`);
+}
+
+export async function updateAgentMemory(formData: FormData) {
+  const agentId = String(formData.get("agentId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const memoryScope = String(formData.get("memoryScope") ?? "").trim();
+  const capabilities = String(formData.get("capabilities") ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (!agentId || !organizationId || !memoryScope) {
+    throw new Error("Agent and memory scope are required.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to update agent memory.");
+  }
+
+  const { data: agent, error } = await supabase
+    .from("agents")
+    .update({
+      memory_scope: memoryScope,
+      capabilities,
+    })
+    .eq("id", agentId)
+    .eq("organization_id", organizationId)
+    .select("id, name")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    actor_agent_id: agent.id,
+    event_type: "agent_memory_updated",
+    event_summary: `${agent.name} memory scope updated`,
+    metadata: { source: "memory_workspace", capabilities },
+  });
+
+  revalidatePath("/app");
+  revalidatePath("/app/agents");
+  revalidatePath("/app/memory");
+  revalidatePath("/app/audit");
 }
