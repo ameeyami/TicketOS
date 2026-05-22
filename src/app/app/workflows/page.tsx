@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Play, ShieldCheck, Workflow } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Plus, ShieldCheck, Workflow } from "lucide-react";
 import { runWorkflow } from "@/app/app/workflows/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -42,8 +42,17 @@ export default async function WorkflowsPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Workflow library</p>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight">Run governed IT workflows.</h1>
           </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-            {organization.name}
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/app/workflows/new"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            >
+              <Plus size={16} />
+              New workflow
+            </Link>
+            <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
+              {organization.name}
+            </div>
           </div>
         </div>
 
@@ -64,17 +73,26 @@ export default async function WorkflowsPage() {
                       </p>
                     </div>
                   </div>
-                  <form action={runWorkflow}>
-                    <input type="hidden" name="workflowId" value={workflow.id} />
-                    <input type="hidden" name="organizationId" value={organization.id} />
-                    <PendingButton
-                      pendingText="Starting..."
-                      className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/app/workflows/${workflow.id}`}
+                      className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
                     >
-                      <Play size={16} />
-                      Run workflow
-                    </PendingButton>
-                  </form>
+                      Designer
+                      <ArrowRight size={15} />
+                    </Link>
+                    <form action={runWorkflow}>
+                      <input type="hidden" name="workflowId" value={workflow.id} />
+                      <input type="hidden" name="organizationId" value={organization.id} />
+                      <PendingButton
+                        pendingText="Starting..."
+                        className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                      >
+                        <Play size={16} />
+                        Run workflow
+                      </PendingButton>
+                    </form>
+                  </div>
                 </div>
               </div>
             ))}
