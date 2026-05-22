@@ -67,6 +67,17 @@ export async function runWorkflow(formData: FormData) {
     step(organizationId, run.id, "execute", "Workflow executing", "running", "Execution has started and is waiting for integration output."),
   ]);
 
+  await supabase.from("execution_actions").insert([
+    executionAction(organizationId, run.id, "okta", "reset_password", "running", {
+      ticket_id: ticket.id,
+      source: "manual_workflow_run",
+    }),
+    executionAction(organizationId, run.id, "slack", "send_ephemeral_message", "pending", {
+      ticket_id: ticket.id,
+      source: "manual_workflow_run",
+    }),
+  ]);
+
   await supabase.from("policy_evaluations").insert({
     organization_id: organizationId,
     workflow_run_id: run.id,
@@ -90,9 +101,30 @@ export async function runWorkflow(formData: FormData) {
   revalidatePath("/app");
   revalidatePath("/app/workflows");
   revalidatePath(`/app/workflows/${workflowId}`);
+  revalidatePath("/app/executions");
   revalidatePath("/app/audit");
   revalidatePath("/app/intelligence");
   revalidatePath(`/app/tickets/${ticket.id}`);
+}
+
+function executionAction(
+  organizationId: string,
+  workflowRunId: string,
+  integrationKey: string,
+  actionKey: string,
+  status: string,
+  requestPayload: Record<string, unknown>,
+) {
+  return {
+    organization_id: organizationId,
+    workflow_run_id: workflowRunId,
+    integration_key: integrationKey,
+    action_key: actionKey,
+    status,
+    request_payload: requestPayload,
+    response_payload: {},
+    idempotency_key: `${workflowRunId}-${integrationKey}-${actionKey}`,
+  };
 }
 
 export async function createWorkflowFromTemplate(formData: FormData) {
