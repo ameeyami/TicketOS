@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Cable, CheckCircle2, LockKeyhole, Power } from "lucide-react";
+import { ArrowLeft, ArrowRight, Cable, CheckCircle2, LockKeyhole, Power } from "lucide-react";
 import { updateIntegrationStatus } from "@/app/app/integrations/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -70,6 +70,13 @@ export default async function IntegrationsPage() {
               </div>
 
               <div className="mt-5 flex gap-2">
+                <Link
+                  href={`/app/integrations/${integration.id}`}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
+                >
+                  Actions
+                  <ArrowRight size={15} />
+                </Link>
                 <IntegrationButton id={integration.id} status="connected" label="Connect" icon="check" />
                 <IntegrationButton id={integration.id} status="disabled" label="Disable" icon="power" />
               </div>
