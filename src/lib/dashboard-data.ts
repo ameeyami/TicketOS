@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   CircleAlert,
   Clock3,
+  ClipboardList,
   Cpu,
   KeyRound,
   LockKeyhole,
@@ -27,6 +28,7 @@ import {
 export const navItems = [
   { label: "Overview", icon: Activity, href: "/app" },
   { label: "Queue", icon: MessageSquareText, href: "/app/tickets" },
+  { label: "Catalog", icon: ClipboardList, href: "/app/catalog" },
   { label: "Agents", icon: Bot, href: "/app/agents" },
   { label: "Autonomy", icon: SlidersHorizontal, href: "/app/autonomy" },
   { label: "Memory", icon: Brain, href: "/app/memory" },
