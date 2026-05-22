@@ -138,4 +138,5 @@ export async function updateTicketStatus(formData: FormData) {
 
   revalidatePath(`/app/tickets/${ticketId}`);
   revalidatePath("/app");
+  revalidatePath("/app/tickets");
 }

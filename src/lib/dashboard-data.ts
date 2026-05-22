@@ -19,7 +19,7 @@ import {
 
 export const navItems = [
   { label: "Overview", icon: Activity, href: "/app" },
-  { label: "Queue", icon: MessageSquareText, href: "/app" },
+  { label: "Queue", icon: MessageSquareText, href: "/app/tickets" },
   { label: "Agents", icon: Bot, href: "/app/agents" },
   { label: "Workflows", icon: Workflow, href: "/app/workflows" },
   { label: "Approvals", icon: BadgeCheck, href: "/app/approvals" },
