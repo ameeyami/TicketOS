@@ -8,17 +8,19 @@ export function PendingButton({
   children,
   pendingText = "Working...",
   className,
+  disabled = false,
 }: {
   children: React.ReactNode;
   pendingText?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       className={cn(
         "inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70",

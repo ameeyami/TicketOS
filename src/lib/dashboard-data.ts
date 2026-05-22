@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  UsersRound,
   UserPlus,
   Workflow,
 } from "lucide-react";
@@ -32,6 +33,7 @@ export const navItems = [
   { label: "Intelligence", icon: BarChart3, href: "/app/intelligence" },
   { label: "Copilot", icon: Sparkles, href: "/app/copilot" },
   { label: "Audit", icon: ShieldCheck, href: "/app/audit" },
+  { label: "Team", icon: UsersRound, href: "/app/team" },
 ];
 
 export const insights = [
