@@ -99,7 +99,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
               Autonomous actions are limited to low-risk identity and routing workflows.
             </p>
             <Link
-              href="/app/workflows"
+              href="/app/policies"
               className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-white px-3 text-sm font-semibold text-[#111713]"
             >
               Review rules
