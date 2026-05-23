@@ -41,6 +41,7 @@ export const navItems = [
   { label: "Executions", icon: Cpu, href: "/app/executions" },
   { label: "Escalations", icon: Siren, href: "/app/escalations" },
   { label: "Incidents", icon: CircleAlert, href: "/app/incidents" },
+  { label: "Security", icon: LockKeyhole, href: "/app/security" },
   { label: "Changes", icon: FilePenLine, href: "/app/changes" },
   { label: "Workflows", icon: Workflow, href: "/app/workflows" },
   { label: "Runbooks", icon: BookOpenCheck, href: "/app/runbooks" },
