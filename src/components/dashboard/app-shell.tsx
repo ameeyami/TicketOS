@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -9,10 +10,8 @@ import {
   Cable,
   ChartNoAxesColumn,
   ChevronDown,
-  ClipboardList,
   FileText,
   GitBranch,
-  Inbox,
   KeyRound,
   LockKeyhole,
   MessageSquareText,
@@ -65,11 +64,6 @@ const teams = [
   },
 ];
 
-const topLinks = [
-  { label: "Inbox", href: "/app/notifications", icon: Inbox },
-  { label: "My Tickets", href: "/app/tickets", icon: ClipboardList },
-];
-
 const utilityLinks = [
   { label: "Agents", href: "/app/agents", icon: Bot },
   { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
@@ -79,6 +73,18 @@ const utilityLinks = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
+    const activeTeam = teams.find((team) => team.links.some((item) => isActivePath(item.href, pathname)));
+    if (activeTeam) {
+      return activeTeam.name;
+    }
+
+    if (utilityLinks.some((item) => isActivePath(item.href, pathname))) {
+      return "Other";
+    }
+
+    return null;
+  });
 
   return (
     <div className="ticketos-app-shell min-h-screen bg-[#fbfaf8] text-[#1f1b16]">
@@ -92,40 +98,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ChevronDown size={13} className="text-black/35" />
           </Link>
 
-          <nav className="mt-6 space-y-1">
-            {topLinks.map((item) => (
-              <NavLink key={item.href} item={item} pathname={pathname} />
-            ))}
-          </nav>
-
           <div className="mt-7 flex items-center justify-between px-2 text-xs font-medium text-black/45">
-            <span>Your teams</span>
+            <span>Workspace</span>
             <Plus size={14} />
           </div>
 
-          <div className="mt-2 space-y-4">
+          <div className="mt-2 space-y-1">
             {teams.map((team) => (
-              <div key={team.name}>
-                <div className="flex h-8 items-center gap-2 px-2 text-sm font-semibold text-black/78">
-                  <span className="flex size-5 items-center justify-center rounded bg-[#d8efff] text-[11px] font-bold text-[#357297]">
-                    {team.initial}
-                  </span>
-                  {team.name}
-                  <ChevronDown size={13} className="text-black/35" />
-                </div>
-                <div className="mt-1 space-y-1">
-                  {team.links.map((item) => (
-                    <NavLink key={item.href} item={item} pathname={pathname} />
-                  ))}
-                </div>
-              </div>
+              <SidebarSection
+                key={team.name}
+                name={team.name}
+                initial={team.initial}
+                expanded={expandedSection === team.name}
+                onToggle={() => setExpandedSection((current) => (current === team.name ? null : team.name))}
+              >
+                {team.links.map((item) => (
+                  <NavLink key={item.href} item={item} pathname={pathname} />
+                ))}
+              </SidebarSection>
             ))}
-          </div>
 
-          <div className="mt-6 border-t border-[#eee8e2] pt-4">
-            {utilityLinks.map((item) => (
-              <NavLink key={item.href} item={item} pathname={pathname} />
-            ))}
+            <SidebarSection
+              name="Other"
+              initial="O"
+              expanded={expandedSection === "Other"}
+              onToggle={() => setExpandedSection((current) => (current === "Other" ? null : "Other"))}
+            >
+              {utilityLinks.map((item) => (
+                <NavLink key={item.href} item={item} pathname={pathname} />
+              ))}
+            </SidebarSection>
           </div>
         </aside>
 
@@ -167,6 +169,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function SidebarSection({
+  name,
+  initial,
+  expanded,
+  onToggle,
+  children,
+}: {
+  name: string;
+  initial: string;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-semibold text-black/78 transition hover:bg-[#f1ebe5]"
+        aria-expanded={expanded}
+      >
+        <span className="flex size-5 items-center justify-center rounded bg-[#d8efff] text-[11px] font-bold text-[#357297]">
+          {initial}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{name}</span>
+        <ChevronDown
+          size={13}
+          className={cn("text-black/35 transition", expanded && "rotate-180")}
+        />
+      </button>
+      {expanded && <div className="mt-1 space-y-1 pb-3">{children}</div>}
+    </div>
+  );
+}
+
 function NavLink({
   item,
   pathname,
@@ -189,4 +226,8 @@ function NavLink({
       {item.label === "Approvals" && <span className="rounded bg-white px-1.5 py-0.5 text-[11px] text-black/45">2</span>}
     </Link>
   );
+}
+
+function isActivePath(href: string, pathname: string) {
+  return href === "/app" ? pathname === "/app" : pathname.startsWith(href);
 }
