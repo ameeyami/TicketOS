@@ -7,9 +7,15 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function updateIntegrationStatus(formData: FormData) {
   const integrationId = String(formData.get("integrationId") ?? "");
   const status = String(formData.get("status") ?? "");
+  const connectionId = String(formData.get("connectionId") ?? "").trim();
+  const adminEmail = String(formData.get("adminEmail") ?? "").trim();
 
   if (!integrationId || !["connected", "disabled", "not_connected"].includes(status)) {
     throw new Error("Invalid integration update.");
+  }
+
+  if (status === "connected" && !connectionId) {
+    throw new Error("Enter the workspace, tenant, or app ID before connecting.");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -21,7 +27,7 @@ export async function updateIntegrationStatus(formData: FormData) {
 
   const { data: integration, error: readError } = await supabase
     .from("integrations")
-    .select("id, organization_id, display_name")
+    .select("id, organization_id, display_name, config")
     .eq("id", integrationId)
     .single();
 
@@ -35,6 +41,15 @@ export async function updateIntegrationStatus(formData: FormData) {
       status,
       connected_by: status === "connected" ? userData.user.id : null,
       connected_at: status === "connected" ? new Date().toISOString() : null,
+      config:
+        status === "connected"
+          ? {
+              ...(integration.config ?? {}),
+              connection_id: connectionId,
+              admin_email: adminEmail || null,
+              connection_mode: "manual_scoped_setup",
+            }
+          : integration.config ?? {},
     })
     .eq("id", integrationId);
 
@@ -47,7 +62,11 @@ export async function updateIntegrationStatus(formData: FormData) {
     actor_user_id: userData.user.id,
     event_type: "integration_updated",
     event_summary: `${integration.display_name} marked ${status.replaceAll("_", " ")}`,
-    metadata: { source: "integrations_page" },
+    metadata: {
+      source: "integrations_page",
+      connection_id: status === "connected" ? connectionId : null,
+      admin_email: status === "connected" ? adminEmail || null : null,
+    },
   });
 
   revalidatePath("/app");

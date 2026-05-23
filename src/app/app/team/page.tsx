@@ -11,10 +11,11 @@ import {
   ShieldCheck,
   Trash2,
   UserCog,
+  UserPlus,
   UsersRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { removeMember, updateMemberRole } from "@/app/app/team/actions";
+import { inviteMember, removeMember, updateMemberRole } from "@/app/app/team/actions";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -31,25 +32,25 @@ const roleCards = [
   {
     role: "owner",
     title: "Owner",
-    detail: "Full control over workspace, billing-sensitive settings, roles, and destructive changes.",
+    detail: "Full control",
     icon: KeyRound,
   },
   {
     role: "admin",
     title: "Admin",
-    detail: "Manages agents, policies, workflows, integrations, and team permissions.",
+    detail: "Manage workspace",
     icon: ShieldCheck,
   },
   {
     role: "operator",
     title: "Operator",
-    detail: "Runs tickets, approves day-to-day actions, and monitors execution outcomes.",
+    detail: "Run operations",
     icon: UserCog,
   },
   {
     role: "viewer",
     title: "Viewer",
-    detail: "Reads queues, analytics, replay history, and audit logs without changing operations.",
+    detail: "Read only",
     icon: Eye,
   },
 ];
@@ -73,7 +74,7 @@ export default async function TeamPage() {
       .from("audit_logs")
       .select("*")
       .eq("organization_id", organization.id)
-      .in("event_type", ["team_role_updated", "team_member_removed", "workspace_updated"])
+      .in("event_type", ["team_role_updated", "team_member_removed", "team_invite_sent", "workspace_updated"])
       .order("created_at", { ascending: false })
       .limit(8),
     supabase
@@ -89,6 +90,7 @@ export default async function TeamPage() {
   const canManage = currentRole === "owner" || currentRole === "admin";
   const ownerCount = memberRows.filter((member) => member.role === "owner").length;
   const elevatedCount = memberRows.filter((member) => member.role === "owner" || member.role === "admin").length;
+  const pendingInvites = (auditLogs ?? []).filter((log) => log.event_type === "team_invite_sent");
 
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
@@ -103,11 +105,8 @@ export default async function TeamPage() {
 
         <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Team access</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Control who can operate TicketOS.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Give every teammate the right operational boundary before agents execute sensitive work.
-            </p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Team</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Members and roles.</h1>
           </div>
           <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
             Your role: {titleCase(currentRole)}
@@ -220,17 +219,63 @@ export default async function TeamPage() {
           </div>
 
           <div className="space-y-6">
+            <Panel title="Invite member" icon={UserPlus}>
+              <form action={inviteMember} className="space-y-3">
+                <input type="hidden" name="organizationId" value={organization.id} />
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  disabled={!canManage}
+                  placeholder="teammate@company.com"
+                  className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none disabled:opacity-50"
+                />
+                <div className="flex gap-2">
+                  <select
+                    name="role"
+                    defaultValue="operator"
+                    disabled={!canManage}
+                    className="h-10 min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold outline-none disabled:opacity-50"
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="operator">Operator</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <PendingButton
+                    pendingText="Inviting..."
+                    disabled={!canManage}
+                    className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    Invite
+                  </PendingButton>
+                </div>
+              </form>
+              <div className="mt-4 space-y-2">
+                {pendingInvites.slice(0, 3).map((invite) => (
+                  <div key={invite.id} className="rounded-lg border border-black/10 bg-[#fbfcf8] p-3 text-sm">
+                    <p className="font-semibold">{String(invite.metadata?.invite_email ?? "Pending invite")}</p>
+                    <p className="mt-1 text-xs text-black/48">
+                      {titleCase(String(invite.metadata?.role ?? "viewer"))} · {formatDate(invite.created_at)}
+                    </p>
+                  </div>
+                ))}
+                {pendingInvites.length === 0 && <p className="text-sm text-black/48">No pending invites.</p>}
+              </div>
+            </Panel>
+
             <Panel title="Role boundaries" icon={BadgeCheck}>
               <div className="grid gap-3">
                 {roleCards.map((role) => (
-                  <div key={role.role} className="rounded-lg border border-black/10 p-4">
+                  <div key={role.role} className="flex items-center justify-between rounded-lg border border-black/10 p-3">
                     <div className="flex items-center gap-2">
                       <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
                         <role.icon size={16} />
                       </span>
-                      <p className="font-semibold">{role.title}</p>
+                      <div>
+                        <p className="font-semibold">{role.title}</p>
+                        <p className="text-xs text-black/48">{role.detail}</p>
+                      </div>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-black/55">{role.detail}</p>
                   </div>
                 ))}
               </div>

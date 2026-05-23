@@ -5,6 +5,57 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const memberRoles = new Set(["owner", "admin", "operator", "viewer"]);
 
+export async function inviteMember(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const role = String(formData.get("role") ?? "viewer");
+
+  if (!organizationId || !email.includes("@") || !memberRoles.has(role)) {
+    throw new Error("Enter a valid email address and role.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to invite team members.");
+  }
+
+  const { data: currentMembership, error: membershipError } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userData.user.id)
+    .single();
+
+  if (membershipError) {
+    throw membershipError;
+  }
+
+  if (currentMembership.role !== "owner" && currentMembership.role !== "admin") {
+    throw new Error("Only owners and admins can invite team members.");
+  }
+
+  const { error } = await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "team_invite_sent",
+    event_summary: `Invite prepared for ${email}`,
+    metadata: {
+      source: "team_workspace",
+      invite_email: email,
+      role,
+      state: "pending",
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  revalidateTeamViews();
+}
+
 export async function updateMemberRole(formData: FormData) {
   const organizationId = String(formData.get("organizationId") ?? "");
   const memberId = String(formData.get("memberId") ?? "");

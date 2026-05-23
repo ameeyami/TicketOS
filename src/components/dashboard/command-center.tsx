@@ -72,7 +72,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
             </span>
             <div>
               <p className="text-sm font-semibold">TicketOS</p>
-              <p className="text-xs text-white/42">AI operations layer</p>
             </div>
           </div>
           <nav className="mt-8 space-y-1">
@@ -90,22 +89,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
               </Link>
             ))}
           </nav>
-          <div className="mt-8 rounded-xl border border-white/10 bg-white/[.06] p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Sparkles size={16} className="text-[#d7ff78]" />
-              Agent policy mode
-            </div>
-            <p className="mt-3 text-sm leading-6 text-white/52">
-              Autonomous actions are limited to low-risk identity and routing workflows.
-            </p>
-            <Link
-              href="/app/policies"
-              className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-white px-3 text-sm font-semibold text-[#111713]"
-            >
-              Review rules
-              <ArrowRight size={15} />
-            </Link>
-          </div>
         </aside>
 
         <section className="min-w-0 flex-1">
@@ -154,10 +137,10 @@ export function CommandCenter({ data }: { data: DashboardData }) {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">
-                  Operations command center
+                  Command center
                 </p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-                  AI agents are resolving IT work in real time.
+                  IT work, agents, and approvals.
                 </h1>
               </div>
               <div className="flex gap-2">
@@ -203,12 +186,12 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                 <div className="flex items-center justify-between border-b border-black/10 p-5">
                   <div>
                     <h2 className="text-lg font-semibold">AI operations queue</h2>
-                    <p className="mt-1 text-sm text-black/52">
+                    <p className="mt-1 text-sm text-black/48">
                       {data.filters.query
                         ? `Search results for "${data.filters.query}"`
                         : data.filters.view === "approvals"
-                          ? "Showing tickets waiting on approval."
-                          : "Requests grouped by execution state, not just status."}
+                          ? "Waiting on approval"
+                          : `${data.tickets.length} active requests`}
                     </p>
                   </div>
                   <button className="flex size-9 items-center justify-center rounded-lg border border-black/10">
@@ -235,7 +218,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                             </span>
                           </div>
                           <h3 className="mt-2 font-semibold tracking-tight">{ticket.title}</h3>
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-black/56">{ticket.summary}</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
@@ -273,7 +255,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                           </span>
                         </div>
                         <p className="mt-2 text-sm text-black/52">{agent.load}</p>
-                        <p className="mt-1 text-xs text-black/42">{agent.memory}</p>
                       </Link>
                     ))}
                   </div>
@@ -283,9 +264,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                   <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                     <p className="font-semibold text-amber-950">
                       {data.approval?.title ?? "No approvals waiting"}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-amber-900/72">
-                      {data.approval?.description ?? "TicketOS has no paused workflows right now."}
                     </p>
                     {data.approval?.status === "pending" && (
                       <div className="mt-4 flex gap-2">
@@ -325,7 +303,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                           <p className="font-semibold">{step.label}</p>
                           <span className="text-xs text-black/42">{step.time}</span>
                         </div>
-                        <p className="mt-1 text-sm leading-6 text-black/55">{step.detail}</p>
                       </div>
                     </div>
                     );
@@ -380,12 +357,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                       <Bot size={16} className="text-[#d7ff78]" />
                       Copilot
                     </div>
-                    <p className="mt-4 text-sm leading-6 text-white/62">
-                      “Why did contractor deactivation fail?”
-                    </p>
-                    <div className="mt-4 rounded-lg bg-white/8 p-3 text-sm leading-6 text-white/72">
-                      Policy blocked autonomous deactivation because one contractor owns active production API keys.
-                    </div>
                     <Link
                       href="/app/copilot"
                       className="mt-4 flex h-10 items-center gap-2 rounded-lg border border-white/10 px-3 text-sm text-white/58 transition hover:bg-white/8 hover:text-white"
@@ -415,7 +386,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="text-lg font-semibold">Integration catalog</h2>
-                  <p className="mt-1 text-sm text-black/52">Prepared UI for the systems TicketOS will execute against.</p>
                 </div>
                 <Link
                   href="/app/integrations"
