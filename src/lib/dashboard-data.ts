@@ -35,6 +35,7 @@ export const navItems = [
   { label: "Overview", icon: Activity, href: "/app" },
   { label: "Queue", icon: MessageSquareText, href: "/app/tickets" },
   { label: "Catalog", icon: ClipboardList, href: "/app/catalog" },
+  { label: "Passwords", icon: KeyRound, href: "/app/password-resets" },
   { label: "Onboarding", icon: UserPlus, href: "/app/onboarding" },
   { label: "Offboarding", icon: UserX, href: "/app/offboarding" },
   { label: "Apps", icon: Cable, href: "/app/apps" },
