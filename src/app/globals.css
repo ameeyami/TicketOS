@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f2;
-  --foreground: #151914;
+  --background: #fbfaf8;
+  --foreground: #1f1b16;
 }
 
 @theme inline {
@@ -39,4 +39,138 @@ a {
 
 .react-flow__controls-button {
   border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.ticketos-app-shell {
+  --tos-border: #eee8e2;
+  --tos-panel: #ffffff;
+  --tos-muted: #6f675f;
+  --tos-accent: #dc6b22;
+  --tos-accent-soft: #f8eee7;
+}
+
+.app-content-frame {
+  min-height: calc(100vh - 48px);
+  background: #fbfaf8;
+}
+
+.app-content-frame > main {
+  min-height: auto;
+  background: transparent !important;
+  color: #1f1b16;
+  padding: 24px !important;
+}
+
+.app-content-frame > main > div {
+  max-width: none;
+}
+
+.app-content-frame > main > div > a[href="/app"]:first-child {
+  display: none;
+}
+
+.ticketos-dashboard-content {
+  padding: 24px;
+}
+
+.ticketos-app-shell .rounded-xl {
+  border-radius: 8px;
+}
+
+.ticketos-app-shell .rounded-lg,
+.ticketos-app-shell .rounded-md {
+  border-radius: 6px;
+}
+
+.ticketos-app-shell .shadow-sm {
+  box-shadow: none;
+}
+
+.ticketos-app-shell .border-black\/10 {
+  border-color: rgb(238 232 226) !important;
+}
+
+.ticketos-app-shell .divide-black\/8 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(238 232 226) !important;
+}
+
+.ticketos-app-shell .bg-\[\#f6f7f2\],
+.ticketos-app-shell .bg-\[\#f8faf5\],
+.ticketos-app-shell .bg-\[\#fbfcf8\] {
+  background-color: #fbfaf8 !important;
+}
+
+.ticketos-app-shell .bg-\[\#17211c\],
+.ticketos-app-shell .bg-\[\#111713\] {
+  background-color: var(--tos-accent) !important;
+}
+
+.ticketos-app-shell .text-\[\#151914\],
+.ticketos-app-shell .text-\[\#17211c\] {
+  color: #1f1b16 !important;
+}
+
+.ticketos-app-shell .bg-\[\#eef5ea\],
+.ticketos-app-shell .bg-\[\#edf5e9\],
+.ticketos-app-shell .bg-\[\#e7f0e4\] {
+  background-color: var(--tos-accent-soft) !important;
+}
+
+.ticketos-app-shell .text-\[\#2e6658\],
+.ticketos-app-shell .text-\[\#2f6f60\],
+.ticketos-app-shell .text-\[\#315f4f\],
+.ticketos-app-shell .text-\[\#47685d\] {
+  color: var(--tos-accent) !important;
+}
+
+.ticketos-app-shell h1 {
+  letter-spacing: 0;
+}
+
+.ticketos-app-shell h2,
+.ticketos-app-shell h3 {
+  letter-spacing: 0;
+}
+
+.ticketos-app-shell input,
+.ticketos-app-shell textarea,
+.ticketos-app-shell select {
+  border-color: var(--tos-border) !important;
+  background-color: #fff !important;
+}
+
+.ticketos-app-shell button,
+.ticketos-app-shell a {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.app-icon-button {
+  display: inline-flex;
+  height: 32px;
+  width: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--tos-border);
+  border-radius: 6px;
+  background: #fff;
+  color: rgb(0 0 0 / 0.62);
+}
+
+.ticketos-app-shell [class*="text-3xl"] {
+  line-height: 1.1;
+}
+
+.ticketos-app-shell [class*="tracking-\[0\.18em\]"] {
+  letter-spacing: 0.08em !important;
+}
+
+@media (max-width: 768px) {
+  .app-content-frame > main,
+  .ticketos-dashboard-content {
+    padding: 16px !important;
+  }
 }

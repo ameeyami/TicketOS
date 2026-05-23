@@ -7,29 +7,22 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
-  Bell,
   Bot,
-  ChevronDown,
   Clock3,
-  Command,
   Filter,
   GitBranch,
   LockKeyhole,
   MessageSquareText,
   MoreHorizontal,
   Plus,
-  Search,
   Send,
-  Settings,
   ShieldCheck,
   Sparkles,
-  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { insights, navItems, ticketIcons, timelineIcons } from "@/lib/dashboard-data";
+import { insights, ticketIcons, timelineIcons } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { decideApproval } from "@/app/app/actions";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 import { PendingButton } from "@/components/ui/pending-button";
@@ -63,83 +56,13 @@ const nodeTypes = { ticketNode: TicketNode };
 
 export function CommandCenter({ data }: { data: DashboardData }) {
   return (
-    <main className="min-h-screen bg-[#f6f7f2] text-[#151914]">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 border-r border-black/10 bg-[#111713] p-4 text-white lg:block">
-          <div className="flex h-12 items-center gap-3 px-2">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#d7ff78] text-[#111713]">
-              <Workflow size={18} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold">TicketOS</p>
-            </div>
-          </div>
-          <nav className="mt-8 space-y-1">
-            {navItems.map((item, index) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/62 transition hover:bg-white/8 hover:text-white",
-                  index === 0 && "bg-white/10 text-white",
-                )}
-              >
-                <item.icon size={17} />
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </aside>
-
-        <section className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-black/10 bg-[#f6f7f2]/88 px-4 backdrop-blur md:px-6">
-            <div className="flex min-w-0 items-center gap-3">
-              <button className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white lg:hidden">
-                <Command size={18} />
-              </button>
-              <form
-                action="/app"
-                className="hidden min-w-0 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 md:flex"
-              >
-                <Search size={16} className="text-black/42" />
-                <input
-                  name="q"
-                  defaultValue={data.filters.query ?? ""}
-                  className="w-72 bg-transparent text-sm outline-none placeholder:text-black/42"
-                  placeholder="Search tickets, agents, workflows..."
-                />
-              </form>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="hidden h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold md:inline-flex">
-                <Bell size={16} />
-                {data.metrics.find((metric) => metric.label === "Needs approval")?.value ?? "0"} approvals
-              </button>
-              <SignOutButton />
-              <Link
-                href="/app/settings"
-                className="flex size-10 items-center justify-center rounded-lg border border-black/10 bg-white"
-                title="Workspace settings"
-              >
-                <Settings size={17} />
-              </Link>
-              <Link
-                href="/app/settings"
-                className="flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
-              >
-                {data.organizationName}
-                <ChevronDown size={15} />
-              </Link>
-            </div>
-          </header>
-
-          <div className="px-4 py-6 md:px-6 lg:px-8">
+    <div className="ticketos-dashboard-content">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-black/42">
                   Command center
                 </p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                <h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
                   IT work, agents, and approvals.
                 </h1>
               </div>
@@ -411,10 +334,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                 ))}
               </div>
             </section>
-          </div>
-        </section>
-      </div>
-    </main>
+    </div>
   );
 }
 
