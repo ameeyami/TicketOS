@@ -37,6 +37,7 @@ export const navItems = [
   { label: "Memory", icon: Brain, href: "/app/memory" },
   { label: "Executions", icon: Cpu, href: "/app/executions" },
   { label: "Escalations", icon: Siren, href: "/app/escalations" },
+  { label: "Incidents", icon: CircleAlert, href: "/app/incidents" },
   { label: "Workflows", icon: Workflow, href: "/app/workflows" },
   { label: "Runbooks", icon: BookOpenCheck, href: "/app/runbooks" },
   { label: "Policies", icon: ShieldAlert, href: "/app/policies" },
