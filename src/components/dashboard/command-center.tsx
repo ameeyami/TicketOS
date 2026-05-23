@@ -1,58 +1,21 @@
 "use client";
 
-import "@xyflow/react/dist/style.css";
-
-import { Background, Controls, Edge, Handle, MarkerType, Node, Position, ReactFlow } from "@xyflow/react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
   Bot,
-  Clock3,
   Filter,
-  GitBranch,
-  LockKeyhole,
-  MessageSquareText,
   MoreHorizontal,
   Plus,
-  Send,
-  ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { insights, ticketIcons, timelineIcons } from "@/lib/dashboard-data";
+import { ticketIcons } from "@/lib/dashboard-data";
 import { cn } from "@/lib/utils";
 import { decideApproval } from "@/app/app/actions";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 import { PendingButton } from "@/components/ui/pending-button";
-
-const graphNodes: Node[] = [
-  { id: "intake", position: { x: 0, y: 64 }, data: { label: "Intake" }, type: "ticketNode" },
-  { id: "analyze", position: { x: 180, y: 12 }, data: { label: "Analyze" }, type: "ticketNode" },
-  { id: "policy", position: { x: 360, y: 64 }, data: { label: "Policy" }, type: "ticketNode" },
-  { id: "execute", position: { x: 540, y: 12 }, data: { label: "Execute" }, type: "ticketNode" },
-  { id: "verify", position: { x: 720, y: 64 }, data: { label: "Verify" }, type: "ticketNode" },
-];
-
-const graphEdges: Edge[] = [
-  { id: "e1", source: "intake", target: "analyze", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e2", source: "analyze", target: "policy", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e3", source: "policy", target: "execute", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e4", source: "execute", target: "verify", markerEnd: { type: MarkerType.ArrowClosed } },
-];
-
-function TicketNode({ data }: { data: { label: string } }) {
-  return (
-    <div className="rounded-lg border border-[#c9d7cd] bg-white px-4 py-3 text-sm font-semibold text-[#152019] shadow-sm">
-      <Handle type="target" position={Position.Left} className="!bg-[#2f6f60]" />
-      {data.label}
-      <Handle type="source" position={Position.Right} className="!bg-[#2f6f60]" />
-    </div>
-  );
-}
-
-const nodeTypes = { ticketNode: TicketNode };
 
 export function CommandCenter({ data }: { data: DashboardData }) {
   return (
@@ -196,142 +159,6 @@ export function CommandCenter({ data }: { data: DashboardData }) {
                     )}
                   </div>
                 </Panel>
-              </div>
-            </section>
-
-            <section className="mt-6 grid gap-6 xl:grid-cols-[.9fr_1.1fr]">
-              <Panel title="Execution timeline" icon={Clock3}>
-                <div className="space-y-4">
-                  {data.timeline.map((step, index) => {
-                    const StepIcon =
-                      timelineIcons[step.label as keyof typeof timelineIcons] ?? Clock3;
-
-                    return (
-                    <div key={step.label} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <span
-                          className={cn(
-                            "flex size-9 items-center justify-center rounded-lg border",
-                            step.status === "active"
-                              ? "border-[#2f6f60] bg-[#e7f5ee] text-[#2f6f60]"
-                              : "border-black/10 bg-white text-black/52",
-                          )}
-                        >
-                          <StepIcon size={17} />
-                        </span>
-                        {index !== data.timeline.length - 1 && <span className="mt-2 h-10 w-px bg-black/10" />}
-                      </div>
-                      <div className="min-w-0 pb-3">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{step.label}</p>
-                          <span className="text-xs text-black/42">{step.time}</span>
-                        </div>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              </Panel>
-
-              <Panel title="Workflow visualization" icon={GitBranch}>
-                <div className="h-[330px] overflow-hidden rounded-lg border border-black/10 bg-[#f8faf5]">
-                  <ReactFlow
-                    nodes={graphNodes}
-                    edges={graphEdges}
-                    nodeTypes={nodeTypes}
-                    fitView
-                    proOptions={{ hideAttribution: true }}
-                  >
-                    <Background gap={18} size={1} color="#d5ded5" />
-                    <Controls showInteractive={false} />
-                  </ReactFlow>
-                </div>
-              </Panel>
-            </section>
-
-            <section className="mt-6 grid gap-6 xl:grid-cols-[.95fr_1.05fr]">
-              <Panel title="Operational intelligence" icon={Sparkles}>
-                <div className="grid gap-3">
-                  {insights.map((insight) => (
-                    <div key={insight.title} className="flex gap-4 rounded-lg border border-black/10 p-4">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-                        <insight.icon size={18} />
-                      </span>
-                      <div>
-                        <h3 className="font-semibold">{insight.title}</h3>
-                        <p className="mt-1 text-sm leading-6 text-black/55">{insight.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href="/app/intelligence"
-                  className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
-                >
-                  Open intelligence
-                  <ArrowRight size={15} />
-                </Link>
-              </Panel>
-
-              <Panel title="Copilot and audit" icon={MessageSquareText}>
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-lg border border-black/10 bg-[#111713] p-4 text-white">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <Bot size={16} className="text-[#d7ff78]" />
-                      Copilot
-                    </div>
-                    <Link
-                      href="/app/copilot"
-                      className="mt-4 flex h-10 items-center gap-2 rounded-lg border border-white/10 px-3 text-sm text-white/58 transition hover:bg-white/8 hover:text-white"
-                    >
-                      Ask about unresolved tickets
-                      <Send size={15} className="ml-auto" />
-                    </Link>
-                  </div>
-                  <div className="overflow-hidden rounded-lg border border-black/10">
-                    {data.auditRows.map((row) => (
-                      <div key={`${row[0]}-${row[2]}`} className="grid grid-cols-[52px_1fr] gap-3 border-b border-black/8 p-3 last:border-b-0">
-                        <span className="text-xs font-semibold text-black/42">{row[0]}</span>
-                        <div>
-                          <p className="text-sm font-semibold">{row[2]}</p>
-                          <p className="mt-1 text-xs text-black/45">
-                            {row[1]} · {row[3]} · {row[4]}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Panel>
-            </section>
-
-            <section className="mt-6 rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Integration catalog</h2>
-                </div>
-                <Link
-                  href="/app/integrations"
-                  className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
-                >
-                  <LockKeyhole size={16} />
-                  Manage scopes
-                </Link>
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                {data.integrations.map((integration) => (
-                  <Link
-                    href="/app/integrations"
-                    key={integration.name}
-                    className="rounded-lg border border-black/10 p-4 transition hover:bg-[#f8faf5]"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold">{integration.name}</span>
-                      <ShieldCheck size={17} className="text-[#2f6f60]" />
-                    </div>
-                    <p className="mt-3 text-xs leading-5 text-black/45">{integration.status}</p>
-                  </Link>
-                ))}
               </div>
             </section>
     </div>

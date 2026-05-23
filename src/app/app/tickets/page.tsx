@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  Bot,
   CheckCircle2,
   CircleAlert,
   Filter,
@@ -73,13 +72,12 @@ export default async function TicketInboxPage({
 
   const organization = await ensureWorkspace(supabase, userData.user);
   const params = await searchParams;
-  const [{ data: tickets }, { data: agents }, { data: approvals }] = await Promise.all([
+  const [{ data: tickets }, { data: approvals }] = await Promise.all([
     supabase
       .from("tickets")
       .select("*, agents(id, name, status)")
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false }),
-    supabase.from("agents").select("id, name, status").eq("organization_id", organization.id).order("created_at"),
     supabase
       .from("approval_requests")
       .select("id, ticket_id, status")
@@ -88,20 +86,17 @@ export default async function TicketInboxPage({
   ]);
 
   const ticketRows = tickets ?? [];
-  const agentRows = agents ?? [];
   const pendingApprovalTicketIds = new Set((approvals ?? []).filter((approval) => approval.status === "pending").map((approval) => approval.ticket_id));
   const categories = Array.from(new Set(ticketRows.map((ticket) => ticket.category).filter(Boolean))).sort();
-  const filteredTickets = filterTickets(ticketRows, params);
+  const hasAppliedFilter = hasTicketFilter(params);
+  const filteredTickets = hasAppliedFilter ? filterTickets(ticketRows, params) : [];
   const openTickets = ticketRows.filter((ticket) => !["resolved", "blocked", "failed"].includes(ticket.status)).length;
   const approvalTickets = ticketRows.filter((ticket) => ticket.status === "approval_required").length;
   const blockedTickets = ticketRows.filter((ticket) => ["blocked", "failed"].includes(ticket.status)).length;
-  const avgConfidence = ticketRows.length
-    ? Math.round(ticketRows.reduce((sum, ticket) => sum + Number(ticket.ai_confidence ?? 0), 0) / ticketRows.length)
-    : 0;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -110,12 +105,11 @@ export default async function TicketInboxPage({
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">AI ticket inbox</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Triage requests by execution state.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Filter IT requests, inspect AI summaries, and quickly move tickets through the operational queue.
+            <h1 className="text-3xl font-semibold tracking-tight">Tickets</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-black/54">
+              Choose a filter to view only the queue you need.
             </p>
           </div>
           <Link
@@ -127,15 +121,14 @@ export default async function TicketInboxPage({
           </Link>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-3">
           <MetricCard label="Open tickets" value={String(openTickets)} icon={TicketCheck} />
           <MetricCard label="Needs approval" value={String(approvalTickets)} icon={ShieldCheck} />
           <MetricCard label="Blocked" value={String(blockedTickets)} icon={CircleAlert} />
-          <MetricCard label="Avg confidence" value={`${avgConfidence}%`} icon={Bot} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[.76fr_1.24fr]">
-          <aside className="space-y-6">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[300px_1fr]">
+          <aside>
             <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-2">
                 <Filter size={18} className="text-[#2f6f60]" />
@@ -179,30 +172,6 @@ export default async function TicketInboxPage({
               </form>
             </div>
 
-            <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Bot size={18} className="text-[#2f6f60]" />
-                <h2 className="text-lg font-semibold">Agent load</h2>
-              </div>
-              <div className="mt-4 space-y-3">
-                {agentRows.map((agent) => {
-                  const count = ticketRows.filter((ticket) => ticket.assigned_agent_id === agent.id).length;
-                  return (
-                    <div key={agent.id} className="rounded-lg border border-black/10 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-semibold">{agent.name}</p>
-                          <p className="mt-1 text-sm text-black/45">{agent.status}</p>
-                        </div>
-                        <span className="rounded-md bg-[#edf5e9] px-2 py-1 text-xs font-semibold text-[#315f4f]">
-                          {count} tickets
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </aside>
 
           <section className="rounded-xl border border-black/10 bg-white shadow-sm">
@@ -210,7 +179,9 @@ export default async function TicketInboxPage({
               <div>
                 <h2 className="text-lg font-semibold">Queue results</h2>
                 <p className="mt-1 text-sm text-black/52">
-                  Showing {filteredTickets.length} of {ticketRows.length} tickets
+                  {hasAppliedFilter
+                    ? `Showing ${filteredTickets.length} matching tickets`
+                    : "Apply a filter to show tickets"}
                 </p>
               </div>
               <Link
@@ -279,7 +250,13 @@ export default async function TicketInboxPage({
                 );
               })}
 
-              {filteredTickets.length === 0 && (
+              {!hasAppliedFilter && (
+                <p className="p-8 text-center text-sm text-black/48">
+                  No tickets are shown until you apply a status, priority, category, or search filter.
+                </p>
+              )}
+
+              {hasAppliedFilter && filteredTickets.length === 0 && (
                 <p className="p-8 text-center text-sm text-black/48">No tickets match the current filters.</p>
               )}
             </div>
@@ -327,11 +304,11 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
@@ -428,6 +405,15 @@ function filterTickets<
   }
 
   return filtered;
+}
+
+function hasTicketFilter(params: { q?: string; status?: string; priority?: string; category?: string }) {
+  return Boolean(
+    params.q?.trim() ||
+      (params.status && params.status !== "all") ||
+      (params.priority && params.priority !== "all") ||
+      (params.category && params.category !== "all"),
+  );
 }
 
 function formatDate(value: string | null | undefined) {

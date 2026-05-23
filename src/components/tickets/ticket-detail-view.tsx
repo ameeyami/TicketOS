@@ -1,21 +1,16 @@
-import "@xyflow/react/dist/style.css";
-
 import Link from "next/link";
 import {
   ArrowLeft,
   BadgeCheck,
-  Bot,
   CheckCircle2,
   CircleAlert,
   Clock3,
-  GitBranch,
   LockKeyhole,
   ShieldCheck,
-  Sparkles,
   StickyNote,
-  Workflow,
   XCircle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { decideApproval } from "@/app/app/tickets/[ticketId]/actions";
 import { updateTicketStatus } from "@/app/app/actions";
 import {
@@ -28,23 +23,23 @@ import { cn } from "@/lib/utils";
 import { PendingButton } from "@/components/ui/pending-button";
 
 export function TicketDetailView({ data }: { data: TicketDetailData }) {
-  const { ticket, latestRun, steps, approval, policies, auditLogs, comments } = data;
+  const { ticket, steps, approval, policies, auditLogs, comments } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-4 border-b border-black/10 pb-5 lg:grid-cols-[1fr_300px] lg:items-start">
           <div>
             <Link
-              href="/app"
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
+              href="/app/tickets"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
             >
               <ArrowLeft size={16} />
-              Command center
+              Tickets
             </Link>
-            <div className="mt-6 flex flex-wrap items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
               <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/48">
                 {ticket.external_id ?? ticket.id.slice(0, 8)}
               </span>
@@ -53,26 +48,28 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 {titleCase(ticket.priority)}
               </span>
             </div>
-            <h1 className="mt-3 max-w-4xl text-3xl font-semibold tracking-tight md:text-5xl">
+            <h1 className="mt-3 max-w-3xl text-2xl font-semibold tracking-tight md:text-3xl">
               {ticket.title}
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-black/58">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-black/58">
               {ticket.ai_summary ?? ticket.description}
             </p>
           </div>
 
-          <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm md:w-80">
-            <p className="text-sm font-medium text-black/52">AI confidence</p>
-            <p className="mt-3 text-5xl font-semibold tracking-tight">{Number(ticket.ai_confidence)}%</p>
-            <div className="mt-4 h-2 rounded-full bg-black/8">
+          <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-black/52">Confidence</p>
+              <p className="text-2xl font-semibold tracking-tight">{Number(ticket.ai_confidence)}%</p>
+            </div>
+            <div className="mt-3 h-1.5 rounded-full bg-black/8">
               <div
-                className="h-2 rounded-full bg-[#2f6f60]"
+                className="h-1.5 rounded-full bg-[#2f6f60]"
                 style={{ width: `${Number(ticket.ai_confidence)}%` }}
               />
             </div>
-            <div className="mt-5 space-y-3">
+            <div className="mt-4 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/42">Operator action</p>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="resolved" label="Resolve" />
                 <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="executing" label="Reopen" />
                 <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="blocked" label="Block" />
@@ -81,16 +78,16 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
           </div>
         </div>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_.95fr]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
           <Panel title="Execution timeline" icon={Clock3}>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {steps.length > 0 ? (
                 steps.map((step, index) => (
-                  <div key={step.id} className="flex gap-4">
+                  <div key={step.id} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <span
                         className={cn(
-                          "flex size-10 items-center justify-center rounded-lg border",
+                          "flex size-8 items-center justify-center rounded-lg border",
                           step.status === "running"
                             ? "border-[#2f6f60] bg-[#e7f5ee] text-[#2f6f60]"
                             : step.status === "failed" || step.status === "blocked"
@@ -98,18 +95,18 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                               : "border-black/10 bg-white text-black/52",
                         )}
                       >
-                        {step.status === "succeeded" ? <CheckCircle2 size={18} /> : <Clock3 size={18} />}
+                        {step.status === "succeeded" ? <CheckCircle2 size={16} /> : <Clock3 size={16} />}
                       </span>
-                      {index !== steps.length - 1 && <span className="mt-2 h-12 w-px bg-black/10" />}
+                      {index !== steps.length - 1 && <span className="mt-2 h-8 w-px bg-black/10" />}
                     </div>
-                    <div className="min-w-0 pb-4">
+                    <div className="min-w-0 pb-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold">{step.name}</p>
+                        <p className="text-sm font-semibold">{step.name}</p>
                         <span className="rounded-md bg-[#edf5e9] px-2 py-1 text-xs font-semibold text-[#315f4f]">
                           {displayStepStatus(step.status)}
                         </span>
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-black/55">
+                      <p className="mt-1 text-sm leading-6 text-black/55">
                         {step.output?.detail ?? step.error_message ?? "Execution step recorded."}
                       </p>
                     </div>
@@ -121,41 +118,10 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
             </div>
           </Panel>
 
-          <Panel title="Workflow replay" icon={GitBranch}>
-            <div className="rounded-xl border border-black/10 bg-[#111713] p-5 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-[#d7ff78]">
-                    {latestRun?.workflows?.name ?? "No workflow selected"}
-                  </p>
-                  <p className="mt-2 text-sm text-white/52">
-                    {latestRun
-                      ? `Run status: ${titleCase(latestRun.status.replaceAll("_", " "))}`
-                      : "TicketOS will replay the trace once a workflow starts."}
-                  </p>
-                </div>
-                <Workflow size={24} className="text-[#d7ff78]" />
-              </div>
-              <div className="mt-6 grid gap-3">
-                {["Intake", "Analyze", "Policy", "Execute", "Verify"].map((node, index) => (
-                  <div key={node} className="flex items-center gap-3">
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-sm font-semibold">
-                      {index + 1}
-                    </span>
-                    <span className="text-sm font-semibold">{node}</span>
-                    <span className="ml-auto h-px flex-1 bg-white/10" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Panel>
-        </section>
-
-        <section className="mt-6">
-          <div className="grid gap-6 xl:grid-cols-2">
-            <Panel title="Approval gate" icon={BadgeCheck}>
+          <div className="space-y-5">
+            <Panel title="Approval" icon={BadgeCheck}>
               {approval ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                   <p className="font-semibold text-amber-950">{approval.title}</p>
                   <p className="mt-2 text-sm leading-6 text-amber-900/72">
                     {approval.description ?? "This workflow is waiting for a human decision."}
@@ -164,7 +130,7 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                     Status: {titleCase(approval.status)}
                   </p>
                   {approval.status === "pending" && (
-                    <div className="mt-4 grid gap-3">
+                    <div className="mt-3 grid gap-3">
                       <ApprovalForm
                         approvalId={approval.id}
                         ticketId={ticket.id}
@@ -185,9 +151,9 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
               )}
             </Panel>
 
-            <Panel title="Policy decision" icon={ShieldCheck}>
+            <Panel title="Policy" icon={ShieldCheck}>
               {policy ? (
-                <div className="rounded-lg border border-black/10 p-4">
+                <div className="rounded-lg border border-black/10 p-3">
                   <div className="flex items-center gap-2">
                     {policy.decision === "allow" ? (
                       <CheckCircle2 size={18} className="text-[#2f6f60]" />
@@ -206,29 +172,32 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
               )}
             </Panel>
           </div>
-
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[.82fr_1.18fr]">
-          <Panel title="Operator notes" icon={StickyNote}>
+        <section className="mt-5 grid gap-5 xl:grid-cols-[.82fr_1.18fr]">
+          <Panel title="Notes" icon={StickyNote}>
             <div className="space-y-3">
               {comments.length > 0 ? (
                 comments.map((comment) => (
-                  <div key={comment.id} className="rounded-lg border border-black/10 p-4">
-                    <p className="text-sm leading-6 text-black/68">{comment.body}</p>
-                    <p className="mt-2 text-xs text-black/38">
-                      {new Date(comment.created_at).toLocaleString([], {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
-                      · {String(comment.metadata?.source ?? "operator_note").replaceAll("_", " ")}
-                    </p>
+                  <div key={comment.id} className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-amber-900">
+                        {noteLabel(comment.metadata?.source)}
+                      </span>
+                      <span className="text-xs text-amber-900/58">
+                        {new Date(comment.created_at).toLocaleString([], {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-amber-950">{comment.body}</p>
                   </div>
                 ))
               ) : (
-                <EmptyState text="No operator notes yet. Add a note while resolving, blocking, reopening, or deciding an approval." />
+                <EmptyState text="No notes added yet." />
               )}
             </div>
           </Panel>
@@ -237,7 +206,7 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
             <div className="overflow-hidden rounded-lg border border-black/10">
               {auditLogs.length > 0 ? (
                 auditLogs.map((log) => (
-                  <div key={log.id} className="grid gap-3 border-b border-black/8 p-4 last:border-b-0 md:grid-cols-[120px_1fr]">
+                  <div key={log.id} className="grid gap-3 border-b border-black/8 p-3 last:border-b-0 md:grid-cols-[110px_1fr]">
                     <span className="text-xs font-semibold text-black/42">
                       {new Date(log.created_at).toLocaleString([], {
                         month: "short",
@@ -262,17 +231,6 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
           </Panel>
         </section>
 
-        <section className="mt-6 rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Bot size={18} className="text-[#2f6f60]" />
-            <h2 className="text-lg font-semibold">AI explanation</h2>
-          </div>
-          <p className="mt-3 max-w-4xl text-sm leading-6 text-black/56">
-            TicketOS matched this request to an operational workflow, checked policy and permissions, then recorded
-            each action as a replayable execution trace. Future Copilot responses will cite this timeline, policy
-            decision, and audit trail directly.
-          </p>
-        </section>
       </div>
     </main>
   );
@@ -300,9 +258,9 @@ function TicketStatusForm({
       <textarea
         id={`${status}-note`}
         name="note"
-        rows={2}
+        rows={1}
         className="mb-2 w-full rounded-lg border border-black/10 px-2 py-2 text-xs outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
-        placeholder="Optional note"
+        placeholder="Add note"
       />
       <PendingButton
         pendingText={`${label}...`}
@@ -379,20 +337,25 @@ function Panel({
   children,
 }: {
   title: string;
-  icon: typeof Sparkles;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+          <Icon size={16} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
     </div>
   );
+}
+
+function noteLabel(source: unknown) {
+  const value = String(source ?? "agent_note").replaceAll("_", " ");
+  return value.includes("agent") ? "Agent note" : titleCase(value);
 }
 
 function EmptyState({ text }: { text: string }) {
