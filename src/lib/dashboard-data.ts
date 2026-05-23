@@ -35,6 +35,7 @@ export const navItems = [
   { label: "Catalog", icon: ClipboardList, href: "/app/catalog" },
   { label: "Inventory", icon: PackageSearch, href: "/app/inventory" },
   { label: "People", icon: UserRound, href: "/app/people" },
+  { label: "Access", icon: KeyRound, href: "/app/access-reviews" },
   { label: "Agents", icon: Bot, href: "/app/agents" },
   { label: "Autonomy", icon: SlidersHorizontal, href: "/app/autonomy" },
   { label: "Memory", icon: Brain, href: "/app/memory" },
