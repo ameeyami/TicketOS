@@ -4,261 +4,426 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
-  Bot,
   CheckCircle2,
-  CircleAlert,
+  ClipboardCheck,
   Clock3,
+  Cloud,
+  Database,
+  FileCheck2,
+  Fingerprint,
   GitBranch,
+  KeyRound,
   LockKeyhole,
+  MessageSquareText,
+  Network,
   Play,
   ShieldCheck,
+  Sparkles,
+  UserPlus,
+  UserX,
   Workflow,
   Zap,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 
-const workflowSteps = [
-  "Request intake",
-  "Intent analysis",
-  "Policy check",
-  "Tool execution",
-  "Verification",
+const heroTickets = [
+  { id: "TOS-2041", title: "Reset Okta password", status: "Executing", agent: "Access Agent" },
+  { id: "TOS-2040", title: "Provision GitHub for new hire", status: "Approval", agent: "Onboarding Agent" },
+  { id: "TOS-2038", title: "Deactivate contractor apps", status: "Policy check", agent: "Security Agent" },
 ];
 
-const trustItems = [
+const productFeatures = [
   {
-    title: "Execution transparency",
-    body: "Every agent action exposes reasoning, confidence, permissions, inputs, outputs, and policy decisions.",
-    icon: ShieldCheck,
+    title: "Password resets",
+    body: "Verify identity, check risk, reset credentials, rotate sessions, and log the decision.",
+    icon: KeyRound,
+  },
+  {
+    title: "Onboarding",
+    body: "Create new-hire plans, request sensitive access approvals, and track execution steps.",
+    icon: UserPlus,
+  },
+  {
+    title: "Offboarding",
+    body: "Revoke access, preserve data when needed, transfer ownership, and keep a clean audit trail.",
+    icon: UserX,
   },
   {
     title: "Workflow replay",
-    body: "Replay a ticket like an operational trace instead of reading through scattered comments and logs.",
-    icon: Play,
-  },
-  {
-    title: "Operational intelligence",
-    body: "Spot bottlenecks, approval latency, automation opportunities, and where humans still carry load.",
+    body: "Show how each ticket moved from intake to policy, execution, verification, and resolution.",
     icon: GitBranch,
   },
 ];
 
-const policyRows = [
+const metrics = [
+  { label: "ticket handling reduction", value: "62%", note: "routine requests automated" },
+  { label: "saved per new hire", value: "10h", note: "onboarding work compressed" },
+  { label: "faster response time", value: "74%", note: "with agent execution" },
+  { label: "more work per admin", value: "2x", note: "without adding headcount" },
+];
+
+const integrations = [
+  ["Okta", Fingerprint],
+  ["Google Workspace", Cloud],
+  ["Microsoft Teams", MessageSquareText],
+  ["Slack", MessageSquareText],
+  ["GitHub", GitBranch],
+  ["Jira", ClipboardCheck],
+  ["ServiceNow", Workflow],
+  ["Datadog", Database],
+  ["BambooHR", UserPlus],
+  ["Workday", FileCheck2],
+  ["Cisco Meraki", Network],
+  ["Salesforce", Cloud],
+] satisfies Array<[string, LucideIcon]>;
+
+const securityControls = [
+  ["Custom roles", LockKeyhole],
+  ["Approval gates", BadgeCheck],
+  ["SAML single sign-on", Fingerprint],
+  ["Audit logging", FileCheck2],
+  ["Regional deploys", Cloud],
+  ["Policy enforcement", ShieldCheck],
+  ["User provisioning", UserPlus],
+  ["2FA controls", KeyRound],
+] satisfies Array<[string, LucideIcon]>;
+
+const comparisonCards = [
   {
-    title: "Allow",
-    body: "Password reset after identity and manager checks pass",
-    icon: CheckCircle2,
+    name: "ServiceNow",
+    body: "Strong ticket management. TicketOS is built as the execution layer that resolves work after intake.",
+    icon: Workflow,
   },
   {
-    title: "Approve",
-    body: "Production repository access needs human review",
-    icon: BadgeCheck,
+    name: "Jira Service Management",
+    body: "Great for routing and engineering queues. TicketOS focuses on autonomous operations and replayable workflows.",
+    icon: ClipboardCheck,
   },
   {
-    title: "Block",
-    body: "Account owns active API keys and cannot be deactivated",
-    icon: CircleAlert,
-  },
-  {
-    title: "Audit",
-    body: "Every tool call stores actor, reason, payload, and result",
-    icon: LockKeyhole,
+    name: "Freshservice",
+    body: "Useful service desk basics. TicketOS adds AI agents, policy checks, and operational intelligence.",
+    icon: Zap,
   },
 ];
 
+const workflowSteps = ["Connect", "Analyze", "Approve", "Execute", "Verify"];
+
 export function LandingPage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7f8f4] text-[#171914]">
-      <section className="relative min-h-[92vh] border-b border-black/10 px-5 py-5 sm:px-8 lg:px-10">
-        <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,.9),rgba(231,238,228,.64)_44%,rgba(220,232,238,.72))]" />
-        <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_50%_0%,rgba(43,95,88,.18),transparent_58%)]" />
-        <div className="relative mx-auto flex max-w-7xl flex-col">
-          <nav className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-[#17211c] text-white">
-                <Workflow size={18} />
-              </span>
-              <span className="text-lg font-semibold tracking-tight">TicketOS</span>
-            </Link>
-            <div className="hidden items-center gap-7 text-sm font-medium text-black/62 md:flex">
-              <a href="#platform">Platform</a>
-              <a href="#trust">Trust</a>
-              <a href="#intelligence">Intelligence</a>
-            </div>
-            <Link
-              href="/auth/sign-in"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#24332b]"
-            >
-              Open command center
-              <ArrowRight size={16} />
-            </Link>
-          </nav>
-
-          <div className="grid min-h-[calc(92vh-76px)] items-center gap-10 py-16 lg:grid-cols-[.92fr_1.08fr] lg:py-10">
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
-              <div className="mb-7 inline-flex items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm font-medium text-black/68 shadow-sm backdrop-blur">
-                <Bot size={16} />
-                AI agents for autonomous IT operations
-              </div>
-              <h1 className="text-5xl font-semibold leading-[1.02] tracking-tight text-[#121611] sm:text-6xl lg:text-7xl">
-                TicketOS
-              </h1>
-              <p className="mt-6 max-w-2xl text-xl leading-8 text-black/64">
-                The AI execution layer for IT operations. Resolve requests, run
-                governed workflows, and show every decision your agents make.
-              </p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/auth/sign-in"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#17211c] px-5 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-[#26352d]"
-                >
-                  View live prototype
-                  <ArrowRight size={17} />
-                </Link>
-                <a
-                  href="#platform"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-black/12 bg-white/70 px-5 text-sm font-semibold text-[#17211c] backdrop-blur transition hover:bg-white"
-                >
-                  See execution model
-                  <Play size={17} />
-                </a>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 28, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.12, duration: 0.7 }}
-              className="relative"
-            >
-              <div className="overflow-hidden rounded-2xl border border-black/12 bg-[#111713] shadow-2xl shadow-[#30433b]/20">
-                <div className="flex h-12 items-center justify-between border-b border-white/10 px-4">
-                  <div className="flex gap-2">
-                    <span className="size-3 rounded-full bg-[#ff6b5f]" />
-                    <span className="size-3 rounded-full bg-[#ffd166]" />
-                    <span className="size-3 rounded-full bg-[#4ecb71]" />
-                  </div>
-                  <span className="text-xs font-medium text-white/46">Execution command center</span>
-                </div>
-                <div className="grid gap-4 p-4 lg:grid-cols-[.9fr_1.1fr]">
-                  <div className="space-y-3">
-                    {["Okta reset", "Designer onboarding", "VPN outage"].map((item, index) => (
-                      <motion.div
-                        key={item}
-                        animate={{ opacity: [0.74, 1, 0.74] }}
-                        transition={{ duration: 2.8, repeat: Infinity, delay: index * 0.4 }}
-                        className="rounded-xl border border-white/10 bg-white/[.06] p-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-white">{item}</span>
-                          <span className="rounded-md bg-emerald-400/15 px-2 py-1 text-xs text-emerald-200">
-                            {index === 1 ? "approval" : "running"}
-                          </span>
-                        </div>
-                        <div className="mt-3 h-2 rounded-full bg-white/10">
-                          <div
-                            className="h-2 rounded-full bg-[#7be0b5]"
-                            style={{ width: `${78 - index * 16}%` }}
-                          />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-[#19211d] p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-white">Workflow trace</span>
-                      <span className="text-xs text-white/44">96% confidence</span>
-                    </div>
-                    <div className="mt-6 space-y-4">
-                      {workflowSteps.map((step, index) => (
-                        <div key={step} className="flex items-center gap-3">
-                          <span className="flex size-7 items-center justify-center rounded-lg bg-white/8 text-[#9ee7c5]">
-                            {index < 3 ? <CheckCircle2 size={15} /> : <Clock3 size={15} />}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="truncate text-sm text-white/86">{step}</span>
-                              <span className="text-xs text-white/38">09:{41 + index}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+    <main className="min-h-screen bg-[#fbfaf8] text-[#171512]">
+      <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-[#eee8e2] bg-[#fbfaf8]/92 px-5 backdrop-blur md:px-8">
+        <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight">
+          <span className="grid grid-cols-3 gap-0.5">
+            <span className="size-2.5 bg-[#171512]" />
+            <span className="size-2.5 bg-[#171512]" />
+            <span className="size-2.5 bg-[#171512]" />
+            <span className="size-2.5 bg-[#171512]" />
+            <span className="size-2.5 bg-[#171512]" />
+            <span className="size-2.5 bg-[#171512]" />
+          </span>
+          TicketOS
+        </Link>
+        <div className="hidden items-center gap-9 text-sm font-medium text-black/70 md:flex">
+          <a href="#product">Product</a>
+          <a href="#integrations">Integrations</a>
+          <a href="#compare">Compare</a>
+          <a href="#start">Resources</a>
         </div>
-      </section>
-
-      <section id="platform" className="px-5 py-20 sm:px-8 lg:px-10">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.8fr_1.2fr]">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Execution first</p>
-            <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight">
-              Less chatbot. More operational control plane.
-            </h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {trustItems.map((item) => (
-              <div key={item.title} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-                <item.icon className="text-[#2d6658]" size={22} />
-                <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-black/58">{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="trust" className="border-y border-black/10 bg-[#111713] px-5 py-20 text-white sm:px-8 lg:px-10">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9ee7c5]">Governed autonomy</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-tight">
-              AI can act only when policy, permissions, and confidence agree.
-            </h2>
-          </div>
-          <div className="grid gap-3">
-            {policyRows.map((row) => (
-              <div key={row.title} className="flex gap-4 rounded-xl border border-white/10 bg-white/[.06] p-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#9ee7c5]">
-                  <row.icon size={19} />
-                </span>
-                <div>
-                  <h3 className="font-semibold">{row.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-white/56">{row.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="intelligence" className="px-5 py-18 sm:px-8 lg:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-7 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-3xl font-semibold tracking-tight">Built for the IT work that never stops.</h2>
-            <p className="mt-3 max-w-2xl text-black/60">
-              Start with password resets, onboarding, access approvals, software provisioning, deactivation, routing,
-              and troubleshooting. Grow into the execution fabric for internal operations.
-            </p>
-          </div>
+        <div className="flex items-center gap-3">
+          <Link href="/auth/sign-in" className="hidden text-sm font-medium md:inline">
+            Log in
+          </Link>
           <Link
             href="/auth/sign-in"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#17211c] px-5 text-sm font-semibold text-white"
+            className="inline-flex h-11 items-center gap-3 rounded-full bg-black px-5 text-sm font-semibold text-white"
           >
-            Launch command center
-            <Zap size={17} />
+            See TicketOS
+            <span className="flex size-8 items-center justify-center rounded-full bg-white text-black">
+              <ArrowRight size={17} />
+            </span>
           </Link>
         </div>
+      </nav>
+
+      <section className="relative isolate overflow-hidden border-b border-[#eee8e2]">
+        <div className="absolute inset-0 -z-10 bg-[#efe6dc]" />
+        <div className="absolute inset-x-0 top-0 -z-10 h-[72%] bg-[url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2400&q=80')] bg-cover bg-center opacity-35" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-72 bg-[#fbfaf8]" />
+        <div className="mx-auto flex min-h-[760px] max-w-7xl flex-col items-center px-5 pb-16 pt-28 text-center md:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm font-semibold text-white backdrop-blur"
+          >
+            <span className="rounded bg-[#dc6b22] px-1.5 py-0.5 text-xs">AI</span>
+            Execution layer for IT operations
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="mt-8 max-w-5xl text-6xl font-semibold leading-[0.98] tracking-tight md:text-8xl"
+          >
+            Automate IT operations, not just tickets.
+          </motion.h1>
+          <p className="mt-8 max-w-3xl text-xl leading-8 text-black/64">
+            TicketOS uses AI agents to resolve password resets, onboarding, access approvals, offboarding,
+            software requests, and operational workflows with transparent policy checks.
+          </p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/auth/sign-in" className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-black px-6 text-base font-semibold text-white">
+              Open command center
+              <ArrowRight size={18} />
+            </Link>
+            <a href="#product" className="inline-flex h-14 items-center justify-center gap-3 rounded-full border border-black/10 bg-white/80 px-6 text-base font-semibold backdrop-blur">
+              See how it works
+              <Play size={18} />
+            </a>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 32, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.18, duration: 0.65 }}
+            className="mt-16 w-full max-w-6xl overflow-hidden rounded-2xl border border-black/10 bg-white/92 text-left shadow-2xl shadow-black/10 backdrop-blur"
+          >
+            <div className="flex h-10 items-center gap-2 border-b border-[#eee8e2] px-4">
+              <span className="size-3 rounded-full bg-[#ff6b5f]" />
+              <span className="size-3 rounded-full bg-[#ffd166]" />
+              <span className="size-3 rounded-full bg-[#4ecb71]" />
+              <span className="ml-auto text-xs text-black/38">ticketos.app</span>
+            </div>
+            <div className="grid min-h-[390px] md:grid-cols-[220px_1fr]">
+              <div className="border-r border-[#eee8e2] bg-[#faf7f5] p-4">
+                <p className="text-xs font-semibold text-black/38">Your teams</p>
+                {["IT", "Security", "People Ops"].map((team) => (
+                  <div key={team} className="mt-4">
+                    <p className="mb-2 text-sm font-semibold">{team}</p>
+                    {["Tickets", "Suggestions", "Workflows", "Applications"].map((item) => (
+                      <div key={item} className="flex h-8 items-center gap-2 rounded-md px-2 text-sm text-black/58 first:bg-[#f1ebe5] first:text-black">
+                        <span className="size-1.5 rounded-full bg-[#dc6b22]" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div className="grid md:grid-cols-[300px_1fr]">
+                <div className="border-r border-[#eee8e2] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="font-semibold">Suggestions</p>
+                    <Sparkles size={16} className="text-[#dc6b22]" />
+                  </div>
+                  {heroTickets.map((ticket, index) => (
+                    <div key={ticket.id} className="mb-3 rounded-lg border border-[#eee8e2] bg-white p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">{ticket.title}</p>
+                          <p className="mt-1 text-xs text-black/42">{ticket.agent}</p>
+                        </div>
+                        <span className="rounded bg-[#f8eee7] px-2 py-1 text-[11px] font-semibold text-[#dc6b22]">
+                          {index === 0 ? "8m" : index === 1 ? "48m" : "2h"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded bg-[#d9f876] px-2 py-1 text-xs font-semibold">New</span>
+                    <h2 className="font-semibold">Reset Okta password for Priya Shah</h2>
+                  </div>
+                  <p className="mt-4 max-w-2xl text-sm leading-6 text-black/52">
+                    Suggested because identity checks match HR records and MFA passed. TicketOS will reset credentials,
+                    rotate sessions, notify the employee, and store the execution trace.
+                  </p>
+                  <div className="mt-8 flex flex-col items-center">
+                    {workflowSteps.map((step, index) => (
+                      <div key={step} className="flex flex-col items-center">
+                        <div className="w-[270px] rounded-lg border border-[#eee8e2] bg-white p-3">
+                          <div className="flex items-center gap-2">
+                            {index < 3 ? <CheckCircle2 size={16} className="text-emerald-600" /> : <Clock3 size={16} className="text-[#dc6b22]" />}
+                            <span className="text-sm font-semibold">{step}</span>
+                          </div>
+                        </div>
+                        {index !== workflowSteps.length - 1 && <span className="h-7 w-px bg-[#eee8e2]" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-20 md:px-8">
+        <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+          Trusted by lean IT teams replacing manual ITSM work.
+        </h2>
+        <div className="mt-12 grid gap-5 md:grid-cols-4">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="rounded-2xl bg-[#f5f1ed] p-8">
+              <p className="min-h-14 text-lg leading-7 text-black/62">{metric.note}</p>
+              <p className="mt-24 text-7xl font-semibold tracking-tight">{metric.value}</p>
+              <p className="mt-4 text-sm font-semibold uppercase leading-5">{metric.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="product" className="mx-auto grid max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-[.55fr_.45fr]">
+        <div>
+          <h2 className="text-5xl font-semibold leading-tight tracking-tight">
+            One platform. Every service desk. Automations compound over time.
+          </h2>
+          <p className="mt-8 max-w-3xl text-xl leading-8 text-black/62">
+            Access requests, provisioning, onboarding, offboarding, and password resets can move from queue items
+            to governed execution runs. Not triaged. Not assigned. Resolved.
+          </p>
+          <div className="mt-14 space-y-8">
+            {productFeatures.map((feature) => (
+              <div key={feature.title} className="grid gap-4 rounded-2xl p-5 transition hover:bg-[#f5f1ed] md:grid-cols-[36px_1fr]">
+                <feature.icon size={24} />
+                <div>
+                  <h3 className="text-2xl font-semibold">{feature.title}</h3>
+                  <p className="mt-3 max-w-2xl text-base leading-7 text-black/58">{feature.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-3xl bg-[#f5f1ed] p-8">
+          <div className="rounded-2xl border border-[#eee8e2] bg-white p-5 shadow-sm">
+            <p className="text-sm text-black/42">Ticket IT-342</p>
+            <h3 className="mt-2 text-xl font-semibold">Annalyse requested a password reset</h3>
+            <div className="mt-6 grid gap-2 text-sm">
+              {["Request ingested", "Identity matched", "Policy passed", "Password reset", "User notified"].map((step) => (
+                <div key={step} className="flex items-center justify-between rounded-lg bg-[#fbfaf8] px-3 py-2">
+                  <span>{step}</span>
+                  <ArrowRight size={14} className="text-black/30" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mx-auto mt-5 w-4/5 rounded-2xl border border-[#eee8e2] bg-white p-5 shadow-sm">
+            <div className="inline-flex rounded-full bg-[#d9f876] px-3 py-1 text-xs font-semibold">
+              Adding to operational memory
+            </div>
+            <p className="mt-4 text-sm leading-6 text-black/56">
+              TicketOS learns which approvals, apps, and policies worked, then suggests safer automation next time.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="integrations" className="mx-auto max-w-7xl space-y-6 px-5 py-16 md:px-8">
+        <FeatureGrid
+          title="Connect ITSM, identity, HRIS, security, and collaboration systems"
+          cta="See full integrations list"
+          items={integrations}
+        />
+        <FeatureGrid
+          title="Security and governance controls built for autonomous operations"
+          cta="See security controls"
+          items={securityControls}
+        />
+      </section>
+
+      <section id="compare" className="mx-auto max-w-7xl px-5 py-20 text-center md:px-8">
+        <h2 className="text-5xl font-semibold tracking-tight">See how TicketOS compares</h2>
+        <p className="mx-auto mt-5 max-w-3xl text-xl leading-8 text-black/60">
+          Legacy ITSM tools manage the ticket. TicketOS executes the operational work behind it with policy,
+          approvals, memory, and replay.
+        </p>
+        <div className="mt-14 grid gap-6 text-left md:grid-cols-3">
+          {comparisonCards.map((card) => (
+            <div key={card.name} className="rounded-2xl bg-[#f5f1ed] p-8">
+              <div className="flex items-center gap-4">
+                <span className="flex size-11 items-center justify-center rounded-xl bg-white">
+                  <card.icon size={22} className="text-[#dc6b22]" />
+                </span>
+                <h3 className="text-3xl font-semibold">{card.name}</h3>
+              </div>
+              <p className="mt-8 min-h-28 text-lg leading-7 text-black/62">{card.body}</p>
+              <Link href="/auth/sign-in" className="inline-flex h-12 items-center gap-3 rounded-full border border-black/10 bg-white px-5 text-base font-semibold">
+                Compare
+                <ArrowRight size={17} />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="start" className="mx-auto grid max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-[.48fr_.52fr]">
+        <div>
+          <h2 className="text-5xl font-semibold tracking-tight">Get started</h2>
+          <p className="mt-8 max-w-xl text-xl leading-8 text-black/62">
+            See TicketOS resolve a real workflow in your stack. Start with one high-volume IT task and expand from there.
+          </p>
+        </div>
+        <form className="space-y-4">
+          <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Work email" />
+          <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Company" />
+          <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Highest-volume IT workflow" />
+          <Link href="/auth/sign-up" className="inline-flex h-14 items-center justify-center rounded-full bg-black px-7 text-base font-semibold text-white">
+            Schedule a demo
+          </Link>
+        </form>
+      </section>
+
+      <footer className="mx-auto grid max-w-7xl gap-10 border-t border-[#eee8e2] px-5 py-12 md:grid-cols-5 md:px-8">
+        {[
+          ["Product", "Overview", "Help desk automation", "Access management", "AI-native workflows"],
+          ["Solutions", "IT", "HR", "Finance", "Security"],
+          ["Compare", "ServiceNow", "Jira Service Management", "Freshservice"],
+          ["Company", "About", "Security", "Careers"],
+          ["Resources", "Integrations", "Docs", "Status"],
+        ].map(([heading, ...links]) => (
+          <div key={heading}>
+            <h3 className="text-lg font-semibold">{heading}</h3>
+            <div className="mt-5 space-y-3">
+              {links.map((link) => (
+                <a key={link} href="#" className="block text-black/62">
+                  {link}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </footer>
     </main>
+  );
+}
+
+function FeatureGrid({
+  title,
+  cta,
+  items,
+}: {
+  title: string;
+  cta: string;
+  items: Array<[string, LucideIcon]>;
+}) {
+  return (
+    <div className="grid gap-8 rounded-3xl bg-[#f5f1ed] p-8 md:grid-cols-[.34fr_.66fr] md:p-10">
+      <div className="flex flex-col justify-between gap-10">
+        <h2 className="text-2xl font-medium leading-8">{title}</h2>
+        <Link href="/auth/sign-in" className="inline-flex w-fit rounded-full bg-[#e9e1d8] px-5 py-3 text-base font-medium">
+          {cta}
+        </Link>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map(([label, Icon]) => (
+          <div key={label} className="flex items-center gap-4">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white shadow-sm">
+              <Icon size={19} className="text-[#dc6b22]" />
+            </span>
+            <span className="text-lg font-medium">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
