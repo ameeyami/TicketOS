@@ -28,39 +28,39 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 const heroTickets = [
-  { id: "TOS-2041", title: "Reset Okta password", status: "Executing", agent: "Access Agent" },
-  { id: "TOS-2040", title: "Provision GitHub for new hire", status: "Approval", agent: "Onboarding Agent" },
-  { id: "TOS-2038", title: "Deactivate contractor apps", status: "Policy check", agent: "Security Agent" },
+  { id: "TOS-2041", title: "Restore Okta access", status: "Executing", agent: "Access Agent" },
+  { id: "TOS-2040", title: "Prepare designer workspace", status: "Approval", agent: "Onboarding Agent" },
+  { id: "TOS-2038", title: "Close contractor access", status: "Policy check", agent: "Security Agent" },
 ];
 
 const productFeatures = [
   {
-    title: "Password resets",
-    body: "Verify identity, check risk, reset credentials, rotate sessions, and log the decision.",
+    title: "Identity recovery",
+    body: "Confirm the requester, evaluate risk, restore access, rotate sessions, and write the audit note.",
     icon: KeyRound,
   },
   {
-    title: "Onboarding",
-    body: "Create new-hire plans, request sensitive access approvals, and track execution steps.",
+    title: "New-hire launch plans",
+    body: "Turn a start date into app access, device tasks, manager checks, and a tracked execution path.",
     icon: UserPlus,
   },
   {
-    title: "Offboarding",
-    body: "Revoke access, preserve data when needed, transfer ownership, and keep a clean audit trail.",
+    title: "Departure controls",
+    body: "Close accounts, protect data, hand over ownership, and pause risky removals for review.",
     icon: UserX,
   },
   {
-    title: "Workflow replay",
-    body: "Show how each ticket moved from intake to policy, execution, verification, and resolution.",
+    title: "Action-by-action replay",
+    body: "Review the exact path an agent followed: context gathered, policy applied, task executed, result verified.",
     icon: GitBranch,
   },
 ];
 
 const metrics = [
-  { label: "ticket handling reduction", value: "62%", note: "routine requests automated" },
-  { label: "saved per new hire", value: "10h", note: "onboarding work compressed" },
-  { label: "faster response time", value: "74%", note: "with agent execution" },
-  { label: "more work per admin", value: "2x", note: "without adding headcount" },
+  { label: "routine work deflected", value: "58%", note: "identity and access tasks handled by agents" },
+  { label: "handoff time recovered", value: "9h", note: "from offer accepted to workspace ready" },
+  { label: "approval loops shortened", value: "71%", note: "with policy context attached upfront" },
+  { label: "operator capacity gain", value: "2.4x", note: "more requests completed per IT owner" },
 ];
 
 const integrations = [
@@ -79,35 +79,35 @@ const integrations = [
 ] satisfies Array<[string, LucideIcon]>;
 
 const securityControls = [
-  ["Custom roles", LockKeyhole],
-  ["Approval gates", BadgeCheck],
-  ["SAML single sign-on", Fingerprint],
-  ["Audit logging", FileCheck2],
-  ["Regional deploys", Cloud],
-  ["Policy enforcement", ShieldCheck],
-  ["User provisioning", UserPlus],
-  ["2FA controls", KeyRound],
+  ["Role-scoped operators", LockKeyhole],
+  ["Human approval stops", BadgeCheck],
+  ["SSO-ready access", Fingerprint],
+  ["Complete action history", FileCheck2],
+  ["Region-aware workspaces", Cloud],
+  ["Policy checks before tools", ShieldCheck],
+  ["Provisioning guardrails", UserPlus],
+  ["Step-up verification", KeyRound],
 ] satisfies Array<[string, LucideIcon]>;
 
 const comparisonCards = [
   {
     name: "ServiceNow",
-    body: "Strong ticket management. TicketOS is built as the execution layer that resolves work after intake.",
+    body: "Excellent for large process catalogs. TicketOS focuses on the work after submission: decisions, tool calls, and verification.",
     icon: Workflow,
   },
   {
     name: "Jira Service Management",
-    body: "Great for routing and engineering queues. TicketOS focuses on autonomous operations and replayable workflows.",
+    body: "Useful for structured queues. TicketOS adds autonomous IT agents that can carry a request through to completion.",
     icon: ClipboardCheck,
   },
   {
     name: "Freshservice",
-    body: "Useful service desk basics. TicketOS adds AI agents, policy checks, and operational intelligence.",
+    body: "Good for lightweight help desk operations. TicketOS is designed for governed execution and operational memory.",
     icon: Zap,
   },
 ];
 
-const workflowSteps = ["Connect", "Analyze", "Approve", "Execute", "Verify"];
+const workflowSteps = ["Capture", "Classify", "Check policy", "Run action", "Confirm"];
 
 export function LandingPage() {
   return (
@@ -127,7 +127,7 @@ export function LandingPage() {
         <div className="hidden items-center gap-9 text-sm font-medium text-black/70 md:flex">
           <a href="#product">Product</a>
           <a href="#integrations">Integrations</a>
-          <a href="#compare">Compare</a>
+          <a href="#compare">Alternatives</a>
           <a href="#start">Resources</a>
         </div>
         <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export function LandingPage() {
             href="/auth/sign-in"
             className="inline-flex h-11 items-center gap-3 rounded-full bg-black px-5 text-sm font-semibold text-white"
           >
-            See TicketOS
+            Open prototype
             <span className="flex size-8 items-center justify-center rounded-full bg-white text-black">
               <ArrowRight size={17} />
             </span>
@@ -151,25 +151,17 @@ export function LandingPage() {
         <div className="absolute inset-x-0 top-0 -z-10 h-[72%] bg-[url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2400&q=80')] bg-cover bg-center opacity-35" />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-72 bg-[#fbfaf8]" />
         <div className="mx-auto flex min-h-[760px] max-w-7xl flex-col items-center px-5 pb-16 pt-28 text-center md:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm font-semibold text-white backdrop-blur"
-          >
-            <span className="rounded bg-[#dc6b22] px-1.5 py-0.5 text-xs">AI</span>
-            Execution layer for IT operations
-          </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className="mt-8 max-w-5xl text-6xl font-semibold leading-[0.98] tracking-tight md:text-8xl"
+            className="max-w-5xl text-6xl font-semibold leading-[0.98] tracking-tight md:text-8xl"
           >
-            Automate IT operations, not just tickets.
+            Let IT requests finish themselves.
           </motion.h1>
           <p className="mt-8 max-w-3xl text-xl leading-8 text-black/64">
-            TicketOS uses AI agents to resolve password resets, onboarding, access approvals, offboarding,
-            software requests, and operational workflows with transparent policy checks.
+            TicketOS gives IT teams a command center where agents can investigate, ask for approval, execute
+            operational tasks, and explain every step they took.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link href="/auth/sign-in" className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-black px-6 text-base font-semibold text-white">
@@ -177,7 +169,7 @@ export function LandingPage() {
               <ArrowRight size={18} />
             </Link>
             <a href="#product" className="inline-flex h-14 items-center justify-center gap-3 rounded-full border border-black/10 bg-white/80 px-6 text-base font-semibold backdrop-blur">
-              See how it works
+              Product tour
               <Play size={18} />
             </a>
           </div>
@@ -196,11 +188,11 @@ export function LandingPage() {
             </div>
             <div className="grid min-h-[390px] md:grid-cols-[220px_1fr]">
               <div className="border-r border-[#eee8e2] bg-[#faf7f5] p-4">
-                <p className="text-xs font-semibold text-black/38">Your teams</p>
+                <p className="text-xs font-semibold text-black/38">Work areas</p>
                 {["IT", "Security", "People Ops"].map((team) => (
                   <div key={team} className="mt-4">
                     <p className="mb-2 text-sm font-semibold">{team}</p>
-                    {["Tickets", "Suggestions", "Workflows", "Applications"].map((item) => (
+                    {["Queue", "Agent ideas", "Runs", "Apps"].map((item) => (
                       <div key={item} className="flex h-8 items-center gap-2 rounded-md px-2 text-sm text-black/58 first:bg-[#f1ebe5] first:text-black">
                         <span className="size-1.5 rounded-full bg-[#dc6b22]" />
                         {item}
@@ -212,7 +204,7 @@ export function LandingPage() {
               <div className="grid md:grid-cols-[300px_1fr]">
                 <div className="border-r border-[#eee8e2] p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="font-semibold">Suggestions</p>
+                    <p className="font-semibold">Agent ideas</p>
                     <Sparkles size={16} className="text-[#dc6b22]" />
                   </div>
                   {heroTickets.map((ticket, index) => (
@@ -232,11 +224,11 @@ export function LandingPage() {
                 <div className="p-6">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded bg-[#d9f876] px-2 py-1 text-xs font-semibold">New</span>
-                    <h2 className="font-semibold">Reset Okta password for Priya Shah</h2>
+                    <h2 className="font-semibold">Restore Okta access for Priya Shah</h2>
                   </div>
                   <p className="mt-4 max-w-2xl text-sm leading-6 text-black/52">
-                    Suggested because identity checks match HR records and MFA passed. TicketOS will reset credentials,
-                    rotate sessions, notify the employee, and store the execution trace.
+                    TicketOS found matching HR context and a successful MFA challenge. The agent can restore access,
+                    rotate sessions, send the update, and preserve a replayable trace.
                   </p>
                   <div className="mt-8 flex flex-col items-center">
                     {workflowSteps.map((step, index) => (
@@ -260,7 +252,7 @@ export function LandingPage() {
 
       <section className="mx-auto max-w-7xl px-5 py-20 md:px-8">
         <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-          Trusted by lean IT teams replacing manual ITSM work.
+          Built for teams that need IT work completed, not endlessly routed.
         </h2>
         <div className="mt-12 grid gap-5 md:grid-cols-4">
           {metrics.map((metric) => (
@@ -276,11 +268,11 @@ export function LandingPage() {
       <section id="product" className="mx-auto grid max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-[.55fr_.45fr]">
         <div>
           <h2 className="text-5xl font-semibold leading-tight tracking-tight">
-            One platform. Every service desk. Automations compound over time.
+            A control room for everyday IT execution.
           </h2>
           <p className="mt-8 max-w-3xl text-xl leading-8 text-black/62">
-            Access requests, provisioning, onboarding, offboarding, and password resets can move from queue items
-            to governed execution runs. Not triaged. Not assigned. Resolved.
+            TicketOS turns repeatable service requests into agent-run workflows with visible checks, clear owners,
+            approval stops, and a durable record of what happened.
           </p>
           <div className="mt-14 space-y-8">
             {productFeatures.map((feature) => (
@@ -297,9 +289,9 @@ export function LandingPage() {
         <div className="rounded-3xl bg-[#f5f1ed] p-8">
           <div className="rounded-2xl border border-[#eee8e2] bg-white p-5 shadow-sm">
             <p className="text-sm text-black/42">Ticket IT-342</p>
-            <h3 className="mt-2 text-xl font-semibold">Annalyse requested a password reset</h3>
+            <h3 className="mt-2 text-xl font-semibold">Annalyse needs access restored</h3>
             <div className="mt-6 grid gap-2 text-sm">
-              {["Request ingested", "Identity matched", "Policy passed", "Password reset", "User notified"].map((step) => (
+              {["Message captured", "Identity confirmed", "Risk reviewed", "Access restored", "Requester updated"].map((step) => (
                 <div key={step} className="flex items-center justify-between rounded-lg bg-[#fbfaf8] px-3 py-2">
                   <span>{step}</span>
                   <ArrowRight size={14} className="text-black/30" />
@@ -309,10 +301,10 @@ export function LandingPage() {
           </div>
           <div className="mx-auto mt-5 w-4/5 rounded-2xl border border-[#eee8e2] bg-white p-5 shadow-sm">
             <div className="inline-flex rounded-full bg-[#d9f876] px-3 py-1 text-xs font-semibold">
-              Adding to operational memory
+              Saved as operational context
             </div>
             <p className="mt-4 text-sm leading-6 text-black/56">
-              TicketOS learns which approvals, apps, and policies worked, then suggests safer automation next time.
+              The next similar request starts with known systems, policy outcomes, and the safest execution path.
             </p>
           </div>
         </div>
@@ -320,22 +312,22 @@ export function LandingPage() {
 
       <section id="integrations" className="mx-auto max-w-7xl space-y-6 px-5 py-16 md:px-8">
         <FeatureGrid
-          title="Connect ITSM, identity, HRIS, security, and collaboration systems"
-          cta="See full integrations list"
+          title="Bring the tools IT already depends on into one execution surface"
+          cta="Browse connected systems"
           items={integrations}
         />
         <FeatureGrid
-          title="Security and governance controls built for autonomous operations"
-          cta="See security controls"
+          title="Give agents boundaries before they touch sensitive systems"
+          cta="Review governance model"
           items={securityControls}
         />
       </section>
 
       <section id="compare" className="mx-auto max-w-7xl px-5 py-20 text-center md:px-8">
-        <h2 className="text-5xl font-semibold tracking-tight">See how TicketOS compares</h2>
+        <h2 className="text-5xl font-semibold tracking-tight">Where TicketOS fits</h2>
         <p className="mx-auto mt-5 max-w-3xl text-xl leading-8 text-black/60">
-          Legacy ITSM tools manage the ticket. TicketOS executes the operational work behind it with policy,
-          approvals, memory, and replay.
+          Keep your systems of record. Add a layer that understands requests, runs approved actions, and gives
+          operators proof instead of mystery.
         </p>
         <div className="mt-14 grid gap-6 text-left md:grid-cols-3">
           {comparisonCards.map((card) => (
@@ -348,7 +340,7 @@ export function LandingPage() {
               </div>
               <p className="mt-8 min-h-28 text-lg leading-7 text-black/62">{card.body}</p>
               <Link href="/auth/sign-in" className="inline-flex h-12 items-center gap-3 rounded-full border border-black/10 bg-white px-5 text-base font-semibold">
-                Compare
+                Learn more
                 <ArrowRight size={17} />
               </Link>
             </div>
@@ -358,26 +350,27 @@ export function LandingPage() {
 
       <section id="start" className="mx-auto grid max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-[.48fr_.52fr]">
         <div>
-          <h2 className="text-5xl font-semibold tracking-tight">Get started</h2>
+          <h2 className="text-5xl font-semibold tracking-tight">Start with one workflow</h2>
           <p className="mt-8 max-w-xl text-xl leading-8 text-black/62">
-            See TicketOS resolve a real workflow in your stack. Start with one high-volume IT task and expand from there.
+            Pick a repetitive IT request. TicketOS can map the approvals, systems, checks, and agent actions needed
+            to turn it into a reliable run.
           </p>
         </div>
         <form className="space-y-4">
           <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Work email" />
           <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Company" />
-          <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Highest-volume IT workflow" />
+          <input className="h-14 w-full rounded-full border border-black/15 bg-white px-5 text-base outline-none" placeholder="Workflow you want handled first" />
           <Link href="/auth/sign-up" className="inline-flex h-14 items-center justify-center rounded-full bg-black px-7 text-base font-semibold text-white">
-            Schedule a demo
+            Request walkthrough
           </Link>
         </form>
       </section>
 
       <footer className="mx-auto grid max-w-7xl gap-10 border-t border-[#eee8e2] px-5 py-12 md:grid-cols-5 md:px-8">
         {[
-          ["Product", "Overview", "Help desk automation", "Access management", "AI-native workflows"],
-          ["Solutions", "IT", "HR", "Finance", "Security"],
-          ["Compare", "ServiceNow", "Jira Service Management", "Freshservice"],
+          ["Product", "Command center", "Agent workspace", "Workflow replay", "Operational memory"],
+          ["Workflows", "Identity", "Onboarding", "Offboarding", "Approvals"],
+          ["Alternatives", "ServiceNow", "Jira Service Management", "Freshservice"],
           ["Company", "About", "Security", "Careers"],
           ["Resources", "Integrations", "Docs", "Status"],
         ].map(([heading, ...links]) => (
