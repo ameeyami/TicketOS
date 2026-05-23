@@ -26,12 +26,6 @@ const stepStyles: Record<string, string> = {
   failed: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
-const policyStyles: Record<string, string> = {
-  allow: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  approval_required: "border-amber-200 bg-amber-50 text-amber-800",
-  block: "border-rose-200 bg-rose-50 text-rose-700",
-};
-
 export default async function AuditPage({
   searchParams,
 }: {
@@ -47,7 +41,7 @@ export default async function AuditPage({
   const organization = await ensureWorkspace(supabase, userData.user);
   const params = await searchParams;
 
-  const [{ data: workflowRuns }, { data: auditLogs }, { data: policyEvaluations }] = await Promise.all([
+  const [{ data: workflowRuns }, { data: auditLogs }] = await Promise.all([
     supabase
       .from("workflow_runs")
       .select("*, workflows(name), tickets(id, external_id, title, status), workflow_versions(graph)")
@@ -60,12 +54,6 @@ export default async function AuditPage({
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false })
       .limit(30),
-    supabase
-      .from("policy_evaluations")
-      .select("*, policy_rules(name), tickets(external_id, title)")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false })
-      .limit(12),
   ]);
 
   const runs = workflowRuns ?? [];
@@ -102,8 +90,8 @@ export default async function AuditPage({
   const replayableRuns = runs.filter((run) => Boolean(run.replay_snapshot && Object.keys(run.replay_snapshot).length)).length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -112,29 +100,25 @@ export default async function AuditPage({
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Audit and replay</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Trace every autonomous decision.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Review workflow history, policy decisions, execution actions, and agent audit events from one transparent
-              operating record.
-            </p>
+            <h1 className="text-3xl font-semibold tracking-tight">Audit</h1>
+            <p className="mt-2 text-sm text-black/54">Replay workflow runs and review agent decisions.</p>
           </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
+          <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold">
             {organization.name}
           </div>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-4">
           <MetricCard label="Workflow runs" value={String(runs.length)} icon={Workflow} />
           <MetricCard label="Replay snapshots" value={String(replayableRuns)} icon={ListRestart} />
           <MetricCard label="Approvals logged" value={String(approvalEvents)} icon={ShieldCheck} />
           <MetricCard label="Blocked actions" value={String(blockedEvents)} icon={CircleAlert} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[.82fr_1.18fr]">
-          <div className="space-y-6">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[340px_1fr]">
+          <div>
             <Panel title="Run history" icon={FileClock}>
               <div className="space-y-3">
                 {runs.map((run) => (
@@ -167,35 +151,9 @@ export default async function AuditPage({
                 )}
               </div>
             </Panel>
-
-            <Panel title="Policy ledger" icon={ShieldCheck}>
-              <div className="space-y-3">
-                {(policyEvaluations ?? []).map((policy) => (
-                  <div key={policy.id} className="rounded-lg border border-black/10 bg-white p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{policy.policy_rules?.name ?? "Runtime policy"}</p>
-                        <p className="mt-1 text-sm leading-6 text-black/55">{policy.reason}</p>
-                      </div>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-md border px-2 py-1 text-xs font-semibold",
-                          policyStyles[policy.decision] ?? "border-zinc-200 bg-zinc-50 text-zinc-700",
-                        )}
-                      >
-                        {policy.decision.replaceAll("_", " ")}
-                      </span>
-                    </div>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
-                      {policy.tickets?.external_id ?? "Ticket"} · {Number(policy.confidence ?? 0)}% confidence
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </Panel>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             <Panel title="Workflow replay" icon={ListRestart}>
               {selectedRun ? (
                 <div>
@@ -264,7 +222,7 @@ export default async function AuditPage({
               )}
             </Panel>
 
-            <section className="grid gap-6 lg:grid-cols-2">
+            <section className="grid gap-5 lg:grid-cols-2">
               <Panel title="Run policies" icon={ShieldCheck}>
                 <div className="space-y-3">
                   {(runPolicies ?? []).map((policy) => (
@@ -304,7 +262,7 @@ export default async function AuditPage({
             <Panel title="Audit stream" icon={Bot}>
               <div className="divide-y divide-black/8 rounded-lg border border-black/10">
                 {([...((runAudits ?? []).length ? runAudits ?? [] : auditRows)]).map((log) => (
-                  <div key={log.id} className="grid gap-3 p-4 md:grid-cols-[110px_1fr]">
+                  <div key={log.id} className="grid gap-3 p-3 md:grid-cols-[100px_1fr]">
                     <span className="text-xs font-semibold text-black/42">{formatDate(log.created_at)}</span>
                     <div>
                       <p className="font-semibold">{log.event_summary}</p>
@@ -337,14 +295,14 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+          <Icon size={16} />
         </span>
       </div>
     </div>
@@ -361,12 +319,12 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+          <Icon size={16} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-base font-semibold">{title}</h2>
       </div>
       {children}
     </div>

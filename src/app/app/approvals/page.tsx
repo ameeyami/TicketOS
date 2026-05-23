@@ -5,7 +5,6 @@ import {
   BadgeCheck,
   CheckCircle2,
   Clock3,
-  FileText,
   MessageSquareText,
   ShieldCheck,
   XCircle,
@@ -33,20 +32,12 @@ export default async function ApprovalsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: approvals }, { data: auditLogs }] = await Promise.all([
+  const { data: approvals } = await
     supabase
       .from("approval_requests")
       .select("*, tickets(id, external_id, title, priority, status, ai_confidence), agents(name)")
       .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("audit_logs")
-      .select("*, tickets(external_id, title)")
-      .eq("organization_id", organization.id)
-      .in("event_type", ["approved", "rejected"])
-      .order("created_at", { ascending: false })
-      .limit(8),
-  ]);
+      .order("created_at", { ascending: false });
 
   const approvalRows = approvals ?? [];
   const pendingApprovals = approvalRows.filter((approval) => approval.status === "pending");
@@ -55,8 +46,8 @@ export default async function ApprovalsPage() {
   const rejectedCount = approvalRows.filter((approval) => approval.status === "rejected").length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -65,27 +56,20 @@ export default async function ApprovalsPage() {
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Approval workspace</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Review paused AI execution.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Approve, reject, and document the human decisions that govern autonomous IT workflows.
-            </p>
-          </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-            {organization.name}
+            <h1 className="text-3xl font-semibold tracking-tight">Approvals</h1>
+            <p className="mt-2 text-sm text-black/54">Review requests that need a human decision.</p>
           </div>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-3">
           <MetricCard label="Pending" value={String(pendingApprovals.length)} icon={Clock3} />
           <MetricCard label="Approved" value={String(approvedCount)} icon={CheckCircle2} />
           <MetricCard label="Rejected" value={String(rejectedCount)} icon={XCircle} />
-          <MetricCard label="Decision log" value={String(auditLogs?.length ?? 0)} icon={FileText} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_.72fr]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
           <div className="space-y-4">
             <Panel title="Needs decision" icon={BadgeCheck}>
               <div className="space-y-4">
@@ -142,7 +126,7 @@ export default async function ApprovalsPage() {
             </Panel>
           </div>
 
-          <div className="space-y-6">
+          <div>
             <Panel title="Decision history" icon={ShieldCheck}>
               <div className="space-y-3">
                 {resolvedApprovals.map((approval) => (
@@ -170,25 +154,6 @@ export default async function ApprovalsPage() {
                   <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
                     Approved and rejected requests will appear here.
                   </p>
-                )}
-              </div>
-            </Panel>
-
-            <Panel title="Approval audit" icon={FileText}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                {(auditLogs ?? []).map((log) => (
-                  <div key={log.id} className="p-4">
-                    <p className="font-semibold">{log.event_summary}</p>
-                    <p className="mt-1 text-sm text-black/50">
-                      {log.tickets?.external_id ?? "workspace"} · {formatDate(log.created_at)}
-                    </p>
-                    {typeof log.metadata?.note === "string" && log.metadata.note && (
-                      <p className="mt-2 text-sm leading-6 text-black/55">{log.metadata.note}</p>
-                    )}
-                  </div>
-                ))}
-                {(auditLogs ?? []).length === 0 && (
-                  <p className="p-4 text-sm text-black/48">No approval audit events recorded yet.</p>
                 )}
               </div>
             </Panel>
@@ -269,11 +234,11 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
@@ -293,12 +258,12 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+          <Icon size={16} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
     </div>

@@ -6,8 +6,6 @@ import {
   Cable,
   CheckCircle2,
   Clock3,
-  FileText,
-  KeyRound,
   ShieldAlert,
   ShieldCheck,
   Workflow,
@@ -36,14 +34,6 @@ type ActionRow = {
   action_key: string;
   risk_level: string;
   requires_approval: boolean;
-};
-
-type AuditRow = {
-  id: string;
-  event_type: string;
-  event_summary: string;
-  created_at: string;
-  metadata: Record<string, unknown> | null;
 };
 
 type ApprovalRow = {
@@ -75,7 +65,7 @@ export default async function AppsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: integrations }, { data: actions }, { data: audits }, { data: approvals }] = await Promise.all([
+  const [{ data: integrations }, { data: actions }, { data: approvals }] = await Promise.all([
     supabase
       .from("integrations")
       .select("id, provider_key, display_name, status, scopes, config, updated_at")
@@ -87,13 +77,6 @@ export default async function AppsPage() {
       .eq("organization_id", organization.id)
       .order("risk_level", { ascending: false }),
     supabase
-      .from("audit_logs")
-      .select("id, event_type, event_summary, created_at, metadata")
-      .eq("organization_id", organization.id)
-      .in("event_type", ["app_review_requested", "app_owner_reviewed", "integration_updated", "integration_actions_synced"])
-      .order("created_at", { ascending: false })
-      .limit(30),
-    supabase
       .from("approval_requests")
       .select("id, title, status, created_at")
       .eq("organization_id", organization.id)
@@ -104,16 +87,14 @@ export default async function AppsPage() {
 
   const integrationRows = (integrations ?? []) as IntegrationRow[];
   const actionRows = (actions ?? []) as ActionRow[];
-  const auditRows = (audits ?? []) as AuditRow[];
   const approvalRows = (approvals ?? []) as ApprovalRow[];
   const connectedCount = integrationRows.filter((app) => app.status === "connected").length;
   const highRiskActions = actionRows.filter((action) => action.risk_level === "high").length;
-  const approvalActions = actionRows.filter((action) => action.requires_approval).length;
   const pendingReviews = approvalRows.filter((approval) => approval.status === "pending").length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -122,10 +103,10 @@ export default async function AppsPage() {
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Apps</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Govern connected apps.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Apps</h1>
+            <p className="mt-2 text-sm text-black/54">Review connected apps and requested app checks.</p>
           </div>
           <Link
             href="/app/integrations"
@@ -136,19 +117,17 @@ export default async function AppsPage() {
           </Link>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-4">
           <MetricCard label="Apps" value={String(integrationRows.length)} icon={Cable} />
           <MetricCard label="Connected" value={String(connectedCount)} icon={CheckCircle2} />
           <MetricCard label="High risk" value={String(highRiskActions)} icon={ShieldAlert} />
           <MetricCard label="Pending reviews" value={String(pendingReviews)} icon={Clock3} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_.38fr]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
           <div className="grid gap-4 lg:grid-cols-2">
             {integrationRows.map((app) => {
               const appActions = actionRows.filter((action) => action.integration_id === app.id);
-              const appAudits = auditRows.filter((audit) => audit.metadata?.integration_id === app.id);
-              const owner = appAudits.find((audit) => audit.event_type === "app_owner_reviewed")?.metadata?.owner_email;
               const highRiskCount = appActions.filter((action) => action.risk_level === "high").length;
               const approvalCount = appActions.filter((action) => action.requires_approval).length;
               const config = app.config ?? {};
@@ -165,7 +144,7 @@ export default async function AppsPage() {
                       </div>
                       <h2 className="mt-3 text-xl font-semibold tracking-tight">{app.display_name}</h2>
                       <p className="mt-2 text-sm text-black/52">
-                        ID: {String(config.connection_id ?? "Not connected")} {owner ? `· Owner: ${String(owner)}` : ""}
+                        ID: {String(config.connection_id ?? "Not connected")}
                       </p>
                     </div>
                     <Link
@@ -237,7 +216,7 @@ export default async function AppsPage() {
             })}
           </div>
 
-          <div className="space-y-6">
+          <div>
             <Panel title="Review queue" icon={BadgeCheck}>
               <div className="space-y-3">
                 {approvalRows.map((approval) => (
@@ -252,28 +231,6 @@ export default async function AppsPage() {
                 {approvalRows.length === 0 && <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">App review requests will appear here.</p>}
               </div>
             </Panel>
-
-            <Panel title="App audit" icon={FileText}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                {auditRows.slice(0, 12).map((audit) => (
-                  <div key={audit.id} className="p-4">
-                    <p className="font-semibold">{audit.event_summary}</p>
-                    <p className="mt-1 text-sm text-black/48">
-                      {audit.event_type.replaceAll("_", " ")} · {formatDate(audit.created_at)}
-                    </p>
-                  </div>
-                ))}
-                {auditRows.length === 0 && <p className="p-4 text-sm text-black/48">App governance events will appear here.</p>}
-              </div>
-            </Panel>
-
-            <Panel title="Controls" icon={KeyRound}>
-              <div className="grid gap-3">
-                <Fact label="Approval actions" value={String(approvalActions)} />
-                <Fact label="Synced actions" value={String(actionRows.length)} />
-                <Fact label="Connected apps" value={`${connectedCount}/${integrationRows.length}`} />
-              </div>
-            </Panel>
           </div>
         </section>
       </div>
@@ -283,11 +240,11 @@ export default async function AppsPage() {
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
@@ -299,12 +256,12 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
 
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+          <Icon size={16} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
     </div>

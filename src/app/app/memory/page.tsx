@@ -4,11 +4,6 @@ import {
   ArrowLeft,
   Bot,
   Brain,
-  CheckCircle2,
-  Clock3,
-  Database,
-  FileText,
-  MessageSquareText,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -36,41 +31,19 @@ export default async function MemoryPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: agents }, { data: tickets }, { data: runs }, { data: auditLogs }] = await Promise.all([
-    supabase.from("agents").select("*").eq("organization_id", organization.id).order("created_at"),
-    supabase
-      .from("tickets")
-      .select("id, external_id, title, category, status, assigned_agent_id, ai_confidence, created_at")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("agent_runs")
-      .select("*, agents(name), tickets(external_id, title)")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false })
-      .limit(10),
-    supabase
-      .from("audit_logs")
-      .select("*, agents(name)")
-      .eq("organization_id", organization.id)
-      .in("event_type", ["agent_memory_updated", "ticket_assigned", "agent_status_updated"])
-      .order("created_at", { ascending: false })
-      .limit(10),
-  ]);
+  const { data: agents } = await supabase
+    .from("agents")
+    .select("*")
+    .eq("organization_id", organization.id)
+    .order("created_at");
 
   const agentRows = agents ?? [];
-  const ticketRows = tickets ?? [];
-  const runRows = runs ?? [];
   const scopedAgents = agentRows.filter((agent) => Boolean(agent.memory_scope)).length;
   const uniqueCapabilities = new Set(agentRows.flatMap((agent) => agent.capabilities ?? [])).size;
-  const activeRunCount = runRows.filter((run) => ["queued", "running", "waiting_for_approval"].includes(run.status)).length;
-  const averageConfidence = ticketRows.length
-    ? Math.round(ticketRows.reduce((sum, ticket) => sum + Number(ticket.ai_confidence ?? 0), 0) / ticketRows.length)
-    : 0;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -79,33 +52,21 @@ export default async function MemoryPage() {
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Operational memory</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Control what agents remember.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Inspect each agent’s allowed context, execution history, and capability boundaries before it acts.
-            </p>
-          </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-            {organization.name}
+            <h1 className="text-3xl font-semibold tracking-tight">Memory</h1>
+            <p className="mt-2 text-sm text-black/54">Edit the context each agent can use.</p>
           </div>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-2">
           <MetricCard label="Scoped agents" value={`${scopedAgents}/${agentRows.length}`} icon={Brain} />
           <MetricCard label="Capabilities" value={String(uniqueCapabilities)} icon={Sparkles} />
-          <MetricCard label="Active runs" value={String(activeRunCount)} icon={Clock3} />
-          <MetricCard label="Avg confidence" value={`${averageConfidence}%`} icon={CheckCircle2} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_.72fr]">
+        <section className="mt-5">
           <div className="grid gap-4 lg:grid-cols-2">
             {agentRows.map((agent) => {
-              const assignedTickets = ticketRows.filter((ticket) => ticket.assigned_agent_id === agent.id);
-              const agentRuns = runRows.filter((run) => run.agent_id === agent.id);
-              const categories = Array.from(new Set(assignedTickets.map((ticket) => ticket.category).filter(Boolean)));
-
               return (
                 <article key={agent.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-4">
@@ -126,12 +87,6 @@ export default async function MemoryPage() {
                     >
                       {agent.status}
                     </span>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <Fact label="Tickets" value={String(assignedTickets.length)} />
-                    <Fact label="Runs" value={String(agentRuns.length)} />
-                    <Fact label="Domains" value={String(categories.length)} />
                   </div>
 
                   <div className="mt-5 rounded-lg border border-black/10 bg-[#111713] p-4 text-white">
@@ -186,53 +141,6 @@ export default async function MemoryPage() {
               );
             })}
           </div>
-
-          <div className="space-y-6">
-            <Panel title="Recent memory signals" icon={Database}>
-              <div className="space-y-3">
-                {runRows.map((run) => (
-                  <div key={run.id} className="rounded-lg border border-black/10 bg-white p-4">
-                    <p className="font-semibold">{run.agents?.name ?? "Agent run"}</p>
-                    <p className="mt-1 text-sm text-black/52">
-                      {run.tickets?.external_id ?? "Ticket"} · {run.tickets?.title ?? "No ticket attached"}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
-                      {run.status} · {run.model ?? "policy simulator"}
-                    </p>
-                  </div>
-                ))}
-                {runRows.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
-                    Agent runs will appear here when agents start handling tickets.
-                  </p>
-                )}
-              </div>
-            </Panel>
-
-            <Panel title="Memory audit" icon={FileText}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                {(auditLogs ?? []).map((log) => (
-                  <div key={log.id} className="p-4">
-                    <p className="font-semibold">{log.event_summary}</p>
-                    <p className="mt-1 text-sm text-black/50">
-                      {log.agents?.name ?? "TicketOS"} · {formatDate(log.created_at)}
-                    </p>
-                  </div>
-                ))}
-                {(auditLogs ?? []).length === 0 && (
-                  <p className="p-4 text-sm text-black/48">Memory changes will appear here.</p>
-                )}
-              </div>
-            </Panel>
-
-            <Panel title="Memory boundaries" icon={MessageSquareText}>
-              <div className="space-y-3">
-                <Boundary title="Scope-first memory" detail="Agents should only use memory domains listed in their scope." />
-                <Boundary title="Execution logs" detail="Runs and audit events provide traceable operational context." />
-                <Boundary title="Human editable" detail="Operators can revise memory scope before expanding autonomy." />
-              </div>
-            </Panel>
-          </div>
         </section>
       </div>
     </main>
@@ -249,11 +157,11 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
@@ -261,57 +169,4 @@ function MetricCard({
       </div>
     </div>
   );
-}
-
-function Panel({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: LucideIcon;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
-        </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function Boundary({ title, detail }: { title: string; detail: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 p-4">
-      <p className="font-semibold">{title}</p>
-      <p className="mt-1 text-sm leading-6 text-black/55">{detail}</p>
-    </div>
-  );
-}
-
-function formatDate(value: string | null | undefined) {
-  if (!value) {
-    return "Not recorded";
-  }
-
-  return new Date(value).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

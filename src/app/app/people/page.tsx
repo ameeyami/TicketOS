@@ -5,7 +5,6 @@ import {
   BadgeCheck,
   CircleAlert,
   Clock3,
-  FileText,
   MessageSquareText,
   ShieldCheck,
   UserRound,
@@ -40,13 +39,6 @@ type AuditRow = {
   metadata: Record<string, unknown> | null;
 };
 
-type MemberRow = {
-  id: string;
-  user_id: string;
-  role: string;
-  created_at: string;
-};
-
 type Person = {
   name: string;
   email: string;
@@ -78,18 +70,13 @@ export default async function PeoplePage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: tickets }, { data: members }, { data: auditLogs }] = await Promise.all([
+  const [{ data: tickets }, { data: auditLogs }] = await Promise.all([
     supabase
       .from("tickets")
       .select("id, external_id, title, status, priority, category, requester_name, requester_email, ai_confidence, created_at, resolved_at")
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false })
       .limit(80),
-    supabase
-      .from("organization_members")
-      .select("id, user_id, role, created_at")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: true }),
     supabase
       .from("audit_logs")
       .select("id, event_type, event_summary, created_at, metadata")
@@ -100,7 +87,6 @@ export default async function PeoplePage() {
   ]);
 
   const ticketRows = (tickets ?? []) as TicketRow[];
-  const memberRows = (members ?? []) as MemberRow[];
   const logs = (auditLogs ?? []) as AuditRow[];
   const people = buildPeople(ticketRows, logs);
   const openRequests = people.reduce((sum, person) => sum + person.openCount, 0);
@@ -108,8 +94,8 @@ export default async function PeoplePage() {
   const accessReviewCount = logs.filter((log) => log.event_type === "access_review_requested").length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -118,10 +104,10 @@ export default async function PeoplePage() {
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">People</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Requester and access context.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">People</h1>
+            <p className="mt-2 text-sm text-black/54">Review requesters and access review actions.</p>
           </div>
           <Link
             href="/app/team"
@@ -132,14 +118,14 @@ export default async function PeoplePage() {
           </Link>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-4">
           <MetricCard label="People" value={String(people.length)} icon={UserRound} />
           <MetricCard label="Open requests" value={String(openRequests)} icon={Clock3} />
           <MetricCard label="Blocked" value={String(blockedRequests)} icon={CircleAlert} />
           <MetricCard label="Access reviews" value={String(accessReviewCount)} icon={BadgeCheck} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_.36fr]">
+        <section className="mt-5">
           <div className="space-y-4">
             {people.map((person) => (
               <article key={person.email} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
@@ -239,34 +225,6 @@ export default async function PeoplePage() {
             )}
           </div>
 
-          <div className="space-y-6">
-            <Panel title="Workspace roles" icon={UsersRound}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                {memberRows.map((member) => (
-                  <div key={member.id} className="p-4">
-                    <p className="font-semibold">{member.user_id === userData.user.id ? userData.user.email : `Member ${member.user_id.slice(0, 8)}`}</p>
-                    <p className="mt-1 text-sm text-black/48">
-                      {member.role} · joined {formatDate(member.created_at)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </Panel>
-
-            <Panel title="People audit" icon={FileText}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                {logs.slice(0, 8).map((log) => (
-                  <div key={log.id} className="p-4">
-                    <p className="font-semibold">{log.event_summary}</p>
-                    <p className="mt-1 text-sm text-black/48">
-                      {log.event_type.replaceAll("_", " ")} · {formatDate(log.created_at)}
-                    </p>
-                  </div>
-                ))}
-                {logs.length === 0 && <p className="p-4 text-sm text-black/48">People activity will appear here.</p>}
-              </div>
-            </Panel>
-          </div>
         </section>
       </div>
     </main>
@@ -315,30 +273,16 @@ function buildPeople(tickets: TicketRow[], logs: AuditRow[]) {
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
         </span>
       </div>
-    </div>
-  );
-}
-
-function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
-        </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
-      </div>
-      {children}
     </div>
   );
 }

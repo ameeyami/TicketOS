@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BadgeCheck,
   CircleAlert,
-  FileText,
   LockKeyhole,
   ShieldAlert,
   ShieldCheck,
@@ -30,15 +29,6 @@ type TicketRow = {
   ai_confidence: number | null;
   ai_summary: string | null;
   created_at: string;
-};
-
-type AuditRow = {
-  id: string;
-  event_type: string;
-  event_summary: string;
-  created_at: string;
-  metadata: Record<string, unknown> | null;
-  tickets?: Relation<{ external_id: string | null; title: string | null }>;
 };
 
 type PolicyEvaluationRow = {
@@ -84,7 +74,7 @@ export default async function SecurityPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: tickets }, { data: policyEvaluations }, { data: integrationActions }, { data: auditLogs }, { data: approvals }] =
+  const [{ data: tickets }, { data: policyEvaluations }, { data: integrationActions }, { data: approvals }] =
     await Promise.all([
       supabase
         .from("tickets")
@@ -108,13 +98,6 @@ export default async function SecurityPage() {
         .order("risk_level", { ascending: false })
         .limit(12),
       supabase
-        .from("audit_logs")
-        .select("id, event_type, event_summary, created_at, metadata, tickets(external_id, title)")
-        .eq("organization_id", organization.id)
-        .in("event_type", ["blocked", "ticket_blocked", "security_risk_acknowledged", "security_review_requested", "policy_rule_created", "incident_opened"])
-        .order("created_at", { ascending: false })
-        .limit(20),
-      supabase
         .from("approval_requests")
         .select("id, title, status, created_at")
         .eq("organization_id", organization.id)
@@ -126,14 +109,13 @@ export default async function SecurityPage() {
   const securityTickets = (tickets ?? []) as TicketRow[];
   const evaluations = (policyEvaluations ?? []) as unknown as PolicyEvaluationRow[];
   const actions = (integrationActions ?? []) as unknown as IntegrationActionRow[];
-  const logs = (auditLogs ?? []) as unknown as AuditRow[];
   const pendingSecurityReviews = (approvals ?? []).filter((approval) => approval.status === "pending").length;
   const blockedTickets = securityTickets.filter((ticket) => ["blocked", "failed"].includes(ticket.status)).length;
   const highRiskActions = actions.filter((action) => action.risk_level === "high").length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
@@ -142,10 +124,10 @@ export default async function SecurityPage() {
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Security</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Security review center.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Security</h1>
+            <p className="mt-2 text-sm text-black/54">Review blocked and high-risk work.</p>
           </div>
           <Link
             href="/app/policies"
@@ -156,14 +138,14 @@ export default async function SecurityPage() {
           </Link>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-4">
           <MetricCard label="Risk tickets" value={String(securityTickets.length)} icon={LockKeyhole} />
           <MetricCard label="Blocked" value={String(blockedTickets)} icon={XCircle} />
           <MetricCard label="High-risk actions" value={String(highRiskActions)} icon={CircleAlert} />
           <MetricCard label="Reviews" value={String(pendingSecurityReviews)} icon={BadgeCheck} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_.38fr]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
           <div className="space-y-4">
             {securityTickets.map((ticket) => (
               <article key={ticket.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
@@ -276,20 +258,6 @@ export default async function SecurityPage() {
                 {evaluations.length === 0 && <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">Policy stops will appear here.</p>}
               </div>
             </Panel>
-
-            <Panel title="Security audit" icon={FileText}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                {logs.slice(0, 8).map((log) => (
-                  <div key={log.id} className="p-4">
-                    <p className="font-semibold">{log.event_summary}</p>
-                    <p className="mt-1 text-sm text-black/48">
-                      {log.event_type.replaceAll("_", " ")} · {formatDate(log.created_at)}
-                    </p>
-                  </div>
-                ))}
-                {logs.length === 0 && <p className="p-4 text-sm text-black/48">Security events will appear here.</p>}
-              </div>
-            </Panel>
           </div>
         </section>
       </div>
@@ -299,11 +267,11 @@ export default async function SecurityPage() {
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
@@ -315,12 +283,12 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
 
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+          <Icon size={16} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
     </div>
