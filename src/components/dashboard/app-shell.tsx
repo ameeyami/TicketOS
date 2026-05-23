@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -15,7 +14,6 @@ import {
   KeyRound,
   LockKeyhole,
   MessageSquareText,
-  Plus,
   Search,
   Settings,
   ShieldCheck,
@@ -73,18 +71,6 @@ const utilityLinks = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
-    const activeTeam = teams.find((team) => team.links.some((item) => isActivePath(item.href, pathname)));
-    if (activeTeam) {
-      return activeTeam.name;
-    }
-
-    if (utilityLinks.some((item) => isActivePath(item.href, pathname))) {
-      return "Other";
-    }
-
-    return null;
-  });
 
   return (
     <div className="ticketos-app-shell min-h-screen bg-[#fbfaf8] text-[#1f1b16]">
@@ -98,19 +84,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ChevronDown size={13} className="text-black/35" />
           </Link>
 
-          <div className="mt-7 flex items-center justify-between px-2 text-xs font-medium text-black/45">
-            <span>Workspace</span>
-            <Plus size={14} />
-          </div>
-
-          <div className="mt-2 space-y-1">
+          <div className="mt-7 space-y-1">
             {teams.map((team) => (
               <SidebarSection
                 key={team.name}
                 name={team.name}
                 initial={team.initial}
-                expanded={expandedSection === team.name}
-                onToggle={() => setExpandedSection((current) => (current === team.name ? null : team.name))}
+                active={team.links.some((item) => isActivePath(item.href, pathname))}
               >
                 {team.links.map((item) => (
                   <NavLink key={item.href} item={item} pathname={pathname} />
@@ -121,8 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <SidebarSection
               name="Other"
               initial="O"
-              expanded={expandedSection === "Other"}
-              onToggle={() => setExpandedSection((current) => (current === "Other" ? null : "Other"))}
+              active={utilityLinks.some((item) => isActivePath(item.href, pathname))}
             >
               {utilityLinks.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} />
@@ -172,23 +151,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 function SidebarSection({
   name,
   initial,
-  expanded,
-  onToggle,
+  active,
   children,
 }: {
   name: string;
   initial: string;
-  expanded: boolean;
-  onToggle: () => void;
+  active: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-semibold text-black/78 transition hover:bg-[#f1ebe5]"
-        aria-expanded={expanded}
+    <details className="group">
+      <summary
+        className={cn(
+          "flex h-9 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm font-semibold text-black/78 transition hover:bg-[#f1ebe5]",
+          active && "bg-[#f1ebe5] text-black",
+        )}
       >
         <span className="flex size-5 items-center justify-center rounded bg-[#d8efff] text-[11px] font-bold text-[#357297]">
           {initial}
@@ -196,11 +173,11 @@ function SidebarSection({
         <span className="min-w-0 flex-1 truncate">{name}</span>
         <ChevronDown
           size={13}
-          className={cn("text-black/35 transition", expanded && "rotate-180")}
+          className="text-black/35 transition group-open:rotate-180"
         />
-      </button>
-      {expanded && <div className="mt-1 space-y-1 pb-3">{children}</div>}
-    </div>
+      </summary>
+      <div className="mt-1 space-y-1 pb-3">{children}</div>
+    </details>
   );
 }
 
