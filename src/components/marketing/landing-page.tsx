@@ -84,12 +84,11 @@ export function LandingPage() {
           <a href="#start">Contact</a>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/auth/sign-in" className="text-sm font-semibold text-[#07111f]">
+          <Link
+            href="/auth/sign-in"
+            className="inline-flex h-10 items-center rounded-md bg-[#0b2a4a] px-4 text-sm font-semibold text-white"
+          >
             Log in
-          </Link>
-          <Link href="/auth/sign-up" className="hidden h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-4 text-sm font-semibold text-white sm:inline-flex">
-            Request access
-            <ArrowRight size={16} />
           </Link>
         </div>
       </nav>
@@ -117,8 +116,8 @@ export function LandingPage() {
               execute actions, and explain what happened.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/auth/sign-up" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#22c55e] px-5 text-base font-semibold text-[#03120a]">
-                Request access
+              <Link href="/auth/sign-in" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#22c55e] px-5 text-base font-semibold text-[#03120a]">
+                Log in
                 <ArrowRight size={18} />
               </Link>
               <a href="#product" className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/15 bg-white/8 px-5 text-base font-semibold text-white">
@@ -237,20 +236,17 @@ export function LandingPage() {
 
       <section id="start" className="mx-auto grid max-w-7xl gap-10 border-t border-[#d8e4ee] px-5 py-16 md:px-8 lg:grid-cols-[0.48fr_0.52fr]">
         <div>
-          <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">Start with one recurring request</h2>
+          <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">Run TicketOS from one clear workspace</h2>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
-            Pick the workflow your IT team repeats every week. TicketOS can map the checks, approvals, and tool actions.
+            Sign in to review tickets, connect apps, approve workflows, and inspect agent execution history.
           </p>
         </div>
-        <form className="grid gap-3">
-          <input className="h-12 rounded-md border border-[#d8e4ee] bg-white px-4 text-sm outline-none focus:border-[#0b5f91]" placeholder="Work email" />
-          <input className="h-12 rounded-md border border-[#d8e4ee] bg-white px-4 text-sm outline-none focus:border-[#0b5f91]" placeholder="Company" />
-          <input className="h-12 rounded-md border border-[#d8e4ee] bg-white px-4 text-sm outline-none focus:border-[#0b5f91]" placeholder="First workflow to automate" />
-          <Link href="/auth/sign-up" className="inline-flex h-12 w-fit items-center justify-center gap-2 rounded-md bg-[#0b2a4a] px-5 text-sm font-semibold text-white">
-            Request access
+        <div className="flex items-start justify-start lg:justify-end">
+          <Link href="/auth/sign-in" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#0b2a4a] px-5 text-sm font-semibold text-white">
+            Log in to TicketOS
             <ArrowRight size={16} />
           </Link>
-        </form>
+        </div>
       </section>
     </main>
   );

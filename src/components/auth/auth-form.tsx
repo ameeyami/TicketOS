@@ -8,6 +8,7 @@ import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
+type OAuthProvider = "google" | "github" | "azure";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -17,10 +18,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [oktaDomain, setOktaDomain] = useState("");
   const [message, setMessage] = useState(searchParams.get("message") ?? "");
   const [error, setError] = useState(searchParams.get("error") ?? "");
 
   const isSignUp = mode === "sign-up";
+  const authRedirectUrl = () => `${window.location.origin}/auth/callback?next=/app`;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,7 +39,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           password,
           options: {
             data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/app`,
+            emailRedirectTo: authRedirectUrl(),
           },
         });
 
@@ -64,7 +67,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     });
   }
 
-  function handleOAuth(provider: "google" | "github") {
+  function handleOAuth(provider: OAuthProvider, label: string) {
     setError("");
     setMessage("");
 
@@ -73,12 +76,38 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/app`,
+          redirectTo: authRedirectUrl(),
         },
       });
 
       if (oauthError) {
-        setError(oauthError.message);
+        setError(`${label} sign in could not start. Check that ${label} is enabled in Supabase Auth settings.`);
+      }
+    });
+  }
+
+  function handleOktaSSO() {
+    const domain = oktaDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+    setError("");
+    setMessage("");
+
+    if (!domain) {
+      setError("Enter your Okta company domain first, for example company.okta.com.");
+      return;
+    }
+
+    startTransition(async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { error: ssoError } = await supabase.auth.signInWithSSO({
+        domain,
+        options: {
+          redirectTo: authRedirectUrl(),
+        },
+      });
+
+      if (ssoError) {
+        setError("Okta SSO could not start. Check that Okta SSO is enabled in Supabase Auth settings for this domain.");
       }
     });
   }
@@ -105,8 +134,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               <button
                 type="button"
                 disabled={isPending}
-                onClick={() => handleOAuth("google")}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f8f4ef] disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={() => handleOAuth("google", "Google")}
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <GoogleMark />
                 Continue with Google
@@ -114,12 +143,40 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               <button
                 type="button"
                 disabled={isPending}
-                onClick={() => handleOAuth("github")}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f8f4ef] disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={() => handleOAuth("github", "GitHub")}
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <GitHubMark />
                 Continue with GitHub
               </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => handleOAuth("azure", "Microsoft")}
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <MicrosoftMark />
+                Continue with Microsoft / Teams
+              </button>
+              <div className="rounded-xl border border-black/10 bg-white p-3 shadow-sm">
+                <label className="block text-xs font-semibold text-black/56">Okta company domain</label>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={oktaDomain}
+                    onChange={(event) => setOktaDomain(event.target.value)}
+                    className="min-w-0 flex-1 rounded-lg border border-black/10 px-3 text-sm outline-none transition focus:border-black/25 focus:ring-4 focus:ring-black/5"
+                    placeholder="company.okta.com"
+                  />
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={handleOktaSSO}
+                    className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    Okta SSO
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="my-7 flex items-center gap-3">
@@ -235,6 +292,17 @@ function GitHubMark() {
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-[#181717]">
         <path d="M12 1.4c-5.9 0-10.6 4.8-10.6 10.7 0 4.7 3 8.7 7.3 10.1.5.1.7-.2.7-.5v-2c-3 .7-3.6-1.3-3.6-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 0 1.6 1.1 1.6 1.1.9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.7-1.4-2.4-.3-4.9-1.2-4.9-5.3 0-1.2.4-2.1 1.1-2.9-.1-.3-.5-1.4.1-2.8 0 0 .9-.3 2.9 1.1.8-.2 1.8-.4 2.7-.4s1.9.1 2.7.4c2-1.4 2.9-1.1 2.9-1.1.6 1.4.2 2.5.1 2.8.7.8 1.1 1.7 1.1 2.9 0 4.1-2.5 5-4.9 5.3.4.3.7 1 .7 2v2.9c0 .3.2.6.7.5 4.3-1.4 7.3-5.4 7.3-10.1C22.6 6.2 17.9 1.4 12 1.4z" />
       </svg>
+    </span>
+  );
+}
+
+function MicrosoftMark() {
+  return (
+    <span className="grid size-5 grid-cols-2 gap-0.5">
+      <span className="rounded-[2px] bg-[#f25022]" />
+      <span className="rounded-[2px] bg-[#7fba00]" />
+      <span className="rounded-[2px] bg-[#00a4ef]" />
+      <span className="rounded-[2px] bg-[#ffb900]" />
     </span>
   );
 }
