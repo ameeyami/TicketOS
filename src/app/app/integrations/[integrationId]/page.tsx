@@ -110,7 +110,6 @@ export default async function IntegrationDetailPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <IntegrationButton id={integration.id} status="connected" label="Connect" icon="check" />
             <IntegrationButton id={integration.id} status="disabled" label="Disable" icon="power" />
             <form action={syncIntegrationActions}>
               <input type="hidden" name="integrationId" value={integration.id} />
@@ -134,6 +133,16 @@ export default async function IntegrationDetailPage({
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_.72fr]">
           <div className="space-y-6">
+            <Panel title="Connection setup" icon={Cable}>
+              <ConnectionSetupForm
+                integrationId={integration.id}
+                providerKey={integration.provider_key}
+                displayName={integration.display_name}
+                config={integration.config as IntegrationConfig | null}
+                isConnected={integration.status === "connected"}
+              />
+            </Panel>
+
             <Panel title="Executable actions" icon={Workflow}>
               <div className="space-y-3">
                 {actionRows.map((action) => (
@@ -276,6 +285,94 @@ function IntegrationButton({
         {label}
       </PendingButton>
     </form>
+  );
+}
+
+function connectionPlaceholder(providerKey: string) {
+  const labels: Record<string, string> = {
+    github: "GitHub organization ID",
+    slack: "Slack workspace ID",
+    teams: "Microsoft tenant ID",
+    okta: "Okta domain or tenant ID",
+    jira: "Jira site ID",
+    "google-workspace": "Google customer ID",
+  };
+
+  return labels[providerKey] ?? "Workspace or app ID";
+}
+
+type IntegrationConfig = {
+  connection_id?: string;
+  admin_email?: string | null;
+  connection_note?: string | null;
+};
+
+function ConnectionSetupForm({
+  integrationId,
+  providerKey,
+  displayName,
+  config,
+  isConnected,
+}: {
+  integrationId: string;
+  providerKey: string;
+  displayName: string;
+  config: IntegrationConfig | null;
+  isConnected: boolean;
+}) {
+  return (
+    <div>
+      {isConnected && (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <p className="font-semibold">{displayName} is connected</p>
+          <p className="mt-1">ID: {config?.connection_id ?? "Not saved"}</p>
+          {config?.admin_email && <p className="mt-1">Admin: {config.admin_email}</p>}
+          {config?.connection_note && <p className="mt-1">Note: {config.connection_note}</p>}
+        </div>
+      )}
+      <form action={updateIntegrationStatus} className="grid gap-3 md:grid-cols-[1fr_1fr]">
+        <input type="hidden" name="integrationId" value={integrationId} />
+        <input type="hidden" name="status" value="connected" />
+        <label className="text-xs font-semibold uppercase tracking-[0.12em] text-black/42">
+          Workspace ID
+          <input
+            name="connectionId"
+            required
+            defaultValue={config?.connection_id ?? ""}
+            placeholder={connectionPlaceholder(providerKey)}
+            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#2f6f60]"
+          />
+        </label>
+        <label className="text-xs font-semibold uppercase tracking-[0.12em] text-black/42">
+          Admin email
+          <input
+            name="adminEmail"
+            type="email"
+            defaultValue={config?.admin_email ?? ""}
+            placeholder="admin@company.com"
+            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#2f6f60]"
+          />
+        </label>
+        <label className="text-xs font-semibold uppercase tracking-[0.12em] text-black/42 md:col-span-2">
+          Setup note
+          <input
+            name="note"
+            defaultValue={config?.connection_note ?? ""}
+            placeholder="Optional ticket reference, scope note, or approval context"
+            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#2f6f60]"
+          />
+        </label>
+        <div className="md:col-span-2">
+          <PendingButton
+            pendingText={isConnected ? "Updating..." : "Connecting..."}
+            className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+          >
+            <CheckCircle2 size={15} />
+            {isConnected ? "Update connection" : "Validate and connect"}
+          </PendingButton>
+        </div>
+      </form>
+    </div>
   );
 }
 

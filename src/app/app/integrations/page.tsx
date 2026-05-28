@@ -40,7 +40,11 @@ export default async function IntegrationsPage() {
 
         <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {(integrations ?? []).map((integration) => {
-            const config = integration.config as { connection_id?: string; admin_email?: string | null } | null;
+            const config = integration.config as {
+              connection_id?: string;
+              admin_email?: string | null;
+              connection_note?: string | null;
+            } | null;
             const isConnected = integration.status === "connected";
 
             return (
@@ -71,6 +75,7 @@ export default async function IntegrationsPage() {
                   <div className="mt-4 rounded-md border border-black/10 bg-[#f8fbfe] p-3 text-sm">
                     <p className="font-semibold">ID: {config?.connection_id ?? "Not saved"}</p>
                     {config?.admin_email && <p className="mt-1 text-black/50">{config.admin_email}</p>}
+                    {config?.connection_note && <p className="mt-2 text-black/50">Note: {config.connection_note}</p>}
                   </div>
                 ) : (
                   <form action={updateIntegrationStatus} className="mt-4 space-y-3">
@@ -86,6 +91,11 @@ export default async function IntegrationsPage() {
                       name="adminEmail"
                       type="email"
                       placeholder="Admin email (optional)"
+                      className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none"
+                    />
+                    <input
+                      name="note"
+                      placeholder="Setup note or ticket reference (optional)"
                       className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none"
                     />
                     <PendingButton

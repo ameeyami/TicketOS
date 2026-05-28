@@ -9,6 +9,7 @@ export async function updateIntegrationStatus(formData: FormData) {
   const status = String(formData.get("status") ?? "");
   const connectionId = String(formData.get("connectionId") ?? "").trim();
   const adminEmail = String(formData.get("adminEmail") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
 
   if (!integrationId || !["connected", "disabled", "not_connected"].includes(status)) {
     throw new Error("Invalid integration update.");
@@ -48,6 +49,8 @@ export async function updateIntegrationStatus(formData: FormData) {
               connection_id: connectionId,
               admin_email: adminEmail || null,
               connection_mode: "manual_scoped_setup",
+              connection_note: note || null,
+              verified_at: new Date().toISOString(),
             }
           : integration.config ?? {},
     })
@@ -66,6 +69,7 @@ export async function updateIntegrationStatus(formData: FormData) {
       source: "integrations_page",
       connection_id: status === "connected" ? connectionId : null,
       admin_email: status === "connected" ? adminEmail || null : null,
+      note: note || null,
     },
   });
 
