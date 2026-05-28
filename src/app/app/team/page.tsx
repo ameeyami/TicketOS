@@ -15,7 +15,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { inviteMember, removeMember, updateMemberRole } from "@/app/app/team/actions";
+import { cancelInvite, inviteMember, removeMember, updateMemberRole } from "@/app/app/team/actions";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -74,7 +74,7 @@ export default async function TeamPage() {
       .from("audit_logs")
       .select("*")
       .eq("organization_id", organization.id)
-      .in("event_type", ["team_role_updated", "team_member_removed", "team_invite_sent", "workspace_updated"])
+      .in("event_type", ["team_role_updated", "team_member_removed", "team_invite_sent", "team_invite_cancelled", "workspace_updated"])
       .order("created_at", { ascending: false })
       .limit(8),
     supabase
@@ -90,7 +90,17 @@ export default async function TeamPage() {
   const canManage = currentRole === "owner" || currentRole === "admin";
   const ownerCount = memberRows.filter((member) => member.role === "owner").length;
   const elevatedCount = memberRows.filter((member) => member.role === "owner" || member.role === "admin").length;
-  const pendingInvites = (auditLogs ?? []).filter((log) => log.event_type === "team_invite_sent");
+  const cancelledInviteTokens = new Set(
+    (auditLogs ?? [])
+      .filter((log) => log.event_type === "team_invite_cancelled")
+      .map((log) => String(log.metadata?.invite_token ?? ""))
+      .filter(Boolean),
+  );
+  const pendingInvites = (auditLogs ?? []).filter(
+    (log) =>
+      log.event_type === "team_invite_sent" &&
+      !cancelledInviteTokens.has(String(log.metadata?.invite_token ?? "")),
+  );
 
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
@@ -230,6 +240,12 @@ export default async function TeamPage() {
                   placeholder="teammate@company.com"
                   className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none disabled:opacity-50"
                 />
+                <input
+                  name="note"
+                  disabled={!canManage}
+                  placeholder="Optional note or access reason"
+                  className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none disabled:opacity-50"
+                />
                 <div className="flex gap-2">
                   <select
                     name="role"
@@ -253,9 +269,33 @@ export default async function TeamPage() {
               <div className="mt-4 space-y-2">
                 {pendingInvites.slice(0, 3).map((invite) => (
                   <div key={invite.id} className="rounded-lg border border-black/10 bg-[#fbfcf8] p-3 text-sm">
-                    <p className="font-semibold">{String(invite.metadata?.invite_email ?? "Pending invite")}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{String(invite.metadata?.invite_email ?? "Pending invite")}</p>
+                        <p className="mt-1 text-xs text-black/48">
+                          {titleCase(String(invite.metadata?.role ?? "viewer"))} · Expires {formatDate(String(invite.metadata?.expires_at ?? ""))}
+                        </p>
+                      </div>
+                      <form action={cancelInvite}>
+                        <input type="hidden" name="organizationId" value={organization.id} />
+                        <input type="hidden" name="inviteToken" value={String(invite.metadata?.invite_token ?? "")} />
+                        <input type="hidden" name="inviteEmail" value={String(invite.metadata?.invite_email ?? "")} />
+                        <PendingButton
+                          pendingText="Canceling..."
+                          disabled={!canManage}
+                          className="h-8 rounded-md border border-black/10 bg-white px-2 text-xs font-semibold text-black/62 disabled:opacity-50"
+                        >
+                          Cancel
+                        </PendingButton>
+                      </form>
+                    </div>
+                    {invite.metadata?.note && (
+                      <p className="mt-2 rounded-md border border-black/10 bg-white px-2 py-1 text-xs text-black/52">
+                        {String(invite.metadata.note)}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-black/48">
-                      {titleCase(String(invite.metadata?.role ?? "viewer"))} · {formatDate(invite.created_at)}
+                      Token: {String(invite.metadata?.invite_token ?? "not generated").slice(0, 8)}
                     </p>
                   </div>
                 ))}

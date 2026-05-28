@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const memberRoles = new Set(["owner", "admin", "operator", "viewer"]);
+const managerRoles = new Set(["owner", "admin"]);
 
 export async function inviteMember(formData: FormData) {
   const organizationId = String(formData.get("organizationId") ?? "");
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const role = String(formData.get("role") ?? "viewer");
+  const note = String(formData.get("note") ?? "").trim();
 
   if (!organizationId || !email.includes("@") || !memberRoles.has(role)) {
     throw new Error("Enter a valid email address and role.");
@@ -21,20 +23,10 @@ export async function inviteMember(formData: FormData) {
     throw new Error("You must be signed in to invite team members.");
   }
 
-  const { data: currentMembership, error: membershipError } = await supabase
-    .from("organization_members")
-    .select("role")
-    .eq("organization_id", organizationId)
-    .eq("user_id", userData.user.id)
-    .single();
+  await requireTeamManager(supabase, organizationId, userData.user.id);
 
-  if (membershipError) {
-    throw membershipError;
-  }
-
-  if (currentMembership.role !== "owner" && currentMembership.role !== "admin") {
-    throw new Error("Only owners and admins can invite team members.");
-  }
+  const inviteToken = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const { error } = await supabase.from("audit_logs").insert({
     organization_id: organizationId,
@@ -45,7 +37,10 @@ export async function inviteMember(formData: FormData) {
       source: "team_workspace",
       invite_email: email,
       role,
+      note: note || null,
       state: "pending",
+      invite_token: inviteToken,
+      expires_at: expiresAt,
     },
   });
 
@@ -82,6 +77,8 @@ export async function updateMemberRole(formData: FormData) {
   if (targetError) {
     throw targetError;
   }
+
+  await requireTeamManager(supabase, organizationId, userData.user.id);
 
   if (targetMember.role === "owner" && role !== "owner") {
     const { count } = await supabase
@@ -148,6 +145,8 @@ export async function removeMember(formData: FormData) {
     throw targetError;
   }
 
+  await requireTeamManager(supabase, organizationId, userData.user.id);
+
   if (targetMember.user_id === userData.user.id) {
     throw new Error("You cannot remove your own active session from this workspace.");
   }
@@ -188,6 +187,65 @@ export async function removeMember(formData: FormData) {
   });
 
   revalidateTeamViews();
+}
+
+export async function cancelInvite(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const inviteToken = String(formData.get("inviteToken") ?? "");
+  const inviteEmail = String(formData.get("inviteEmail") ?? "");
+
+  if (!organizationId || !inviteToken) {
+    throw new Error("A valid invite is required.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to cancel invites.");
+  }
+
+  await requireTeamManager(supabase, organizationId, userData.user.id);
+
+  const { error } = await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "team_invite_cancelled",
+    event_summary: `Invite cancelled for ${inviteEmail || "teammate"}`,
+    metadata: {
+      source: "team_workspace",
+      invite_email: inviteEmail || null,
+      invite_token: inviteToken,
+      state: "cancelled",
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  revalidateTeamViews();
+}
+
+async function requireTeamManager(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  organizationId: string,
+  userId: string,
+) {
+  const { data: currentMembership, error: membershipError } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .single();
+
+  if (membershipError) {
+    throw membershipError;
+  }
+
+  if (!managerRoles.has(currentMembership.role)) {
+    throw new Error("Only owners and admins can manage team members.");
+  }
 }
 
 function revalidateTeamViews() {
