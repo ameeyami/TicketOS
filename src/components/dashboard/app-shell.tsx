@@ -73,15 +73,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="ticketos-app-shell min-h-screen bg-[#fbfaf8] text-[#1f1b16]">
+    <div className="ticketos-app-shell min-h-screen bg-[#f4f8fb] text-[#07111f]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[218px] shrink-0 border-r border-[#eee8e2] bg-[#faf7f5] px-3 py-4 lg:block">
+        <aside className="hidden w-[226px] shrink-0 border-r border-[#d8e4ee] bg-[#07111f] px-3 py-4 text-white lg:block">
           <Link href="/app" className="flex h-9 items-center gap-2 px-2 text-sm font-semibold">
-            <span className="flex size-6 items-center justify-center rounded-md bg-[#d9f876] text-xs font-bold text-[#263011]">
+            <span className="flex size-6 items-center justify-center rounded-md bg-[#22c55e] text-xs font-bold text-[#03120a]">
               T
             </span>
             TicketOS
-            <ChevronDown size={13} className="text-black/35" />
+            <ChevronDown size={13} className="text-white/40" />
           </Link>
 
           <div className="mt-7 space-y-1">
@@ -111,13 +111,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <section className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[#eee8e2] bg-[#fbfaf8]/92 px-4 backdrop-blur md:px-6">
+          <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[#d8e4ee] bg-white/92 px-4 backdrop-blur md:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <Link href="/app" className="flex items-center gap-2 text-sm font-semibold text-black/72 lg:hidden">
-                <span className="flex size-6 items-center justify-center rounded-md bg-[#d9f876] text-xs font-bold">T</span>
+                <span className="flex size-6 items-center justify-center rounded-md bg-[#22c55e] text-xs font-bold text-[#03120a]">T</span>
                 TicketOS
               </Link>
-              <form action="/app" className="hidden h-8 w-[320px] items-center gap-2 rounded-md border border-[#eee8e2] bg-white px-2 md:flex">
+              <form action="/app" className="hidden h-8 w-[320px] items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-2 md:flex">
                 <Search size={14} className="text-black/35" />
                 <input
                   name="q"
@@ -134,7 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Settings size={15} />
               </Link>
               <SignOutButton />
-              <Link href="/app/team" className="hidden h-8 items-center gap-2 rounded-md border border-[#eee8e2] bg-white px-2 text-xs font-semibold md:inline-flex">
+              <Link href="/app/team" className="hidden h-8 items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-2 text-xs font-semibold md:inline-flex">
                 <Building2 size={14} />
                 Amee Labs
               </Link>
@@ -163,17 +163,17 @@ function SidebarSection({
     <details className="group">
       <summary
         className={cn(
-          "flex h-9 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm font-semibold text-black/78 transition hover:bg-[#f1ebe5]",
-          active && "bg-[#f1ebe5] text-black",
+          "flex h-9 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm font-semibold text-white/76 transition hover:bg-white/10",
+          active && "bg-white/12 text-white",
         )}
       >
-        <span className="flex size-5 items-center justify-center rounded bg-[#d8efff] text-[11px] font-bold text-[#357297]">
+        <span className="flex size-5 items-center justify-center rounded bg-[#dbeafe] text-[11px] font-bold text-[#0b4f7a]">
           {initial}
         </span>
         <span className="min-w-0 flex-1 truncate">{name}</span>
         <ChevronDown
           size={13}
-          className="text-black/35 transition group-open:rotate-180"
+          className="text-white/35 transition group-open:rotate-180"
         />
       </summary>
       <div className="mt-1 space-y-1 pb-3">{children}</div>
@@ -194,13 +194,13 @@ function NavLink({
     <Link
       href={item.href}
       className={cn(
-        "flex h-8 items-center gap-2 rounded-md px-2 text-sm font-medium text-black/68 transition hover:bg-[#f1ebe5] hover:text-black",
-        active && "bg-[#f1ebe5] text-black",
+        "flex h-8 items-center gap-2 rounded-md px-2 text-sm font-medium text-white/62 transition hover:bg-white/10 hover:text-white",
+        active && "bg-white/12 text-white",
       )}
     >
-      <item.icon size={14} className="text-black/56" />
+      <item.icon size={14} className="text-current opacity-80" />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
-      {item.label === "Approvals" && <span className="rounded bg-white px-1.5 py-0.5 text-[11px] text-black/45">2</span>}
+      {item.label === "Approvals" && <span className="rounded bg-[#22c55e] px-1.5 py-0.5 text-[11px] text-[#03120a]">2</span>}
     </Link>
   );
 }

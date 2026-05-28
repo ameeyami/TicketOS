@@ -23,7 +23,7 @@ export default async function IntegrationsPage() {
     .order("display_name");
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
@@ -33,25 +33,25 @@ export default async function IntegrationsPage() {
           Command center
         </Link>
 
-        <div className="mt-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Integrations</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Connect operational systems.</h1>
+        <div className="mt-5 border-b border-black/10 pb-5">
+          <h1 className="text-3xl font-semibold tracking-tight">Applications</h1>
+          <p className="mt-2 text-sm text-slate-600">Connect IT systems with a verified workspace or tenant ID.</p>
         </div>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {(integrations ?? []).map((integration) => {
             const config = integration.config as { connection_id?: string; admin_email?: string | null } | null;
             const isConnected = integration.status === "connected";
 
             return (
-              <div key={integration.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+              <div key={integration.id} className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <Cable size={18} className="text-[#2f6f60]" />
+                      <Cable size={18} className="text-[#0b5f91]" />
                       <h2 className="text-lg font-semibold">{integration.display_name}</h2>
                     </div>
-                    <p className="mt-2 text-sm text-black/48">{integration.scopes?.join(", ") || "No scopes"}</p>
+                    <p className="mt-2 text-sm text-slate-500">{integration.scopes?.join(", ") || "No scopes"}</p>
                   </div>
                   <span
                     className={cn(
@@ -60,7 +60,7 @@ export default async function IntegrationsPage() {
                         ? "bg-emerald-50 text-emerald-700"
                         : integration.status === "disabled"
                           ? "bg-rose-50 text-rose-700"
-                          : "bg-zinc-100 text-zinc-600",
+                          : "bg-[#e7f3ff] text-[#0b5f91]",
                     )}
                   >
                     {integration.status.replaceAll("_", " ")}
@@ -68,7 +68,7 @@ export default async function IntegrationsPage() {
                 </div>
 
                 {isConnected ? (
-                  <div className="mt-4 rounded-lg border border-black/10 bg-[#fbfcf8] p-3 text-sm">
+                  <div className="mt-4 rounded-md border border-black/10 bg-[#f8fbfe] p-3 text-sm">
                     <p className="font-semibold">ID: {config?.connection_id ?? "Not saved"}</p>
                     {config?.admin_email && <p className="mt-1 text-black/50">{config.admin_email}</p>}
                   </div>
@@ -80,17 +80,17 @@ export default async function IntegrationsPage() {
                       name="connectionId"
                       required
                       placeholder={connectionPlaceholder(integration.provider_key)}
-                      className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none"
+                      className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none"
                     />
                     <input
                       name="adminEmail"
                       type="email"
                       placeholder="Admin email (optional)"
-                      className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none"
+                      className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none"
                     />
                     <PendingButton
                       pendingText="Connecting..."
-                      className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                      className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
                     >
                       <CheckCircle2 size={15} />
                       Connect
@@ -101,7 +101,7 @@ export default async function IntegrationsPage() {
                 <div className="mt-5 flex gap-2">
                   <Link
                     href={`/app/integrations/${integration.id}`}
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
+                    className="inline-flex h-9 items-center gap-2 rounded-md border border-black/10 bg-white px-3 text-sm font-semibold"
                   >
                     Actions
                     <ArrowRight size={15} />
@@ -133,10 +133,10 @@ function IntegrationButton({
       <PendingButton
         pendingText={label === "Connect" ? "Connecting..." : "Disabling..."}
         className={cn(
-          "inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold",
+          "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-semibold",
           status === "connected"
-            ? "bg-[#17211c] text-white"
-            : "border border-black/10 bg-white text-[#151914]",
+            ? "bg-[#0b2a4a] text-white"
+            : "border border-black/10 bg-white text-[#07111f]",
         )}
       >
         {status === "connected" ? <CheckCircle2 size={15} /> : <LockKeyhole size={15} />}

@@ -27,7 +27,7 @@ export default async function WorkflowsPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
@@ -37,38 +37,38 @@ export default async function WorkflowsPage() {
           Command center
         </Link>
 
-        <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="mt-5 flex flex-col gap-3 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Workflow library</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Run governed IT workflows.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Workflows</h1>
+            <p className="mt-2 text-sm text-slate-600">Run governed automations for repeat IT work.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/app/workflows/new"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
             >
               <Plus size={16} />
               New workflow
             </Link>
-            <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
+            <div className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-semibold">
               {organization.name}
             </div>
           </div>
         </div>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_.8fr]">
+        <section className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
           <div className="space-y-4">
             {(workflows ?? []).map((workflow) => (
-              <div key={workflow.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+              <div key={workflow.id} className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex gap-4">
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-                      <Workflow size={20} />
+                  <div className="flex gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[#e7f3ff] text-[#0b5f91]">
+                      <Workflow size={18} />
                     </span>
                     <div>
                       <h2 className="text-lg font-semibold">{workflow.name}</h2>
-                      <p className="mt-1 text-sm leading-6 text-black/55">{workflow.description}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
+                      <p className="mt-1 text-sm leading-6 text-slate-600">{workflow.description}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                         Trigger: {workflow.trigger_type}
                       </p>
                     </div>
@@ -76,7 +76,7 @@ export default async function WorkflowsPage() {
                   <div className="flex flex-wrap gap-2">
                     <Link
                       href={`/app/workflows/${workflow.id}`}
-                      className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
+                      className="inline-flex h-9 items-center gap-2 rounded-md border border-black/10 px-3 text-sm font-semibold"
                     >
                       Designer
                       <ArrowRight size={15} />
@@ -86,7 +86,7 @@ export default async function WorkflowsPage() {
                       <input type="hidden" name="organizationId" value={organization.id} />
                       <PendingButton
                         pendingText="Starting..."
-                        className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                        className="h-9 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
                       >
                         <Play size={16} />
                         Run workflow
@@ -98,33 +98,33 @@ export default async function WorkflowsPage() {
             ))}
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+          <div className="space-y-5">
+            <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-[#2f6f60]" />
-                <h2 className="text-lg font-semibold">Policy rules</h2>
+                <ShieldCheck size={17} className="text-[#0b5f91]" />
+                <h2 className="font-semibold">Policy rules</h2>
               </div>
               <div className="mt-4 space-y-3">
                 {(policies ?? []).length > 0 ? (
                   policies?.map((policy) => (
-                    <div key={policy.id} className="rounded-lg border border-black/10 p-4">
+                    <div key={policy.id} className="rounded-md border border-black/10 p-3">
                       <p className="font-semibold">{policy.name}</p>
                       <p className="mt-1 text-sm text-black/52">{policy.description}</p>
                     </div>
                   ))
                 ) : (
                   <p className="rounded-lg border border-dashed border-black/15 bg-[#f8faf5] p-4 text-sm text-black/48">
-                    No custom policy rules yet. Default guardrails are still active.
+                    No custom policy rules yet.
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">Recent workflow runs</h2>
+            <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+              <h2 className="font-semibold">Recent runs</h2>
               <div className="mt-4 space-y-3">
                 {(runs ?? []).map((run) => (
-                  <div key={run.id} className="rounded-lg border border-black/10 p-4">
+                  <div key={run.id} className="rounded-md border border-black/10 p-3">
                     <p className="font-semibold">{run.workflows?.name ?? "Workflow run"}</p>
                     <p className="mt-1 text-sm text-black/52">
                       {run.tickets?.external_id ?? "Ticket"} · {run.tickets?.title ?? "No ticket title"}

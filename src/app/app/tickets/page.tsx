@@ -4,14 +4,10 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  CircleAlert,
   Filter,
   Plus,
   Search,
-  ShieldCheck,
-  TicketCheck,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { updateTicketStatus } from "@/app/app/actions";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ticketIcons } from "@/lib/dashboard-data";
@@ -41,7 +37,7 @@ const priorityOptions = [
 const statusStyles: Record<string, string> = {
   new: "border-zinc-200 bg-zinc-50 text-zinc-700",
   triaging: "border-sky-200 bg-sky-50 text-sky-700",
-  approval_required: "border-amber-200 bg-amber-50 text-amber-800",
+  approval_required: "border-[#b7d8f2] bg-[#e7f3ff] text-[#0b5f91]",
   executing: "border-emerald-200 bg-emerald-50 text-emerald-700",
   resolved: "border-emerald-200 bg-emerald-50 text-emerald-700",
   blocked: "border-rose-200 bg-rose-50 text-rose-700",
@@ -90,12 +86,9 @@ export default async function TicketInboxPage({
   const categories = Array.from(new Set(ticketRows.map((ticket) => ticket.category).filter(Boolean))).sort();
   const hasAppliedFilter = hasTicketFilter(params);
   const filteredTickets = hasAppliedFilter ? filterTickets(ticketRows, params) : [];
-  const openTickets = ticketRows.filter((ticket) => !["resolved", "blocked", "failed"].includes(ticket.status)).length;
-  const approvalTickets = ticketRows.filter((ticket) => ticket.status === "approval_required").length;
-  const blockedTickets = ticketRows.filter((ticket) => ["blocked", "failed"].includes(ticket.status)).length;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
@@ -108,36 +101,28 @@ export default async function TicketInboxPage({
         <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Tickets</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-black/54">
-              Choose a filter to view only the queue you need.
-            </p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Filter the queue, inspect requests, and resolve work.</p>
           </div>
           <Link
             href="/app/tickets/new"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
           >
             <Plus size={16} />
             New ticket
           </Link>
         </div>
 
-        <section className="mt-5 grid gap-3 md:grid-cols-3">
-          <MetricCard label="Open tickets" value={String(openTickets)} icon={TicketCheck} />
-          <MetricCard label="Needs approval" value={String(approvalTickets)} icon={ShieldCheck} />
-          <MetricCard label="Blocked" value={String(blockedTickets)} icon={CircleAlert} />
-        </section>
-
         <section className="mt-5 grid gap-5 xl:grid-cols-[300px_1fr]">
           <aside>
-            <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+            <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-2">
-                <Filter size={18} className="text-[#2f6f60]" />
-                <h2 className="text-lg font-semibold">Filters</h2>
+                <Filter size={17} className="text-[#0b5f91]" />
+                <h2 className="font-semibold">Filters</h2>
               </div>
-              <form action="/app/tickets" className="mt-5 grid gap-4">
+              <form action="/app/tickets" className="mt-4 grid gap-3">
                 <label className="text-sm font-semibold">
                   Search
-                  <div className="mt-2 flex h-11 items-center gap-2 rounded-lg border border-black/10 bg-[#f8faf5] px-3">
+                  <div className="mt-2 flex h-10 items-center gap-2 rounded-md border border-black/10 bg-[#f8fbfe] px-3">
                     <Search size={16} className="text-black/38" />
                     <input
                       name="q"
@@ -160,12 +145,12 @@ export default async function TicketInboxPage({
                   ]}
                 />
 
-                <button className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                <button className="h-10 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
                   Apply filters
                 </button>
                 <Link
                   href="/app/tickets"
-                  className="inline-flex h-10 items-center justify-center rounded-lg border border-black/10 px-3 text-sm font-semibold"
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-black/10 px-3 text-sm font-semibold"
                 >
                   Clear
                 </Link>
@@ -174,8 +159,8 @@ export default async function TicketInboxPage({
 
           </aside>
 
-          <section className="rounded-xl border border-black/10 bg-white shadow-sm">
-            <div className="flex flex-col gap-2 border-b border-black/10 p-5 md:flex-row md:items-center md:justify-between">
+          <section className="rounded-lg border border-black/10 bg-white shadow-sm">
+            <div className="flex flex-col gap-2 border-b border-black/10 px-4 py-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Queue results</h2>
                 <p className="mt-1 text-sm text-black/52">
@@ -186,7 +171,7 @@ export default async function TicketInboxPage({
               </div>
               <Link
                 href="/app/approvals"
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-black/10 px-3 text-sm font-semibold"
               >
                 Approval workspace
                 <ArrowRight size={15} />
@@ -198,9 +183,9 @@ export default async function TicketInboxPage({
                 const TicketIcon = ticketIcons[ticket.category as keyof typeof ticketIcons] ?? ticketIcons.Default;
 
                 return (
-                  <article key={ticket.id} className="grid gap-4 p-5 transition hover:bg-[#f8faf5] lg:grid-cols-[1fr_190px]">
-                    <div className="flex gap-4">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                  <article key={ticket.id} className="grid gap-4 px-4 py-3 transition hover:bg-[#f8fbfe] lg:grid-cols-[1fr_190px]">
+                    <div className="flex gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[#e7f3ff] text-[#0b5f91]">
                         <TicketIcon size={19} />
                       </span>
                       <div className="min-w-0">
@@ -211,13 +196,13 @@ export default async function TicketInboxPage({
                             {ticket.priority}
                           </span>
                           {pendingApprovalTicketIds.has(ticket.id) && (
-                            <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+                            <span className="rounded-md border border-[#b7d8f2] bg-[#e7f3ff] px-2 py-1 text-xs font-semibold text-[#0b5f91]">
                               approval pending
                             </span>
                           )}
                         </div>
-                        <h3 className="mt-2 text-lg font-semibold tracking-tight">{ticket.title}</h3>
-                        <p className="mt-2 max-w-3xl text-sm leading-6 text-black/56">
+                        <h3 className="mt-2 font-semibold tracking-tight">{ticket.title}</h3>
+                        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
                           {ticket.ai_summary ?? ticket.description ?? "No summary available."}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-black/42">
@@ -236,7 +221,7 @@ export default async function TicketInboxPage({
                       <div className="flex flex-wrap gap-2 lg:justify-end">
                         <Link
                           href={`/app/tickets/${ticket.id}`}
-                          className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                          className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
                         >
                           Inspect
                           <ArrowRight size={15} />
@@ -294,30 +279,6 @@ function QuickStatusForm({
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon: LucideIcon;
-}) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-        </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function SelectFilter({
   name,
   label,
@@ -335,7 +296,7 @@ function SelectFilter({
       <select
         name={name}
         defaultValue={value}
-        className="mt-2 h-11 w-full rounded-lg border border-black/10 bg-[#f8faf5] px-3 text-sm outline-none focus:border-[#2f6f60]"
+        className="mt-2 h-10 w-full rounded-md border border-black/10 bg-[#f8fbfe] px-3 text-sm outline-none focus:border-[#0b5f91]"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
