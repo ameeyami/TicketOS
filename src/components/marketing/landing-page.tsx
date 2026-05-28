@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 
 const heroTickets = [
   { id: "TOS-2041", title: "Restore Okta access", status: "Executing", agent: "Access Agent" },
@@ -74,8 +75,7 @@ export function LandingPage() {
     <main className="min-h-screen bg-[#f4f8fb] text-[#07111f]">
       <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-[#d8e4ee] bg-white/90 px-5 backdrop-blur md:px-8">
         <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-          <TicketOSMark />
-          TicketOS
+          <TicketOSLogo markSize="md" />
         </Link>
         <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
           <a href="#product">Product</a>
@@ -136,7 +136,7 @@ export function LandingPage() {
           >
             <div className="flex h-11 items-center justify-between border-b border-[#d8e4ee] bg-[#f8fbfe] px-4">
               <div className="flex items-center gap-2">
-                <TicketOSMark small />
+                <TicketOSLogo markSize="sm" showWordmark={false} />
                 <span className="text-sm font-semibold">Service workspace</span>
               </div>
               <span className="rounded-md bg-[#e8f8ef] px-2 py-1 text-xs font-semibold text-[#0f7a5f]">Live</span>
@@ -253,14 +253,6 @@ export function LandingPage() {
         </form>
       </section>
     </main>
-  );
-}
-
-function TicketOSMark({ small = false }: { small?: boolean }) {
-  return (
-    <span className={small ? "flex size-6 items-center justify-center rounded-md bg-[#22c55e] text-xs font-bold text-[#03120a]" : "flex size-8 items-center justify-center rounded-md bg-[#22c55e] text-sm font-bold text-[#03120a]"}>
-      T
-    </span>
   );
 }
 

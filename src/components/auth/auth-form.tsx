@@ -3,7 +3,8 @@
 import { FormEvent, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Eye, EyeOff, Loader2, Workflow } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -83,13 +84,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] text-[#171512]">
+    <main className="min-h-screen bg-[#f4f8fb] text-[#07111f]">
       <section className="flex min-h-screen flex-col px-5 py-5 md:px-8">
         <Link href="/" className="flex w-fit items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-[#17211c] text-white">
-              <Workflow size={18} />
-            </span>
-          <span className="text-xl font-semibold tracking-tight">TicketOS</span>
+          <TicketOSLogo markSize="lg" />
         </Link>
 
         <div className="flex flex-1 items-center justify-center py-12">

@@ -27,6 +27,7 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { cn } from "@/lib/utils";
 
 const teams = [
@@ -77,10 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen">
         <aside className="hidden w-[226px] shrink-0 border-r border-[#d8e4ee] bg-[#07111f] px-3 py-4 text-white lg:block">
           <Link href="/app" className="flex h-9 items-center gap-2 px-2 text-sm font-semibold">
-            <span className="flex size-6 items-center justify-center rounded-md bg-[#22c55e] text-xs font-bold text-[#03120a]">
-              T
-            </span>
-            TicketOS
+            <TicketOSLogo markSize="sm" tone="dark" />
             <ChevronDown size={13} className="text-white/40" />
           </Link>
 
@@ -114,8 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[#d8e4ee] bg-white/92 px-4 backdrop-blur md:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <Link href="/app" className="flex items-center gap-2 text-sm font-semibold text-black/72 lg:hidden">
-                <span className="flex size-6 items-center justify-center rounded-md bg-[#22c55e] text-xs font-bold text-[#03120a]">T</span>
-                TicketOS
+                <TicketOSLogo markSize="sm" />
               </Link>
               <form action="/app" className="hidden h-8 w-[320px] items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-2 md:flex">
                 <Search size={14} className="text-black/35" />
