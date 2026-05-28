@@ -1,14 +1,15 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, type ReactNode, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { signInWithProvider } from "@/app/auth/actions";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
+import { PendingButton } from "@/components/ui/pending-button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
-type OAuthProvider = "google" | "github" | "azure";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -67,25 +68,6 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     });
   }
 
-  function handleOAuth(provider: OAuthProvider, label: string) {
-    setError("");
-    setMessage("");
-
-    startTransition(async () => {
-      const supabase = createSupabaseBrowserClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: authRedirectUrl(),
-        },
-      });
-
-      if (oauthError) {
-        setError(`${label} sign in could not start. Check that ${label} is enabled in Supabase Auth settings.`);
-      }
-    });
-  }
-
   function handleOktaSSO() {
     const domain = oktaDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
@@ -131,33 +113,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </div>
 
             <div className="space-y-3">
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => handleOAuth("google", "Google")}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <GoogleMark />
-                Continue with Google
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => handleOAuth("github", "GitHub")}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <GitHubMark />
-                Continue with GitHub
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => handleOAuth("azure", "Microsoft")}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <MicrosoftMark />
-                Continue with Microsoft / Teams
-              </button>
+              <ProviderLoginForm provider="google" label="Continue with Google" icon={<GoogleMark />} />
+              <ProviderLoginForm provider="github" label="Continue with GitHub" icon={<GitHubMark />} />
+              <ProviderLoginForm provider="azure" label="Continue with Microsoft / Teams" icon={<MicrosoftMark />} />
               <div className="rounded-xl border border-black/10 bg-white p-3 shadow-sm">
                 <label className="block text-xs font-semibold text-black/56">Okta company domain</label>
                 <div className="mt-2 flex gap-2">
@@ -270,6 +228,29 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <p className="text-xs text-black/38">TicketOS</p>
       </section>
     </main>
+  );
+}
+
+function ProviderLoginForm({
+  provider,
+  label,
+  icon,
+}: {
+  provider: "google" | "github" | "azure";
+  label: string;
+  icon: ReactNode;
+}) {
+  return (
+    <form action={signInWithProvider}>
+      <input type="hidden" name="provider" value={provider} />
+      <PendingButton
+        pendingText="Checking..."
+        className="h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {icon}
+        {label}
+      </PendingButton>
+    </form>
   );
 }
 
