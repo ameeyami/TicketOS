@@ -2,15 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   ArrowLeft,
-  BadgeCheck,
-  CircleAlert,
-  Clock3,
+  ChevronDown,
   MessageSquareText,
   ShieldCheck,
-  UserRound,
   UsersRound,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { recordPeopleReview, requestAccessReview } from "@/app/app/people/actions";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -89,9 +85,6 @@ export default async function PeoplePage() {
   const ticketRows = (tickets ?? []) as TicketRow[];
   const logs = (auditLogs ?? []) as AuditRow[];
   const people = buildPeople(ticketRows, logs);
-  const openRequests = people.reduce((sum, person) => sum + person.openCount, 0);
-  const blockedRequests = people.reduce((sum, person) => sum + person.blockedCount, 0);
-  const accessReviewCount = logs.filter((log) => log.event_type === "access_review_requested").length;
 
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
@@ -118,17 +111,10 @@ export default async function PeoplePage() {
           </Link>
         </div>
 
-        <section className="mt-5 grid gap-3 md:grid-cols-4">
-          <MetricCard label="People" value={String(people.length)} icon={UserRound} />
-          <MetricCard label="Open requests" value={String(openRequests)} icon={Clock3} />
-          <MetricCard label="Blocked" value={String(blockedRequests)} icon={CircleAlert} />
-          <MetricCard label="Access reviews" value={String(accessReviewCount)} icon={BadgeCheck} />
-        </section>
-
         <section className="mt-5">
           <div className="space-y-4">
             {people.map((person) => (
-              <article key={person.email} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+              <article key={person.email} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex gap-3">
                     <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#e7f0e4] text-base font-semibold text-[#2e6658]">
@@ -141,6 +127,7 @@ export default async function PeoplePage() {
                         <Pill>{person.topCategory}</Pill>
                         <Pill>{person.openCount} open</Pill>
                         <Pill>{person.accessReviews} reviews</Pill>
+                        <Pill>{riskLabel(person)} risk</Pill>
                       </div>
                     </div>
                   </div>
@@ -149,14 +136,7 @@ export default async function PeoplePage() {
                   </span>
                 </div>
 
-                <div className="mt-5 grid gap-3 md:grid-cols-4">
-                  <Fact label="Tickets" value={String(person.tickets.length)} />
-                  <Fact label="Open" value={String(person.openCount)} />
-                  <Fact label="Risk" value={riskLabel(person)} />
-                  <Fact label="AI confidence" value={`${person.avgConfidence}%`} />
-                </div>
-
-                <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_.85fr]">
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_.85fr]">
                   <div className="rounded-lg border border-black/10">
                     {person.tickets.slice(0, 3).map((ticket) => (
                       <Link key={ticket.id} href={`/app/tickets/${ticket.id}`} className="block border-b border-black/8 p-4 last:border-b-0">
@@ -173,7 +153,12 @@ export default async function PeoplePage() {
                     ))}
                   </div>
 
-                  <div className="space-y-3">
+                  <details className="group rounded-lg border border-black/10 bg-[#f8faf5]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-3 text-sm font-semibold">
+                      Review actions
+                      <ChevronDown size={15} className="text-black/38 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="space-y-3 border-t border-black/10 p-3">
                     <form action={recordPeopleReview} className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
                       <input type="hidden" name="organizationId" value={organization.id} />
                       <input type="hidden" name="personEmail" value={person.email} />
@@ -211,7 +196,8 @@ export default async function PeoplePage() {
                         Request access review
                       </PendingButton>
                     </form>
-                  </div>
+                    </div>
+                  </details>
                 </div>
               </article>
             ))}
@@ -269,31 +255,6 @@ function buildPeople(tickets: TicketRow[], logs: AuditRow[]) {
       } satisfies Person;
     })
     .sort((a, b) => b.openCount - a.openCount || new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime());
-}
-
-function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-        </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-black/70">{value}</p>
-    </div>
-  );
 }
 
 function Pill({ children }: { children: React.ReactNode }) {

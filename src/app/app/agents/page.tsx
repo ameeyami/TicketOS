@@ -4,12 +4,9 @@ import {
   ArrowLeft,
   Bot,
   Boxes,
-  CheckCircle2,
   CirclePause,
-  Clock3,
   Play,
   ShieldCheck,
-  TicketCheck,
 } from "lucide-react";
 import { assignTicketToAgent, updateAgentStatus } from "@/app/app/agents/actions";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -40,29 +37,18 @@ export default async function AgentsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: agents }, { data: tickets }, { data: agentRuns }] = await Promise.all([
+  const [{ data: agents }, { data: tickets }] = await Promise.all([
     supabase.from("agents").select("*").eq("organization_id", organization.id).order("created_at"),
     supabase
       .from("tickets")
       .select("id, external_id, title, status, priority, ai_confidence, assigned_agent_id, created_at")
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("agent_runs")
-      .select("*, agents(name), tickets(external_id, title)")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false })
-      .limit(6),
   ]);
 
   const ticketRows = tickets ?? [];
   const agentRows = agents ?? [];
   const unassignedTickets = ticketRows.filter((ticket) => !ticket.assigned_agent_id);
-  const activeTickets = ticketRows.filter((ticket) => !["resolved", "blocked"].includes(ticket.status)).length;
-  const executingAgents = agentRows.filter((agent) => agent.status === "Executing").length;
-  const averageConfidence = ticketRows.length
-    ? Math.round(ticketRows.reduce((sum, ticket) => sum + Number(ticket.ai_confidence ?? 0), 0) / ticketRows.length)
-    : 0;
 
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
@@ -82,19 +68,13 @@ export default async function AgentsPage() {
           </div>
         </div>
 
-        <section className="mt-5 grid gap-3 md:grid-cols-3">
-          <MetricCard label="Active tickets" value={String(activeTickets)} icon={TicketCheck} />
-          <MetricCard label="Executing agents" value={`${executingAgents}/${agentRows.length}`} icon={Bot} />
-          <MetricCard label="Avg confidence" value={`${averageConfidence}%`} icon={CheckCircle2} />
-        </section>
-
         <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
           <div className="grid gap-4 lg:grid-cols-2">
             {agentRows.map((agent) => {
               const assignedTickets = ticketRows.filter((ticket) => ticket.assigned_agent_id === agent.id);
 
               return (
-                <article key={agent.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+                <article key={agent.id} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex gap-4">
                       <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
@@ -115,22 +95,18 @@ export default async function AgentsPage() {
                     </span>
                   </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">Capabilities</p>
-                      <p className="mt-2 text-sm leading-6 text-black/62">
-                        {agent.capabilities?.join(", ") || "General operations"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">Memory scope</p>
-                      <p className="mt-2 text-sm leading-6 text-black/62">
-                        {agent.memory_scope ?? "No scoped memory yet"}
-                      </p>
-                    </div>
+                  <div className="mt-4 rounded-lg border border-black/10 bg-[#f8faf5] p-3">
+                    <p className="text-sm text-black/58">
+                      <span className="font-semibold text-black/72">Scope:</span>{" "}
+                      {agent.memory_scope ?? "No scoped memory yet"}
+                    </p>
+                    <p className="mt-2 text-sm text-black/58">
+                      <span className="font-semibold text-black/72">Capabilities:</span>{" "}
+                      {agent.capabilities?.join(", ") || "General operations"}
+                    </p>
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold">Assigned work</p>
                       <span className="text-xs font-semibold text-black/42">{assignedTickets.length} tickets</span>
@@ -161,7 +137,7 @@ export default async function AgentsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     {actionStatuses.map((action) => (
                       <form key={action.status} action={updateAgentStatus}>
                         <input type="hidden" name="agentId" value={agent.id} />
@@ -187,16 +163,16 @@ export default async function AgentsPage() {
             })}
           </div>
 
-          <div className="space-y-5">
-            <section className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+          <div>
+            <section className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <Boxes size={18} className="text-[#2f6f60]" />
-                <h2 className="text-lg font-semibold">Route unassigned tickets</h2>
+                <h2 className="font-semibold">Unassigned tickets</h2>
               </div>
               <div className="mt-4 space-y-3">
                 {unassignedTickets.length > 0 ? (
-                  unassignedTickets.map((ticket) => (
-                    <div key={ticket.id} className="rounded-lg border border-black/10 p-4">
+                  unassignedTickets.slice(0, 5).map((ticket) => (
+                    <div key={ticket.id} className="rounded-lg border border-black/10 p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-semibold">{ticket.title}</p>
@@ -211,7 +187,7 @@ export default async function AgentsPage() {
                           Inspect
                         </Link>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {agentRows.map((agent) => (
                           <form key={agent.id} action={assignTicketToAgent}>
                             <input type="hidden" name="ticketId" value={ticket.id} />
@@ -235,58 +211,9 @@ export default async function AgentsPage() {
                 )}
               </div>
             </section>
-
-            <section className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Clock3 size={18} className="text-[#2f6f60]" />
-                <h2 className="text-lg font-semibold">Recent agent activity</h2>
-              </div>
-              <div className="mt-4 space-y-3">
-                {(agentRuns ?? []).map((run) => (
-                  <div key={run.id} className="rounded-lg border border-black/10 p-4">
-                    <p className="font-semibold">{run.agents?.name ?? "Agent run"}</p>
-                    <p className="mt-1 text-sm text-black/52">
-                      {run.tickets?.external_id ?? "Ticket"} · {run.tickets?.title ?? "No ticket attached"}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
-                      {run.status} · {run.model ?? "policy simulator"}
-                    </p>
-                  </div>
-                ))}
-                {(agentRuns ?? []).length === 0 && (
-                  <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
-                    Agent runs will appear here when workflow execution creates them.
-                  </p>
-                )}
-              </div>
-            </section>
           </div>
         </section>
       </div>
     </main>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon: typeof Bot;
-}) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-        </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
-        </span>
-      </div>
-    </div>
   );
 }

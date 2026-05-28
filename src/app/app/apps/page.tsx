@@ -4,9 +4,7 @@ import {
   ArrowLeft,
   BadgeCheck,
   Cable,
-  CheckCircle2,
-  Clock3,
-  ShieldAlert,
+  ChevronDown,
   ShieldCheck,
   Workflow,
 } from "lucide-react";
@@ -88,9 +86,6 @@ export default async function AppsPage() {
   const integrationRows = (integrations ?? []) as IntegrationRow[];
   const actionRows = (actions ?? []) as ActionRow[];
   const approvalRows = (approvals ?? []) as ApprovalRow[];
-  const connectedCount = integrationRows.filter((app) => app.status === "connected").length;
-  const highRiskActions = actionRows.filter((action) => action.risk_level === "high").length;
-  const pendingReviews = approvalRows.filter((approval) => approval.status === "pending").length;
 
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
@@ -117,13 +112,6 @@ export default async function AppsPage() {
           </Link>
         </div>
 
-        <section className="mt-5 grid gap-3 md:grid-cols-4">
-          <MetricCard label="Apps" value={String(integrationRows.length)} icon={Cable} />
-          <MetricCard label="Connected" value={String(connectedCount)} icon={CheckCircle2} />
-          <MetricCard label="High risk" value={String(highRiskActions)} icon={ShieldAlert} />
-          <MetricCard label="Pending reviews" value={String(pendingReviews)} icon={Clock3} />
-        </section>
-
         <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
           <div className="grid gap-4 lg:grid-cols-2">
             {integrationRows.map((app) => {
@@ -133,7 +121,7 @@ export default async function AppsPage() {
               const config = app.config ?? {};
 
               return (
-                <article key={app.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+                <article key={app.id} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -156,13 +144,13 @@ export default async function AppsPage() {
                     </Link>
                   </div>
 
-                  <div className="mt-5 grid gap-3 md:grid-cols-3">
-                    <Fact label="Actions" value={String(appActions.length)} />
-                    <Fact label="High risk" value={String(highRiskCount)} />
-                    <Fact label="Approval" value={String(approvalCount)} />
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-black/50">
+                    <span>{appActions.length} actions</span>
+                    <span>{highRiskCount} high risk</span>
+                    <span>{approvalCount} approval required</span>
                   </div>
 
-                  <div className="mt-5 rounded-lg border border-black/10">
+                  <div className="mt-4 rounded-lg border border-black/10">
                     {appActions.slice(0, 4).map((action) => (
                       <div key={action.id} className="flex items-center justify-between gap-3 border-b border-black/8 p-3 last:border-b-0">
                         <div>
@@ -178,7 +166,12 @@ export default async function AppsPage() {
                     {appActions.length === 0 && <p className="p-3 text-sm text-black/48">Sync actions from the integration detail page.</p>}
                   </div>
 
-                  <div className="mt-5 grid gap-3">
+                  <details className="group mt-4 rounded-lg border border-black/10 bg-[#f8faf5]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-3 text-sm font-semibold">
+                      Review options
+                      <ChevronDown size={15} className="text-black/38 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="grid gap-3 border-t border-black/10 p-3">
                     <form action={requestAppReview} className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
                       <input type="hidden" name="organizationId" value={organization.id} />
                       <input type="hidden" name="integrationId" value={app.id} />
@@ -210,7 +203,8 @@ export default async function AppsPage() {
                         Record owner
                       </PendingButton>
                     </form>
-                  </div>
+                    </div>
+                  </details>
                 </article>
               );
             })}
@@ -238,22 +232,6 @@ export default async function AppsPage() {
   );
 }
 
-function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-        </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
@@ -264,15 +242,6 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIco
         <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-black/70">{value}</p>
     </div>
   );
 }
