@@ -54,7 +54,7 @@ export default async function WorkflowDetailPage({
     notFound();
   }
 
-  const [{ data: versions }, { data: runs }, { data: policies }, { data: audits }] = await Promise.all([
+  const [{ data: versions }, { data: runs }, { data: policies }, { data: audits }, { data: tickets }] = await Promise.all([
     supabase
       .from("workflow_versions")
       .select("*")
@@ -79,6 +79,12 @@ export default async function WorkflowDetailPage({
       .in("event_type", ["workflow_created", "workflow_started", "workflow_activated", "workflow_paused"])
       .order("created_at", { ascending: false })
       .limit(8),
+    supabase
+      .from("tickets")
+      .select("id, external_id, title, status")
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false })
+      .limit(12),
   ]);
 
   const latestVersion = versions?.[0] ?? null;
@@ -108,17 +114,6 @@ export default async function WorkflowDetailPage({
           </div>
           <div className="flex flex-wrap gap-2">
             <StatusBadge active={workflow.is_active} />
-            <form action={runWorkflow}>
-              <input type="hidden" name="workflowId" value={workflow.id} />
-              <input type="hidden" name="organizationId" value={organization.id} />
-              <PendingButton
-                pendingText="Starting..."
-                className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
-              >
-                <Play size={16} />
-                Run workflow
-              </PendingButton>
-            </form>
             <form action={updateWorkflowStatus}>
               <input type="hidden" name="workflowId" value={workflow.id} />
               <input type="hidden" name="organizationId" value={organization.id} />
@@ -139,6 +134,16 @@ export default async function WorkflowDetailPage({
           <MetricCard label="Runs" value={String(runRows.length)} icon={Workflow} />
           <MetricCard label="Active runs" value={String(activeRuns)} icon={Clock3} />
           <MetricCard label="Avg confidence" value={`${avgConfidence}%`} icon={Bot} />
+        </section>
+
+        <section className="mt-6 rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Start a governed run</h2>
+              <p className="mt-1 text-sm text-black/52">Choose the ticket this workflow should execute against.</p>
+            </div>
+          </div>
+          <RunWorkflowForm workflowId={workflow.id} organizationId={organization.id} tickets={tickets ?? []} />
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.08fr_.92fr]">
@@ -229,6 +234,55 @@ export default async function WorkflowDetailPage({
         </section>
       </div>
     </main>
+  );
+}
+
+function RunWorkflowForm({
+  workflowId,
+  organizationId,
+  tickets,
+}: {
+  workflowId: string;
+  organizationId: string;
+  tickets: Array<{ id: string; external_id: string | null; title: string; status: string }>;
+}) {
+  return (
+    <form action={runWorkflow} className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+      <input type="hidden" name="workflowId" value={workflowId} />
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Ticket
+        <select
+          name="ticketId"
+          className="mt-2 h-10 w-full rounded-md border border-[#d8e4ee] bg-white px-3 text-sm normal-case tracking-normal text-[#07111f] outline-none focus:border-[#0b5f91]"
+          required
+        >
+          <option value="">Choose ticket</option>
+          {tickets.map((ticket) => (
+            <option key={ticket.id} value={ticket.id}>
+              {ticket.external_id ?? "Ticket"} - {ticket.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Note
+        <input
+          name="note"
+          className="mt-2 h-10 w-full rounded-md border border-[#d8e4ee] bg-white px-3 text-sm normal-case tracking-normal text-[#07111f] outline-none focus:border-[#0b5f91]"
+          placeholder="Optional operator note"
+        />
+      </label>
+      <div className="flex items-end">
+        <PendingButton
+          pendingText="Starting..."
+          className="h-10 w-full rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white md:w-auto"
+        >
+          <Play size={16} />
+          Run workflow
+        </PendingButton>
+      </div>
+    </form>
   );
 }
 

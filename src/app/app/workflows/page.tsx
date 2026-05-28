@@ -15,7 +15,7 @@ export default async function WorkflowsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: workflows }, { data: runs }, { data: policies }] = await Promise.all([
+  const [{ data: workflows }, { data: runs }, { data: policies }, { data: tickets }] = await Promise.all([
     supabase.from("workflows").select("*").eq("organization_id", organization.id).order("created_at"),
     supabase
       .from("workflow_runs")
@@ -24,6 +24,12 @@ export default async function WorkflowsPage() {
       .order("created_at", { ascending: false })
       .limit(6),
     supabase.from("policy_rules").select("*").eq("organization_id", organization.id).order("created_at"),
+    supabase
+      .from("tickets")
+      .select("id, external_id, title, status")
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false })
+      .limit(12),
   ]);
 
   return (
@@ -81,19 +87,13 @@ export default async function WorkflowsPage() {
                       Designer
                       <ArrowRight size={15} />
                     </Link>
-                    <form action={runWorkflow}>
-                      <input type="hidden" name="workflowId" value={workflow.id} />
-                      <input type="hidden" name="organizationId" value={organization.id} />
-                      <PendingButton
-                        pendingText="Starting..."
-                        className="h-9 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
-                      >
-                        <Play size={16} />
-                        Run workflow
-                      </PendingButton>
-                    </form>
                   </div>
                 </div>
+                <RunWorkflowForm
+                  workflowId={workflow.id}
+                  organizationId={organization.id}
+                  tickets={tickets ?? []}
+                />
               </div>
             ))}
           </div>
@@ -140,5 +140,54 @@ export default async function WorkflowsPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function RunWorkflowForm({
+  workflowId,
+  organizationId,
+  tickets,
+}: {
+  workflowId: string;
+  organizationId: string;
+  tickets: Array<{ id: string; external_id: string | null; title: string; status: string }>;
+}) {
+  return (
+    <form action={runWorkflow} className="mt-4 grid gap-3 rounded-lg border border-[#d8e4ee] bg-[#f8fbfe] p-3 md:grid-cols-[1fr_1fr_auto]">
+      <input type="hidden" name="workflowId" value={workflowId} />
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Ticket
+        <select
+          name="ticketId"
+          className="mt-2 h-10 w-full rounded-md border border-[#d8e4ee] bg-white px-3 text-sm normal-case tracking-normal text-[#07111f] outline-none focus:border-[#0b5f91]"
+          required
+        >
+          <option value="">Choose ticket</option>
+          {tickets.map((ticket) => (
+            <option key={ticket.id} value={ticket.id}>
+              {ticket.external_id ?? "Ticket"} - {ticket.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Note
+        <input
+          name="note"
+          className="mt-2 h-10 w-full rounded-md border border-[#d8e4ee] bg-white px-3 text-sm normal-case tracking-normal text-[#07111f] outline-none focus:border-[#0b5f91]"
+          placeholder="Optional operator note"
+        />
+      </label>
+      <div className="flex items-end">
+        <PendingButton
+          pendingText="Starting..."
+          className="h-10 w-full rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white md:w-auto"
+        >
+          <Play size={16} />
+          Run
+        </PendingButton>
+      </div>
+    </form>
   );
 }

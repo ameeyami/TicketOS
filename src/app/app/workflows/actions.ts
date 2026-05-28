@@ -8,6 +8,8 @@ import { workflowTemplates, type WorkflowTemplateKey } from "@/lib/workflow-temp
 export async function runWorkflow(formData: FormData) {
   const workflowId = String(formData.get("workflowId") ?? "");
   const organizationId = String(formData.get("organizationId") ?? "");
+  const ticketId = String(formData.get("ticketId") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
 
   if (!workflowId || !organizationId) {
     throw new Error("Workflow and organization are required.");
@@ -20,13 +22,27 @@ export async function runWorkflow(formData: FormData) {
     throw new Error("You must be signed in to run workflows.");
   }
 
-  const { data: ticket } = await supabase
-    .from("tickets")
-    .select("id")
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("id, name, trigger_type")
+    .eq("id", workflowId)
     .eq("organization_id", organizationId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .single();
+
+  if (workflowError) {
+    throw workflowError;
+  }
+
+  let ticketQuery = supabase
+    .from("tickets")
+    .select("id, external_id, title")
+    .eq("organization_id", organizationId);
+
+  ticketQuery = ticketId
+    ? ticketQuery.eq("id", ticketId)
+    : ticketQuery.order("created_at", { ascending: false }).limit(1);
+
+  const { data: ticket } = await ticketQuery.maybeSingle();
 
   if (!ticket) {
     throw new Error("Create a ticket before running a workflow.");
@@ -50,7 +66,12 @@ export async function runWorkflow(formData: FormData) {
       ticket_id: ticket.id,
       status: "running",
       confidence: 89,
-      replay_snapshot: { source: "manual_workflow_run", replayable: true },
+      replay_snapshot: {
+        source: "manual_workflow_run",
+        replayable: true,
+        operator_note: note || null,
+        selected_ticket: ticket.external_id,
+      },
       started_at: now,
     })
     .select("id")
@@ -61,22 +82,15 @@ export async function runWorkflow(formData: FormData) {
   }
 
   await supabase.from("workflow_run_steps").insert([
-    step(organizationId, run.id, "intake", "Request received", "succeeded", "Workflow was manually started from the workflow library."),
-    step(organizationId, run.id, "analysis", "Intent analyzed", "succeeded", "TicketOS matched the latest ticket to this workflow."),
-    step(organizationId, run.id, "policy", "Permission checked", "succeeded", "Policy check allowed workflow execution."),
-    step(organizationId, run.id, "execute", "Workflow executing", "running", "Execution has started and is waiting for integration output."),
+    step(organizationId, run.id, "intake", "Request received", "succeeded", "Workflow was manually started from the workflow library.", note),
+    step(organizationId, run.id, "analysis", "Intent analyzed", "succeeded", `TicketOS matched ${ticket.external_id ?? "the selected ticket"} to ${workflow.name}.`, note),
+    step(organizationId, run.id, "policy", "Permission checked", "succeeded", "Policy check allowed workflow execution.", note),
+    step(organizationId, run.id, "execute", "Workflow executing", "running", "Execution has started and is waiting for integration output.", note),
   ]);
 
-  await supabase.from("execution_actions").insert([
-    executionAction(organizationId, run.id, "okta", "reset_password", "running", {
-      ticket_id: ticket.id,
-      source: "manual_workflow_run",
-    }),
-    executionAction(organizationId, run.id, "slack", "send_ephemeral_message", "pending", {
-      ticket_id: ticket.id,
-      source: "manual_workflow_run",
-    }),
-  ]);
+  await supabase
+    .from("execution_actions")
+    .insert(executionActionsForWorkflow(workflow.trigger_type, organizationId, run.id, ticket.id, note));
 
   await supabase.from("policy_evaluations").insert({
     organization_id: organizationId,
@@ -85,8 +99,17 @@ export async function runWorkflow(formData: FormData) {
     decision: "allow",
     reason: "Manual operator-triggered workflow passed policy guardrails.",
     confidence: 89,
-    evaluated_context: { source: "workflow_library" },
+    evaluated_context: { source: "workflow_library", note: note || null },
   });
+
+  await supabase
+    .from("tickets")
+    .update({
+      status: "executing",
+      ai_summary: `TicketOS started ${workflow.name} for this request. ${note ? `Operator note: ${note}` : "Provider actions are now visible in the execution console."}`,
+    })
+    .eq("id", ticket.id)
+    .eq("organization_id", organizationId);
 
   await supabase.from("audit_logs").insert({
     organization_id: organizationId,
@@ -94,8 +117,8 @@ export async function runWorkflow(formData: FormData) {
     ticket_id: ticket.id,
     workflow_run_id: run.id,
     event_type: "workflow_started",
-    event_summary: "Workflow started manually",
-    metadata: { source: "workflow_library" },
+    event_summary: `${workflow.name} started for ${ticket.external_id ?? "ticket"}`,
+    metadata: { source: "workflow_library", note: note || null },
   });
 
   revalidatePath("/app");
@@ -104,7 +127,9 @@ export async function runWorkflow(formData: FormData) {
   revalidatePath("/app/executions");
   revalidatePath("/app/audit");
   revalidatePath("/app/intelligence");
+  revalidatePath("/app/tickets");
   revalidatePath(`/app/tickets/${ticket.id}`);
+  redirect("/app/executions?status=running");
 }
 
 function executionAction(
@@ -125,6 +150,46 @@ function executionAction(
     response_payload: {},
     idempotency_key: `${workflowRunId}-${integrationKey}-${actionKey}`,
   };
+}
+
+function executionActionsForWorkflow(
+  triggerType: string,
+  organizationId: string,
+  workflowRunId: string,
+  ticketId: string,
+  note: string,
+) {
+  const basePayload = {
+    ticket_id: ticketId,
+    source: "manual_workflow_run",
+    operator_note: note || null,
+  };
+
+  const actionsByTrigger: Record<string, Array<[string, string, string]>> = {
+    ticket_intent: [
+      ["okta", "reset_password", "running"],
+      ["slack", "notify_requester", "pending"],
+    ],
+    onboarding_request: [
+      ["google-workspace", "create_user", "running"],
+      ["github", "invite_to_team", "pending"],
+      ["slack", "send_onboarding_message", "pending"],
+    ],
+    security_request: [
+      ["okta", "suspend_user", "running"],
+      ["github", "review_owned_repositories", "pending"],
+      ["google-workspace", "transfer_drive_files", "pending"],
+    ],
+    incident_signal: [
+      ["cisco-meraki", "inspect_gateway", "running"],
+      ["teams", "notify_incident_channel", "pending"],
+    ],
+  };
+
+  return (actionsByTrigger[triggerType] ?? actionsByTrigger.ticket_intent).map(
+    ([integrationKey, actionKey, status]) =>
+      executionAction(organizationId, workflowRunId, integrationKey, actionKey, status, basePayload),
+  );
 }
 
 export async function createWorkflowFromTemplate(formData: FormData) {
@@ -244,6 +309,7 @@ function step(
   name: string,
   status: string,
   detail: string,
+  note?: string,
 ) {
   return {
     organization_id: organizationId,
@@ -253,6 +319,6 @@ function step(
     status,
     actor_type: "agent",
     started_at: new Date().toISOString(),
-    output: { detail },
+    output: { detail, operator_note: note || null },
   };
 }
