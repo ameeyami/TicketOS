@@ -49,7 +49,7 @@ export default async function NotificationsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: approvals }, { data: tickets }, { data: actions }, { data: runs }, { data: auditLogs }] =
+  const [{ data: approvals }, { data: tickets }, { data: actions }, { data: runs }, { data: auditLogs }, { data: reviewLogs }] =
     await Promise.all([
       supabase
         .from("approval_requests")
@@ -85,9 +85,23 @@ export default async function NotificationsPage() {
         .eq("organization_id", organization.id)
         .order("created_at", { ascending: false })
         .limit(10),
+      supabase
+        .from("audit_logs")
+        .select("metadata")
+        .eq("organization_id", organization.id)
+        .eq("event_type", "attention_item_reviewed")
+        .order("created_at", { ascending: false })
+        .limit(200),
     ]);
 
-  const attentionItems = buildAttentionItems({ approvals, tickets, actions, runs });
+  const reviewedItemIds = new Set(
+    (reviewLogs ?? [])
+      .map((log) => (typeof log.metadata?.item_id === "string" ? log.metadata.item_id : null))
+      .filter(Boolean),
+  );
+  const attentionItems = buildAttentionItems({ approvals, tickets, actions, runs }).filter(
+    (item) => !reviewedItemIds.has(item.id),
+  );
   const criticalCount = attentionItems.filter((item) => item.severity === "critical").length;
   const highCount = attentionItems.filter((item) => item.severity === "high").length;
   const approvalCount = attentionItems.filter((item) => item.type === "Approval").length;
@@ -159,6 +173,7 @@ export default async function NotificationsPage() {
                 <form action={reviewAttentionItem} className="mt-5 rounded-lg border border-black/10 bg-[#f8faf5] p-4">
                   <input type="hidden" name="organizationId" value={organization.id} />
                   <input type="hidden" name="ticketId" value={item.ticketId ?? ""} />
+                  <input type="hidden" name="itemId" value={item.id} />
                   <input type="hidden" name="itemType" value={item.type} />
                   <input type="hidden" name="itemTitle" value={item.title} />
                   <textarea

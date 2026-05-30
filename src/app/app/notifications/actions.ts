@@ -6,11 +6,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function reviewAttentionItem(formData: FormData) {
   const organizationId = String(formData.get("organizationId") ?? "");
   const ticketId = String(formData.get("ticketId") ?? "");
+  const itemId = String(formData.get("itemId") ?? "").trim();
   const itemType = String(formData.get("itemType") ?? "").trim();
   const itemTitle = String(formData.get("itemTitle") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
 
-  if (!organizationId || !itemType || !itemTitle) {
+  if (!organizationId || !itemId || !itemType || !itemTitle) {
     throw new Error("Attention item details are required.");
   }
 
@@ -29,6 +30,7 @@ export async function reviewAttentionItem(formData: FormData) {
     event_summary: `${itemTitle} reviewed`,
     metadata: {
       source: "notifications_center",
+      item_id: itemId,
       item_type: itemType,
       note: note || null,
     },
