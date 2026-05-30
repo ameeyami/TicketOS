@@ -6,13 +6,16 @@ import {
   CheckCircle2,
   CircleAlert,
   Clock3,
+  History,
   Loader2,
   ShieldAlert,
+  Undo2,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { updateExecutionActionStatus } from "@/app/app/executions/actions";
+import { reverseExecutionAction, updateExecutionActionStatus } from "@/app/app/executions/actions";
 import { PendingButton } from "@/components/ui/pending-button";
+import { getInverseAction, type InverseActionDefinition } from "@/lib/integration-action-catalog";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -72,6 +75,7 @@ export default async function ExecutionsPage({
   const pendingActions = actionRows.filter((action) => action.status === "pending").length;
   const succeededActions = actionRows.filter((action) => action.status === "succeeded").length;
   const failedActions = actionRows.filter((action) => ["failed", "blocked"].includes(action.status)).length;
+  const reversibleActions = actionRows.filter(canReverse).length;
 
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
@@ -88,7 +92,7 @@ export default async function ExecutionsPage({
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Execution console</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-black/56">
-              Review provider actions, add an operator note, and update the action outcome.
+              Review provider actions, update the outcome, and roll back any action an agent took with one click.
             </p>
           </div>
           <Link
@@ -100,11 +104,12 @@ export default async function ExecutionsPage({
           </Link>
         </div>
 
-        <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <MetricCard label="Running" value={String(runningActions)} icon={Loader2} />
           <MetricCard label="Pending" value={String(pendingActions)} icon={Clock3} />
           <MetricCard label="Succeeded" value={String(succeededActions)} icon={CheckCircle2} />
           <MetricCard label="Blocked or failed" value={String(failedActions)} icon={ShieldAlert} />
+          <MetricCard label="Reversible" value={String(reversibleActions)} icon={Undo2} />
         </section>
 
         <section className="mt-5 rounded-xl border border-black/10 bg-white shadow-sm">
@@ -147,34 +152,65 @@ export default async function ExecutionsPage({
           </div>
 
           <div className="divide-y divide-black/8">
-            {filteredActions.map((action) => (
-              <article key={action.id} className="grid gap-4 p-4 transition hover:bg-[#f8fbfe] lg:grid-cols-[1fr_280px]">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill status={action.status} />
-                    <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/52">
-                      {action.integration_key}
-                    </span>
-                  </div>
-                  <h3 className="mt-3 truncate text-base font-semibold">{action.action_key.replaceAll("_", " ")}</h3>
-                  <p className="mt-2 text-sm leading-6 text-black/55">
-                    {action.workflow_runs?.workflows?.name ?? "Workflow"} ·{" "}
-                    {action.workflow_runs?.tickets?.external_id ?? "Ticket"} ·{" "}
-                    {action.workflow_runs?.tickets?.title ?? "No ticket title"}
-                  </p>
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-black/35">
-                    {formatDate(action.created_at)}
-                  </p>
-                  {action.error_message && (
-                    <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-700">
-                      {action.error_message}
-                    </p>
-                  )}
-                </div>
+            {filteredActions.map((action) => {
+              const inverse = getInverseAction(action.integration_key, action.action_key);
+              const reversedAt = action.response_payload?.reversed_at as string | undefined;
+              const isReversal = Boolean(action.request_payload?.reverses_action_id);
+              const undoable = canReverse(action);
 
-                <ActionStatusForm actionId={action.id} organizationId={organization.id} currentStatus={action.status} />
-              </article>
-            ))}
+              return (
+                <article key={action.id} className="grid gap-4 p-4 transition hover:bg-[#f8fbfe] lg:grid-cols-[1fr_280px]">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill status={action.status} />
+                      <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/52">
+                        {action.integration_key}
+                      </span>
+                      {isReversal && (
+                        <span className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">
+                          <History size={12} />
+                          Rollback
+                        </span>
+                      )}
+                      {reversedAt && (
+                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+                          <Undo2 size={12} />
+                          Reversed
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="mt-3 truncate text-base font-semibold">{action.action_key.replaceAll("_", " ")}</h3>
+                    <p className="mt-2 text-sm leading-6 text-black/55">
+                      {action.workflow_runs?.workflows?.name ?? "Workflow"} ·{" "}
+                      {action.workflow_runs?.tickets?.external_id ?? "Ticket"} ·{" "}
+                      {action.workflow_runs?.tickets?.title ?? "No ticket title"}
+                    </p>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-black/35">
+                      {formatDate(action.created_at)}
+                    </p>
+                    {action.response_payload?.detail && !isReversal && (
+                      <p className="mt-3 text-sm leading-6 text-black/55">{action.response_payload.detail}</p>
+                    )}
+                    {action.error_message && (
+                      <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-700">
+                        {action.error_message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3">
+                    {reversedAt ? (
+                      <ReversedNotice reversedAt={reversedAt} note={action.response_payload?.reversal_note} />
+                    ) : (
+                      <ActionStatusForm actionId={action.id} organizationId={organization.id} currentStatus={action.status} />
+                    )}
+                    {undoable && inverse && (
+                      <RollbackForm actionId={action.id} organizationId={organization.id} inverse={inverse} />
+                    )}
+                  </div>
+                </article>
+              );
+            })}
             {filteredActions.length === 0 && (
               <p className="p-8 text-center text-sm text-black/48">
                 No execution actions match the current filters. Run a workflow to generate provider actions.
@@ -227,6 +263,55 @@ function ActionStatusForm({
         Save outcome
       </PendingButton>
     </form>
+  );
+}
+
+function RollbackForm({
+  actionId,
+  organizationId,
+  inverse,
+}: {
+  actionId: string;
+  organizationId: string;
+  inverse: InverseActionDefinition;
+}) {
+  return (
+    <form action={reverseExecutionAction} className="grid gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+      <input type="hidden" name="actionId" value={actionId} />
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <div className="flex items-center gap-2 text-amber-800">
+        <Undo2 size={14} />
+        <p className="text-xs font-semibold uppercase tracking-[0.12em]">Reversible</p>
+      </div>
+      <p className="text-sm leading-5 text-amber-900/80">
+        <span className="font-semibold">{inverse.display_name}</span> — {inverse.description}
+      </p>
+      <input
+        name="note"
+        className="h-9 w-full rounded-md border border-amber-200 bg-white px-2 text-xs outline-none focus:border-amber-500"
+        placeholder="Reason for rollback (optional)"
+      />
+      <PendingButton
+        pendingText="Rolling back..."
+        className="h-9 w-full rounded-md border border-amber-300 bg-white px-3 text-sm font-semibold text-amber-900"
+      >
+        <Undo2 size={15} />
+        Undo this action
+      </PendingButton>
+    </form>
+  );
+}
+
+function ReversedNotice({ reversedAt, note }: { reversedAt: string; note?: string }) {
+  return (
+    <div className="grid gap-1 rounded-lg border border-amber-200 bg-amber-50 p-3">
+      <div className="flex items-center gap-2 text-amber-800">
+        <Undo2 size={14} />
+        <p className="text-xs font-semibold uppercase tracking-[0.12em]">Rolled back</p>
+      </div>
+      <p className="text-sm leading-5 text-amber-900/80">{note ?? "This action was reversed by an operator."}</p>
+      <p className="text-xs text-amber-900/55">{formatDate(reversedAt)}</p>
+    </div>
   );
 }
 
@@ -296,6 +381,21 @@ function StatusPill({ status }: { status: string }) {
       <Icon size={13} className={status === "running" ? "animate-spin" : ""} />
       {status}
     </span>
+  );
+}
+
+function canReverse(action: {
+  status: string;
+  integration_key: string;
+  action_key: string;
+  request_payload?: { reverses_action_id?: string } | null;
+  response_payload?: { reversed_at?: string } | null;
+}) {
+  return (
+    action.status === "succeeded" &&
+    !action.response_payload?.reversed_at &&
+    !action.request_payload?.reverses_action_id &&
+    Boolean(getInverseAction(action.integration_key, action.action_key))
   );
 }
 

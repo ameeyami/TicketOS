@@ -2,17 +2,22 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BadgeCheck,
+  Cable,
   CheckCircle2,
   CircleAlert,
   Clock3,
+  History,
   LockKeyhole,
   ShieldCheck,
   StickyNote,
+  Undo2,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { decideApproval } from "@/app/app/tickets/[ticketId]/actions";
 import { updateTicketStatus } from "@/app/app/actions";
+import { reverseExecutionAction } from "@/app/app/executions/actions";
+import { getInverseAction } from "@/lib/integration-action-catalog";
 import {
   displayStepStatus,
   displayTicketStatus,
@@ -23,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { PendingButton } from "@/components/ui/pending-button";
 
 export function TicketDetailView({ data }: { data: TicketDetailData }) {
-  const { ticket, steps, approval, policies, auditLogs, comments } = data;
+  const { ticket, steps, approval, policies, auditLogs, comments, executionActions } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
 
@@ -174,6 +179,15 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
           </div>
         </section>
 
+        <section className="mt-5">
+          <Panel title="Provider actions" icon={Cable}>
+            <p className="-mt-2 mb-4 text-sm leading-6 text-black/52">
+              Every action an agent took on a connected system — and a one-click undo for the ones that can be safely reversed.
+            </p>
+            <ProviderActions actions={executionActions} organizationId={ticket.organization_id} />
+          </Panel>
+        </section>
+
         <section className="mt-5 grid gap-5 xl:grid-cols-[.82fr_1.18fr]">
           <Panel title="Notes" icon={StickyNote}>
             <div className="space-y-3">
@@ -312,6 +326,81 @@ function ApprovalForm({
         {decision === "approved" ? "Approve" : "Reject"}
       </PendingButton>
     </form>
+  );
+}
+
+function ProviderActions({
+  actions,
+  organizationId,
+}: {
+  actions: TicketDetailData["executionActions"];
+  organizationId: string;
+}) {
+  if (!actions.length) {
+    return <EmptyState text="No provider actions have run for this ticket yet." />;
+  }
+
+  return (
+    <div className="space-y-3">
+      {actions.map((action) => {
+        const inverse = getInverseAction(action.integration_key, action.action_key);
+        const reversedAt = action.response_payload?.reversed_at as string | undefined;
+        const isReversal = Boolean(action.request_payload?.reverses_action_id);
+        const undoable = action.status === "succeeded" && !reversedAt && !isReversal && Boolean(inverse);
+
+        return (
+          <div key={action.id} className="rounded-lg border border-black/10 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/52">
+                {action.integration_key}
+              </span>
+              <span className="text-sm font-semibold">{action.action_key.replaceAll("_", " ")}</span>
+              {isReversal && (
+                <span className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                  <History size={11} />
+                  Rollback
+                </span>
+              )}
+              {reversedAt && (
+                <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                  <Undo2 size={11} />
+                  Reversed
+                </span>
+              )}
+            </div>
+            {action.response_payload?.detail && !isReversal && (
+              <p className="mt-2 text-sm leading-6 text-black/55">{action.response_payload.detail}</p>
+            )}
+            {reversedAt && (
+              <p className="mt-2 text-xs text-amber-900/70">
+                {action.response_payload?.reversal_note ?? "Reversed by an operator."}
+              </p>
+            )}
+            {undoable && inverse && (
+              <form action={reverseExecutionAction} className="mt-3 grid gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <input type="hidden" name="actionId" value={action.id} />
+                <input type="hidden" name="organizationId" value={organizationId} />
+                <p className="text-sm leading-5 text-amber-900/80">
+                  <span className="font-semibold">{inverse.display_name}</span> — {inverse.description}
+                </p>
+                <input
+                  name="note"
+                  className="h-9 w-full rounded-md border border-amber-200 bg-white px-2 text-xs outline-none focus:border-amber-500"
+                  placeholder="Reason for rollback (optional)"
+                />
+                <PendingButton
+                  pendingText="Rolling back..."
+                  className="h-9 rounded-md border border-amber-300 bg-white px-3 text-sm font-semibold text-amber-900"
+                >
+                  <Undo2 size={14} />
+                  Undo this action
+                </PendingButton>
+              </form>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

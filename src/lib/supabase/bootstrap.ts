@@ -497,6 +497,33 @@ async function ensureDemoData(supabase: SupabaseClient, organizationId: string, 
       confidence: 96,
       evaluated_context: { policy: "policy.identity.reset.v2" },
     });
+
+    await supabase.from("execution_actions").insert([
+      executionAction(
+        organizationId,
+        run.id,
+        "okta",
+        "reset_password",
+        { user_id: "okta_priya_shah", notify_user: true },
+        "Reset Okta password and rotated active sessions.",
+      ),
+      executionAction(
+        organizationId,
+        run.id,
+        "google-workspace",
+        "add_group_member",
+        { group_email: "it-recovery@example.com", user_email: "priya@example.com" },
+        "Re-added Priya to the it-recovery@example.com access group during recovery.",
+      ),
+      executionAction(
+        organizationId,
+        run.id,
+        "slack",
+        "send_ephemeral_message",
+        { user_id: "U123PRIYA", message: "Your Okta password was reset. Sign in with the recovery link." },
+        "Notified Priya in Slack that her password was reset.",
+      ),
+    ]);
   }
 
   const onboardingTicket = insertedTickets?.find((ticket) => ticket.external_id === "TOS-1838");
@@ -534,6 +561,26 @@ function step(
     actor_type: "agent",
     started_at: new Date().toISOString(),
     output: { detail },
+  };
+}
+
+function executionAction(
+  organizationId: string,
+  workflowRunId: string,
+  integrationKey: string,
+  actionKey: string,
+  requestPayload: Record<string, unknown>,
+  detail: string,
+) {
+  return {
+    organization_id: organizationId,
+    workflow_run_id: workflowRunId,
+    integration_key: integrationKey,
+    action_key: actionKey,
+    status: "succeeded",
+    request_payload: requestPayload,
+    response_payload: { detail, executed_at: new Date().toISOString() },
+    idempotency_key: `seed-${workflowRunId}-${actionKey}`,
   };
 }
 

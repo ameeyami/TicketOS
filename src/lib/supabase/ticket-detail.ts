@@ -63,6 +63,16 @@ export async function getTicketDetail(ticketId: string) {
         .order("created_at")
     : { data: [] };
 
+  const runIds = (workflowRuns ?? []).map((run) => run.id);
+  const { data: executionActions } = runIds.length
+    ? await supabase
+        .from("execution_actions")
+        .select("*")
+        .eq("organization_id", ticket.organization_id)
+        .in("workflow_run_id", runIds)
+        .order("created_at", { ascending: false })
+    : { data: [] };
+
   return {
     ticket,
     latestRun,
@@ -72,6 +82,7 @@ export async function getTicketDetail(ticketId: string) {
     policies: policyEvaluations ?? [],
     auditLogs: auditLogs ?? [],
     comments: comments ?? [],
+    executionActions: executionActions ?? [],
   };
 }
 
