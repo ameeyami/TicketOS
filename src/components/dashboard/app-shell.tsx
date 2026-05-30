@@ -14,6 +14,7 @@ import {
   KeyRound,
   LockKeyhole,
   MessageSquareText,
+  MessagesSquare,
   Search,
   Settings,
   ShieldCheck,
@@ -38,6 +39,7 @@ const teams = [
     initial: "I",
     links: [
       { label: "Tickets", href: "/app/tickets", icon: MessageSquareText },
+      { label: "Channels", href: "/app/channels", icon: MessagesSquare },
       { label: "Suggestions", href: "/app", icon: Sparkles },
       { label: "Workflows", href: "/app/workflows", icon: Workflow },
       { label: "Applications", href: "/app/integrations", icon: Cable },
