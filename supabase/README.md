@@ -20,6 +20,16 @@ This folder contains the versioned Supabase database foundation for TicketOS.
 
 All public tables have Row Level Security enabled. Tenant access is gated through organization membership helper functions in the private `app_private` schema.
 
+## Hardening migration
+
+`migrations/20260530120000_harden_jsonb_to_columns.sql` promotes feature state that the app currently keeps in jsonb / audit-log metadata into first-class columns:
+
+- Rollback lineage on `execution_actions` (`reverses_action_id`, `reversal_action_id`, `reversed_at`, `reversed_by`)
+- A per-workflow `workflows.autonomy_level` (enum)
+- An org-level `organizations.monthly_ai_budget_usd`
+
+It is additive and backfills from the existing data, so it is safe to apply while the app is running. After applying, switch the runtime read/write paths to the new columns — see the rollout note at the top of the migration file.
+
 ## Apply
 
 After linking the CLI to the hosted Supabase project, apply pending migrations with:
