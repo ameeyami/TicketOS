@@ -6,12 +6,8 @@ import {
   CheckCircle2,
   CircleAlert,
   Clock3,
-  Cpu,
-  Filter,
   Loader2,
-  Play,
   ShieldAlert,
-  Workflow,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -63,23 +59,13 @@ export default async function ExecutionsPage({
 
   const organization = await ensureWorkspace(supabase, userData.user);
   const params = await searchParams;
-  const [{ data: actions }, { data: runs }, { data: integrations }] = await Promise.all([
-    supabase
-      .from("execution_actions")
-      .select("*, workflow_runs(id, status, confidence, tickets(id, external_id, title), workflows(id, name))")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("workflow_runs")
-      .select("*, workflows(name), tickets(external_id, title)")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false })
-      .limit(8),
-    supabase.from("integrations").select("id, provider_key, display_name, status").eq("organization_id", organization.id),
-  ]);
+  const { data: actions } = await supabase
+    .from("execution_actions")
+    .select("*, workflow_runs(id, status, confidence, tickets(id, external_id, title), workflows(id, name))")
+    .eq("organization_id", organization.id)
+    .order("created_at", { ascending: false });
 
   const actionRows = actions ?? [];
-  const runRows = runs ?? [];
   const providers = Array.from(new Set(actionRows.map((action) => action.integration_key))).sort();
   const filteredActions = filterActions(actionRows, params);
   const runningActions = actionRows.filter((action) => action.status === "running").length;
@@ -100,98 +86,34 @@ export default async function ExecutionsPage({
 
         <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Execution console</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Monitor provider-level actions.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Track the concrete actions agents execute against Okta, Slack, Jira, Google Workspace, and other systems.
+            <h1 className="text-3xl font-semibold tracking-tight">Execution console</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/56">
+              Review provider actions, add an operator note, and update the action outcome.
             </p>
           </div>
           <Link
             href="/app/workflows"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
           >
-            <Play size={16} />
             Run workflow
+            <ArrowRight size={16} />
           </Link>
         </div>
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 md:grid-cols-4">
           <MetricCard label="Running" value={String(runningActions)} icon={Loader2} />
           <MetricCard label="Pending" value={String(pendingActions)} icon={Clock3} />
           <MetricCard label="Succeeded" value={String(succeededActions)} icon={CheckCircle2} />
           <MetricCard label="Blocked or failed" value={String(failedActions)} icon={ShieldAlert} />
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-[.72fr_1.28fr]">
-          <aside className="space-y-6">
-            <Panel title="Filters" icon={Filter}>
-              <form action="/app/executions" className="grid gap-4">
-                <SelectFilter name="status" label="Status" value={params.status ?? "all"} options={statusOptions} />
-                <SelectFilter
-                  name="provider"
-                  label="Provider"
-                  value={params.provider ?? "all"}
-                  options={[
-                    { value: "all", label: "All providers" },
-                    ...providers.map((provider) => ({ value: provider, label: provider })),
-                  ]}
-                />
-                <button className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
-                  Apply filters
-                </button>
-                <Link
-                  href="/app/executions"
-                  className="inline-flex h-10 items-center justify-center rounded-lg border border-black/10 px-3 text-sm font-semibold"
-                >
-                  Clear
-                </Link>
-              </form>
-            </Panel>
-
-            <Panel title="Recent workflow runs" icon={Workflow}>
-              <div className="space-y-3">
-                {runRows.map((run) => (
-                  <Link
-                    key={run.id}
-                    href={`/app/audit?run=${run.id}`}
-                    className="block rounded-lg border border-black/10 p-4 transition hover:bg-[#f8faf5]"
-                  >
-                    <p className="font-semibold">{run.workflows?.name ?? "Workflow run"}</p>
-                    <p className="mt-1 text-sm text-black/52">
-                      {run.tickets?.external_id ?? "Ticket"} · {run.tickets?.title ?? "No title"}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
-                      {run.status} · {Number(run.confidence ?? 0)}% confidence
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </Panel>
-
-            <Panel title="Provider readiness" icon={Cpu}>
-              <div className="space-y-2">
-                {(integrations ?? []).map((integration) => (
-                  <Link
-                    key={integration.id}
-                    href={`/app/integrations/${integration.id}`}
-                    className="flex items-center justify-between rounded-lg border border-black/10 p-3 transition hover:bg-[#f8faf5]"
-                  >
-                    <span className="text-sm font-semibold">{integration.display_name}</span>
-                    <span className="text-xs font-semibold text-black/45">{integration.status.replaceAll("_", " ")}</span>
-                  </Link>
-                ))}
-              </div>
-            </Panel>
-          </aside>
-
-          <section className="rounded-xl border border-black/10 bg-white shadow-sm">
-            <div className="flex flex-col gap-2 border-b border-black/10 p-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">Execution actions</h2>
-                <p className="mt-1 text-sm text-black/52">
-                  Showing {filteredActions.length} of {actionRows.length} provider actions
-                </p>
-              </div>
+        <section className="mt-5 rounded-xl border border-black/10 bg-white shadow-sm">
+          <div className="border-b border-black/10 p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <p className="text-sm text-black/52">
+                Showing <span className="font-semibold text-[#07111f]">{filteredActions.length}</span> of{" "}
+                <span className="font-semibold text-[#07111f]">{actionRows.length}</span> provider actions
+              </p>
               <Link
                 href="/app/audit"
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
@@ -201,46 +123,64 @@ export default async function ExecutionsPage({
               </Link>
             </div>
 
-            <div className="divide-y divide-black/8">
-              {filteredActions.map((action) => (
-                <article key={action.id} className="grid gap-4 p-5 transition hover:bg-[#f8faf5] lg:grid-cols-[1fr_240px]">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill status={action.status} />
-                      <span className="rounded-md border border-black/10 px-2 py-1 text-xs font-semibold text-black/52">
-                        {action.integration_key}
-                      </span>
-                    </div>
-                    <h3 className="mt-3 text-lg font-semibold">{action.action_key}</h3>
-                    <p className="mt-2 text-sm leading-6 text-black/55">
-                      {action.workflow_runs?.workflows?.name ?? "Workflow"} ·{" "}
-                      {action.workflow_runs?.tickets?.external_id ?? "Ticket"} ·{" "}
-                      {action.workflow_runs?.tickets?.title ?? "No ticket title"}
-                    </p>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
-                      Created {formatDate(action.created_at)}
-                    </p>
-                    {action.error_message && (
-                      <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-700">
-                        {action.error_message}
-                      </p>
-                    )}
-                  </div>
+            <form action="/app/executions" className="mt-4 grid gap-3 md:grid-cols-[180px_1fr_auto_auto]">
+              <SelectFilter name="status" label="Status" value={params.status ?? "all"} options={statusOptions} />
+              <SelectFilter
+                name="provider"
+                label="Provider"
+                value={params.provider ?? "all"}
+                options={[
+                  { value: "all", label: "All providers" },
+                  ...providers.map((provider) => ({ value: provider, label: provider })),
+                ]}
+              />
+              <button className="h-10 self-end rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
+                Apply
+              </button>
+              <Link
+                href="/app/executions"
+                className="inline-flex h-10 items-center justify-center self-end rounded-lg border border-black/10 px-3 text-sm font-semibold"
+              >
+                Clear
+              </Link>
+            </form>
+          </div>
 
-                  <div className="grid gap-2">
-                    <ActionStatusForm actionId={action.id} organizationId={organization.id} status="succeeded" label="Succeeded" />
-                    <ActionStatusForm actionId={action.id} organizationId={organization.id} status="failed" label="Failed" />
-                    <ActionStatusForm actionId={action.id} organizationId={organization.id} status="blocked" label="Blocked" />
+          <div className="divide-y divide-black/8">
+            {filteredActions.map((action) => (
+              <article key={action.id} className="grid gap-4 p-4 transition hover:bg-[#f8fbfe] lg:grid-cols-[1fr_280px]">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill status={action.status} />
+                    <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/52">
+                      {action.integration_key}
+                    </span>
                   </div>
-                </article>
-              ))}
-              {filteredActions.length === 0 && (
-                <p className="p-8 text-center text-sm text-black/48">
-                  No execution actions match the current filters. Run a workflow to generate provider actions.
-                </p>
-              )}
-            </div>
-          </section>
+                  <h3 className="mt-3 truncate text-base font-semibold">{action.action_key.replaceAll("_", " ")}</h3>
+                  <p className="mt-2 text-sm leading-6 text-black/55">
+                    {action.workflow_runs?.workflows?.name ?? "Workflow"} ·{" "}
+                    {action.workflow_runs?.tickets?.external_id ?? "Ticket"} ·{" "}
+                    {action.workflow_runs?.tickets?.title ?? "No ticket title"}
+                  </p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-black/35">
+                    {formatDate(action.created_at)}
+                  </p>
+                  {action.error_message && (
+                    <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-700">
+                      {action.error_message}
+                    </p>
+                  )}
+                </div>
+
+                <ActionStatusForm actionId={action.id} organizationId={organization.id} currentStatus={action.status} />
+              </article>
+            ))}
+            {filteredActions.length === 0 && (
+              <p className="p-8 text-center text-sm text-black/48">
+                No execution actions match the current filters. Run a workflow to generate provider actions.
+              </p>
+            )}
+          </div>
         </section>
       </div>
     </main>
@@ -250,35 +190,41 @@ export default async function ExecutionsPage({
 function ActionStatusForm({
   actionId,
   organizationId,
-  status,
-  label,
+  currentStatus,
 }: {
   actionId: string;
   organizationId: string;
-  status: "succeeded" | "failed" | "blocked";
-  label: string;
+  currentStatus: string;
 }) {
   return (
-    <form action={updateExecutionActionStatus} className="rounded-lg border border-black/10 bg-white p-3">
+    <form action={updateExecutionActionStatus} className="grid gap-2 rounded-lg border border-[#d8e4ee] bg-[#f8fbfe] p-3">
       <input type="hidden" name="actionId" value={actionId} />
       <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="status" value={status} />
+      <label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Outcome
+        <select
+          name="status"
+          defaultValue={currentStatus}
+          className="mt-2 h-9 w-full rounded-md border border-[#d8e4ee] bg-white px-2 text-sm normal-case tracking-normal outline-none focus:border-[#0b5f91]"
+        >
+          <option value="running">Running</option>
+          <option value="succeeded">Succeeded</option>
+          <option value="failed">Failed</option>
+          <option value="blocked">Blocked</option>
+          <option value="skipped">Skipped</option>
+        </select>
+      </label>
       <input
         name="note"
-        className="mb-2 h-9 w-full rounded-lg border border-black/10 bg-[#f8faf5] px-2 text-xs outline-none focus:border-[#2f6f60]"
+        className="h-9 w-full rounded-md border border-[#d8e4ee] bg-white px-2 text-xs outline-none focus:border-[#0b5f91]"
         placeholder="Optional note"
       />
       <PendingButton
         pendingText="Updating..."
-        className={cn(
-          "h-9 w-full rounded-lg px-3 text-sm font-semibold",
-          status === "succeeded"
-            ? "bg-[#17211c] text-white"
-            : "border border-black/10 bg-white text-[#151914]",
-        )}
+        className="h-9 w-full rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
       >
-        {status === "succeeded" ? <CheckCircle2 size={15} /> : status === "failed" ? <XCircle size={15} /> : <ShieldAlert size={15} />}
-        {label}
+        <CheckCircle2 size={15} />
+        Save outcome
       </PendingButton>
     </form>
   );
@@ -294,38 +240,16 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
         <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
           <Icon size={20} />
         </span>
       </div>
-    </div>
-  );
-}
-
-function Panel({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: LucideIcon;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
-        </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
-      </div>
-      {children}
     </div>
   );
 }

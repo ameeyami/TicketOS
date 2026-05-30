@@ -26,6 +26,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,14 @@ const utilityLinks = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const isSectionOpen = (name: string, active: boolean) => openSections[name] ?? active;
+  const toggleSection = (name: string, active: boolean) => {
+    setOpenSections((sections) => ({
+      ...sections,
+      [name]: !(sections[name] ?? active),
+    }));
+  };
 
   return (
     <div className="ticketos-app-shell min-h-screen bg-[#f4f8fb] text-[#07111f]">
@@ -89,6 +98,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 name={team.name}
                 initial={team.initial}
                 active={team.links.some((item) => isActivePath(item.href, pathname))}
+                open={isSectionOpen(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
+                onToggle={() => toggleSection(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
               >
                 {team.links.map((item) => (
                   <NavLink key={item.href} item={item} pathname={pathname} />
@@ -100,6 +111,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               name="Other"
               initial="O"
               active={utilityLinks.some((item) => isActivePath(item.href, pathname))}
+              open={isSectionOpen("Other", utilityLinks.some((item) => isActivePath(item.href, pathname)))}
+              onToggle={() => toggleSection("Other", utilityLinks.some((item) => isActivePath(item.href, pathname)))}
             >
               {utilityLinks.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} />
@@ -149,18 +162,25 @@ function SidebarSection({
   name,
   initial,
   active,
+  open,
+  onToggle,
   children,
 }: {
   name: string;
   initial: string;
   active: boolean;
+  open: boolean;
+  onToggle: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <details className="group">
-      <summary
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
         className={cn(
-          "flex h-9 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm font-semibold text-white/76 transition hover:bg-white/10",
+          "flex h-9 w-full items-center gap-2 rounded-md px-2 text-sm font-semibold text-white/76 transition hover:bg-white/10",
           active && "bg-white/12 text-white",
         )}
       >
@@ -170,11 +190,11 @@ function SidebarSection({
         <span className="min-w-0 flex-1 truncate">{name}</span>
         <ChevronDown
           size={13}
-          className="text-white/35 transition group-open:rotate-180"
+          className={cn("text-white/35 transition", open && "rotate-180")}
         />
-      </summary>
-      <div className="mt-1 space-y-1 pb-3">{children}</div>
-    </details>
+      </button>
+      {open && <div className="mt-1 space-y-1 pb-3">{children}</div>}
+    </div>
   );
 }
 
