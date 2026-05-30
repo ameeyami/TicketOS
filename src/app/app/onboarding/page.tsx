@@ -2,11 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   ArrowLeft,
-  BadgeCheck,
   Clock3,
   ShieldCheck,
   UserPlus,
-  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { createOnboardingPlan, logOnboardingStep } from "@/app/app/onboarding/actions";
@@ -27,16 +25,8 @@ type TicketRow = {
   created_at: string;
 };
 
-type ApprovalRow = {
-  id: string;
-  title: string;
-  status: string;
-  due_at: string | null;
-  created_at: string;
-};
-
 const appOptions = ["Slack", "Google Workspace", "GitHub", "Jira", "Figma", "Okta", "Finance app", "Production access"];
-const fieldClass = "h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none";
+const fieldClass = "h-10 w-full rounded-md border border-[#d8e4ee] bg-white px-3 text-sm outline-none focus:border-[#0b5f91]";
 
 const statusStyles: Record<string, string> = {
   triaging: "border-sky-200 bg-sky-50 text-sky-700",
@@ -57,30 +47,19 @@ export default async function OnboardingPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: tickets }, { data: approvals }] = await Promise.all([
-    supabase
-      .from("tickets")
-      .select("id, external_id, title, status, priority, requester_email, ai_summary, ai_confidence, created_at")
-      .eq("organization_id", organization.id)
-      .eq("category", "Onboarding")
-      .order("created_at", { ascending: false })
-      .limit(24),
-    supabase
-      .from("approval_requests")
-      .select("id, title, status, due_at, created_at")
-      .eq("organization_id", organization.id)
-      .ilike("title", "Sensitive onboarding access:%")
-      .order("created_at", { ascending: false })
-      .limit(12),
-  ]);
+  const { data: tickets } = await supabase
+    .from("tickets")
+    .select("id, external_id, title, status, priority, requester_email, ai_summary, ai_confidence, created_at")
+    .eq("organization_id", organization.id)
+    .eq("category", "Onboarding")
+    .order("created_at", { ascending: false })
+    .limit(24);
 
   const ticketRows = (tickets ?? []) as TicketRow[];
-  const approvalRows = (approvals ?? []) as ApprovalRow[];
   const openPlans = ticketRows.filter((ticket) => !["resolved", "failed"].includes(ticket.status)).length;
-  const pendingApprovals = approvalRows.filter((approval) => approval.status === "pending").length;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
         <Link
           href="/app"
@@ -93,24 +72,16 @@ export default async function OnboardingPage() {
         <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Onboarding</h1>
-            <p className="mt-2 text-sm text-black/54">Create and track new-hire setup plans.</p>
+            <p className="mt-2 text-sm text-slate-600">Create a new-hire plan and track active setup work.</p>
           </div>
-          <Link
-            href="/app/catalog"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
-          >
-            Catalog
-            <Workflow size={16} />
-          </Link>
         </div>
 
-        <section className="mt-5 grid gap-3 md:grid-cols-3">
+        <section className="mt-5 grid gap-3 md:grid-cols-2">
           <MetricCard label="Plans" value={String(ticketRows.length)} icon={UserPlus} />
           <MetricCard label="Open" value={String(openPlans)} icon={Clock3} />
-          <MetricCard label="Approvals" value={String(pendingApprovals)} icon={BadgeCheck} />
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[330px_1fr]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[320px_1fr]">
           <div>
             <Panel title="Create plan" icon={UserPlus}>
               <form action={createOnboardingPlan} className="space-y-3">
@@ -134,23 +105,26 @@ export default async function OnboardingPage() {
                     <option>No device</option>
                   </select>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {appOptions.map((app) => (
-                    <label key={app} className="flex min-h-10 items-center gap-2 rounded-lg border border-black/10 bg-[#f8faf5] px-3 text-sm font-semibold">
-                      <input type="checkbox" name="apps" value={app} className="size-4 accent-[#17211c]" />
-                      {app}
-                    </label>
-                  ))}
-                </div>
+                <details className="rounded-md border border-[#d8e4ee] bg-[#f8fbfe] p-3">
+                  <summary className="cursor-pointer text-sm font-semibold">App access</summary>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {appOptions.map((app) => (
+                      <label key={app} className="flex min-h-9 items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-3 text-sm font-medium">
+                        <input type="checkbox" name="apps" value={app} className="size-4 accent-[#0b2a4a]" />
+                        {app}
+                      </label>
+                    ))}
+                  </div>
+                </details>
                 <textarea
                   name="note"
-                  rows={3}
+                  rows={2}
                   placeholder="Optional note, ticket reference, or hardware detail"
-                  className="w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none"
+                  className="w-full resize-none rounded-md border border-[#d8e4ee] bg-white px-3 py-2 text-sm outline-none focus:border-[#0b5f91]"
                 />
-                <PendingButton pendingText="Creating..." className="h-10 w-full rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                <PendingButton pendingText="Creating..." className="h-10 w-full rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
                   <UserPlus size={16} />
-                  Create onboarding plan
+                  Create plan
                 </PendingButton>
               </form>
             </Panel>
@@ -158,50 +132,49 @@ export default async function OnboardingPage() {
           </div>
 
           <div className="space-y-5">
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-3">
               {ticketRows.map((ticket) => (
-                <article key={ticket.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
+                <article key={ticket.id} className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+                  <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusPill value={ticket.status} />
                         <span className="rounded-md border border-black/10 px-2 py-1 text-xs font-semibold text-black/42">
                           {ticket.external_id ?? ticket.priority}
                         </span>
                       </div>
-                      <h2 className="mt-3 text-lg font-semibold tracking-tight">{ticket.title}</h2>
-                      <p className="mt-2 line-clamp-2 text-sm text-black/52">{ticket.ai_summary ?? "Onboarding plan queued."}</p>
+                      <h2 className="mt-2 text-base font-semibold tracking-tight">{ticket.title}</h2>
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-600">{ticket.ai_summary ?? "Onboarding plan queued."}</p>
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-black/42">
+                        <span>{ticket.requester_email ?? "Manager"}</span>
+                        <span>{ticket.ai_confidence ?? 0}% confidence</span>
+                        <span>{formatDate(ticket.created_at)}</span>
+                      </div>
                     </div>
-                    <Link href={`/app/tickets/${ticket.id}`} className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold">
-                      Inspect
-                    </Link>
-                  </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <Fact label="AI" value={`${ticket.ai_confidence ?? 0}%`} />
-                    <Fact label="Owner" value={ticket.requester_email ?? "Manager"} />
-                    <Fact label="Created" value={formatDate(ticket.created_at)} />
-                  </div>
-
-                  <form action={logOnboardingStep} className="mt-4 rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-                    <input type="hidden" name="organizationId" value={organization.id} />
-                    <input type="hidden" name="ticketId" value={ticket.id} />
-                    <input type="hidden" name="employeeName" value={ticket.title.replace("Onboard ", "")} />
-                    <div className="grid gap-3 sm:grid-cols-[.62fr_1fr]">
-                      <select name="step" defaultValue="Account created" className={cn(fieldClass, "font-semibold")}>
-                        <option>Account created</option>
-                        <option>Device prepared</option>
-                        <option>Apps provisioned</option>
-                        <option>Manager notified</option>
-                        <option>Day-one complete</option>
-                      </select>
-                      <input name="note" placeholder="Optional note" className={fieldClass} />
+                    <div className="grid gap-2">
+                      <Link href={`/app/tickets/${ticket.id}`} className="inline-flex h-9 items-center justify-center rounded-md border border-black/10 bg-white px-3 text-sm font-semibold">
+                        Inspect
+                      </Link>
+                      <form action={logOnboardingStep} className="grid gap-2 rounded-md border border-[#d8e4ee] bg-[#f8fbfe] p-3">
+                        <input type="hidden" name="organizationId" value={organization.id} />
+                        <input type="hidden" name="ticketId" value={ticket.id} />
+                        <input type="hidden" name="employeeName" value={ticket.title.replace("Onboard ", "")} />
+                        <select name="step" defaultValue="Account created" className={cn(fieldClass, "font-semibold")}>
+                          <option>Account created</option>
+                          <option>Device prepared</option>
+                          <option>Apps provisioned</option>
+                          <option>Manager notified</option>
+                          <option>Day-one complete</option>
+                        </select>
+                        <input name="note" placeholder="Optional note" className={fieldClass} />
+                        <PendingButton pendingText="Logging..." className="h-9 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
+                          <ShieldCheck size={16} />
+                          Log step
+                        </PendingButton>
+                      </form>
                     </div>
-                    <PendingButton pendingText="Logging..." className="mt-3 h-10 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#17211c]">
-                      <ShieldCheck size={16} />
-                      Log step
-                    </PendingButton>
-                  </form>
+                  </div>
                 </article>
               ))}
             </div>
@@ -210,26 +183,9 @@ export default async function OnboardingPage() {
               <div className="rounded-xl border border-dashed border-black/15 bg-white p-8 text-center">
                 <UserPlus size={28} className="mx-auto text-[#2f6f60]" />
                 <p className="mt-3 font-semibold">No onboarding plans yet.</p>
-                <p className="mt-2 text-sm text-black/52">Create a plan to generate the ticket, audit trail, and approval request.</p>
+                <p className="mt-2 text-sm text-black/52">Create a plan to generate the ticket and audit trail.</p>
               </div>
             )}
-
-            <section>
-              <Panel title="Approvals" icon={BadgeCheck}>
-                <div className="divide-y divide-black/8 rounded-lg border border-black/10">
-                  {approvalRows.map((approval) => (
-                    <div key={approval.id} className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="font-semibold">{approval.title}</p>
-                        <StatusPill value={approval.status} />
-                      </div>
-                      <p className="mt-1 text-sm text-black/48">Due {formatDate(approval.due_at ?? approval.created_at)}</p>
-                    </div>
-                  ))}
-                  {approvalRows.length === 0 && <p className="p-4 text-sm text-black/48">Sensitive access approvals will appear here.</p>}
-                </div>
-              </Panel>
-            </section>
           </div>
         </section>
       </div>
@@ -263,15 +219,6 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIco
         <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-black/70">{value}</p>
     </div>
   );
 }
