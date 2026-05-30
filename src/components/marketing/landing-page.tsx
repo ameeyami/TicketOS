@@ -7,55 +7,60 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Cloud,
+  Coins,
   Database,
   FileCheck2,
   Fingerprint,
   GitBranch,
   KeyRound,
   LockKeyhole,
-  MessageSquareText,
+  MessagesSquare,
   Network,
-  Play,
+  ScanSearch,
   ShieldCheck,
   Sparkles,
-  UserPlus,
-  UserX,
+  TrendingUp,
+  Undo2,
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
+import { AuroraField, GridOverlay, OrbitArt } from "@/components/brand/backgrounds";
 
-const heroTickets = [
-  { id: "TOS-2041", title: "Restore Okta access", status: "Executing", agent: "Access Agent" },
-  { id: "TOS-2040", title: "Prepare designer workspace", status: "Approval", agent: "Onboarding Agent" },
-  { id: "TOS-2038", title: "Close contractor access", status: "Policy check", agent: "Security Agent" },
-];
+const heroSteps = [
+  ["Request captured", "from Slack", true],
+  ["Identity verified", "via HRIS", true],
+  ["Policy checked", "reset.v2", true],
+  ["Access restored", "Okta", false],
+] as const;
 
-const productFeatures = [
-  ["Identity recovery", "Verify the requester, restore access, rotate sessions, and record the reason.", KeyRound],
-  ["Onboarding plans", "Create app access, device tasks, manager checks, and approval steps from one request.", UserPlus],
-  ["Departure controls", "Close accounts, protect data, and pause risky removals before anything breaks.", UserX],
-  ["Workflow replay", "See the exact path an agent followed, from policy checks to final confirmation.", GitBranch],
+const differentiators = [
+  ["Undo any action", "One click reverses what an agent did on a connected system — re-add the group, restore the account.", Undo2],
+  ["Price every resolution", "A live ledger shows the AI cost of each ticket and your month-to-date burn against a hard budget.", Coins],
+  ["Preview the blast radius", "Before a workflow runs, see exactly which systems it will touch, what's reversible, and what pauses for approval.", ScanSearch],
+  ["Earned autonomy", "Workflows graduate from suggest to fully autonomous as they prove themselves — and tighten the instant trust drops.", TrendingUp],
+  ["Lives in chat", "Requests arrive from Slack and Teams, get classified, and the agent replies in the same thread.", MessagesSquare],
+  ["Replayable audit", "Every decision, approval, and action is recorded — replay the exact path an agent followed.", GitBranch],
 ] satisfies Array<[string, string, LucideIcon]>;
 
 const metrics = [
-  ["58%", "Routine IT tasks handled by agents"],
-  ["9h", "Average onboarding handoff recovered"],
-  ["71%", "Approval loops shortened with context"],
-  ["2.4x", "More requests completed per operator"],
+  ["58%", "Routine IT work handled by agents"],
+  ["$0.21", "Median cost per AI resolution"],
+  ["71%", "Shorter approval loops"],
+  ["100%", "Actions audited and reversible"],
 ];
 
 const integrations = [
   ["Okta", Fingerprint],
   ["Google Workspace", Cloud],
-  ["Microsoft Teams", MessageSquareText],
-  ["Slack", MessageSquareText],
+  ["Microsoft Teams", MessagesSquare],
+  ["Slack", MessagesSquare],
   ["GitHub", GitBranch],
   ["Jira", ClipboardCheck],
   ["ServiceNow", Workflow],
   ["Datadog", Database],
-  ["BambooHR", UserPlus],
+  ["BambooHR", KeyRound],
   ["Workday", FileCheck2],
   ["Cisco Meraki", Network],
   ["Salesforce", Cloud],
@@ -64,219 +69,294 @@ const integrations = [
 const controls = [
   ["Role-scoped access", LockKeyhole],
   ["Approval stops", BadgeCheck],
-  ["SSO-ready", Fingerprint],
+  ["Reversible actions", Undo2],
   ["Audit history", FileCheck2],
   ["Policy checks", ShieldCheck],
-  ["Provisioning limits", UserPlus],
+  ["Cost budgets", Coins],
 ] satisfies Array<[string, LucideIcon]>;
+
+const fadeUp = {
+  initial: { opacity: 0, y: 16 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-80px" },
+};
 
 export function LandingPage() {
   return (
     <main className="min-h-screen bg-[#f4f8fb] text-[#07111f]">
-      <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-[#d8e4ee] bg-white/90 px-5 backdrop-blur md:px-8">
-        <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-          <TicketOSLogo markSize="md" />
+      <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/10 bg-[#07111f]/85 px-5 backdrop-blur-xl md:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <TicketOSLogo markSize="md" tone="dark" />
         </Link>
-        <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
-          <a href="#product">Product</a>
-          <a href="#integrations">Integrations</a>
-          <a href="#security">Security</a>
-          <a href="#start">Contact</a>
+        <div className="hidden items-center gap-8 text-sm font-medium text-white/64 md:flex">
+          <a href="#features" className="transition hover:text-white">Product</a>
+          <a href="#integrations" className="transition hover:text-white">Integrations</a>
+          <a href="#security" className="transition hover:text-white">Governance</a>
         </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/auth/sign-in"
-            className="inline-flex h-10 items-center rounded-md bg-[#0b2a4a] px-4 text-sm font-semibold text-white"
-          >
-            Log in
-          </Link>
-        </div>
+        <Link
+          href="/auth/sign-in"
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-[#22c55e] px-5 text-sm font-semibold text-[#03120a] transition hover:bg-[#34d36b]"
+        >
+          Log in
+          <ArrowRight size={16} />
+        </Link>
       </nav>
 
-      <section className="relative overflow-hidden border-b border-[#d8e4ee] bg-[#07111f] text-white">
-        <div className="mx-auto grid min-h-[720px] max-w-7xl gap-10 px-5 py-20 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-[#07111f] text-white">
+        <AuroraField className="opacity-90" />
+        <GridOverlay tone="dark" />
+        <OrbitArt className="right-[-180px] top-[-120px] hidden h-[640px] w-[640px] opacity-70 lg:block" />
+
+        <div className="relative mx-auto grid min-h-[660px] max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
-            <motion.p
+            <motion.span
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex rounded-full border border-white/15 bg-white/8 px-3 py-1 text-sm font-semibold text-[#b7f7d0]"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-[#b7f7d0] backdrop-blur"
             >
+              <Sparkles size={13} />
               AI-native IT service operations
-            </motion.p>
+            </motion.span>
+
             <motion.h1
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.06 }}
-              className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-tight md:text-7xl"
+              className="mt-6 max-w-2xl text-balance text-5xl font-semibold leading-[1.03] tracking-tight md:text-7xl"
             >
-              Resolve IT requests with agents you can audit.
+              The autonomy you can{" "}
+              <span className="bg-gradient-to-r from-[#22c55e] via-[#5eead4] to-[#38bdf8] bg-clip-text text-transparent">
+                audit, undo, and afford.
+              </span>
             </motion.h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/68">
+
+            <motion.p
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className="mt-6 max-w-xl text-lg leading-8 text-white/68"
+            >
               TicketOS gives lean IT teams a governed workspace where AI agents triage requests, ask for approval,
-              execute actions, and explain what happened.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/auth/sign-in" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#22c55e] px-5 text-base font-semibold text-[#03120a]">
-                Log in
-                <ArrowRight size={18} />
+              execute on real systems — and let you reverse any action, see what it cost, and prove what happened.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 }}
+              className="mt-9 flex flex-col gap-3 sm:flex-row"
+            >
+              <Link
+                href="/auth/sign-in"
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#22c55e] px-6 text-base font-semibold text-[#03120a] shadow-lg shadow-[#22c55e]/20 transition hover:bg-[#34d36b]"
+              >
+                Open the workspace
+                <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
               </Link>
-              <a href="#product" className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/15 bg-white/8 px-5 text-base font-semibold text-white">
-                View product tour
-                <Play size={18} />
+              <a
+                href="#features"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10"
+              >
+                See what&apos;s different
               </a>
-            </div>
+            </motion.div>
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 22, scale: 0.98 }}
+            initial={{ opacity: 0, y: 28, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.12, duration: 0.55 }}
-            className="overflow-hidden rounded-xl border border-white/12 bg-white text-left text-[#07111f] shadow-2xl shadow-black/30"
+            transition={{ delay: 0.16, duration: 0.6 }}
+            className="tos-glass overflow-hidden rounded-2xl shadow-2xl shadow-black/40"
           >
-            <div className="flex h-11 items-center justify-between border-b border-[#d8e4ee] bg-[#f8fbfe] px-4">
+            <div className="flex h-12 items-center justify-between border-b border-white/10 px-4">
               <div className="flex items-center gap-2">
                 <TicketOSLogo markSize="sm" showWordmark={false} />
-                <span className="text-sm font-semibold">Service workspace</span>
+                <span className="text-sm font-semibold text-white/90">Service workspace</span>
               </div>
-              <span className="rounded-md bg-[#e8f8ef] px-2 py-1 text-xs font-semibold text-[#0f7a5f]">Live</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#22c55e]/15 px-2.5 py-1 text-xs font-semibold text-[#7ef0a8]">
+                <span className="size-1.5 rounded-full bg-[#22c55e]" />
+                Live
+              </span>
             </div>
-            <div className="grid min-h-[420px] lg:grid-cols-[250px_1fr]">
-              <div className="border-r border-[#d8e4ee] bg-[#f4f8fb] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Suggestions</p>
-                <div className="mt-4 space-y-3">
-                  {heroTickets.map((ticket, index) => (
-                    <div key={ticket.id} className={index === 0 ? "rounded-md border border-[#b7d8f2] bg-white p-3" : "rounded-md border border-[#d8e4ee] bg-white p-3"}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">{ticket.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{ticket.agent}</p>
-                        </div>
-                        <span className="rounded bg-[#e7f3ff] px-2 py-1 text-[11px] font-semibold text-[#0b5f91]">
-                          {index === 0 ? "8m" : index === 1 ? "48m" : "2h"}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+
+            <div className="space-y-4 p-5">
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-white/10 px-2 py-1 text-xs font-semibold text-white/80">TOS-1842</span>
+                <span className="rounded-md bg-[#22c55e]/15 px-2 py-1 text-xs font-semibold text-[#7ef0a8]">Executing</span>
+                <span className="text-sm font-semibold text-white/90">Restore Okta access · Priya Shah</span>
               </div>
-              <div className="p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded bg-[#e8f8ef] px-2 py-1 text-xs font-semibold text-[#0f7a5f]">New workflow</span>
-                  <h2 className="font-semibold">Restore Okta access for Priya Shah</h2>
-                </div>
-                <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
-                  The agent found HR context, verified MFA, checked policy, and prepared the tool action for review.
-                </p>
-                <div className="mt-7 grid gap-3">
-                  {["Request captured", "Identity verified", "Policy checked", "Access action prepared", "Requester notified"].map((step, index) => (
-                    <div key={step} className="flex items-center justify-between rounded-md border border-[#d8e4ee] bg-[#f8fbfe] px-3 py-3">
-                      <div className="flex items-center gap-3">
-                        {index < 3 ? <CheckCircle2 size={17} className="text-[#0f7a5f]" /> : <Sparkles size={17} className="text-[#0b5f91]" />}
-                        <span className="text-sm font-semibold">{step}</span>
-                      </div>
-                      <span className="text-xs font-semibold text-slate-400">{index < 3 ? "Done" : "Queued"}</span>
+
+              <div className="space-y-2">
+                {heroSteps.map(([label, detail, done]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {done ? (
+                        <CheckCircle2 size={16} className="text-[#22c55e]" />
+                      ) : (
+                        <Sparkles size={16} className="text-[#38bdf8]" />
+                      )}
+                      <span className="text-sm font-medium text-white/90">{label}</span>
                     </div>
-                  ))}
-                </div>
+                    <span className="text-xs text-white/45">{detail}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-white/75">
+                  <Coins size={12} className="text-[#7ef0a8]" /> $0.21 to resolve
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-white/75">
+                  <Undo2 size={12} className="text-[#7ef0a8]" /> Reversible
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-white/75">
+                  <TrendingUp size={12} className="text-[#7ef0a8]" /> Auto with audit
+                </span>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 md:px-8">
-        <div className="grid gap-4 md:grid-cols-4">
-          {metrics.map(([value, label]) => (
-            <div key={label} className="rounded-lg border border-[#d8e4ee] bg-white p-6">
-              <p className="text-4xl font-semibold tracking-tight">{value}</p>
-              <p className="mt-4 text-sm leading-6 text-slate-600">{label}</p>
-            </div>
+      {/* Metrics */}
+      <section className="border-b border-[#d8e4ee] bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px overflow-hidden px-5 md:grid-cols-4 md:px-8">
+          {metrics.map(([value, label], index) => (
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: index * 0.05 }}
+              key={label}
+              className="px-2 py-10 text-center md:px-6"
+            >
+              <p className="text-4xl font-semibold tracking-tight text-[#0b2a4a] md:text-5xl">{value}</p>
+              <p className="mx-auto mt-3 max-w-[18ch] text-sm leading-6 text-slate-500">{label}</p>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      <section id="product" className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:px-8 lg:grid-cols-[0.45fr_0.55fr]">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0b5f91]">Product</p>
+      {/* Differentiators */}
+      <section id="features" className="mx-auto max-w-7xl px-5 py-20 md:px-8">
+        <motion.div {...fadeUp} className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">Why TicketOS</p>
           <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
-            A calmer way to run high-volume IT work.
+            Most tools let agents act. We let you stay in control.
           </h2>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            The workspace is built around visible execution: queue, workflow, approval, policy, and replay.
+            Every other platform asks you to trust the automation. TicketOS makes that trust visible, reversible, and
+            measurable — the things legacy ITSM and newer agents leave out.
           </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {productFeatures.map(([title, body, Icon]) => (
-            <div key={title} className="rounded-lg border border-[#d8e4ee] bg-white p-5">
-              <span className="flex size-10 items-center justify-center rounded-md bg-[#e7f3ff] text-[#0b5f91]">
-                <Icon size={20} />
+        </motion.div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {differentiators.map(([title, body, Icon], index) => (
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: (index % 3) * 0.06 }}
+              key={title}
+              className="group rounded-2xl border border-[#d8e4ee] bg-white p-6 transition hover:-translate-y-1 hover:border-[#b7d8f2] hover:shadow-xl hover:shadow-[#0b2a4a]/5"
+            >
+              <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#e7f3ff] to-[#e8f8ef] text-[#0b5f91] transition group-hover:from-[#22c55e] group-hover:to-[#0b5f91] group-hover:text-white">
+                <Icon size={21} />
               </span>
-              <h3 className="mt-5 text-xl font-semibold">{title}</h3>
+              <h3 className="mt-5 text-xl font-semibold tracking-tight">{title}</h3>
               <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      <section id="integrations" className="mx-auto max-w-7xl px-5 py-16 md:px-8">
+      {/* Integrations */}
+      <section id="integrations" className="mx-auto max-w-7xl px-5 pb-8 md:px-8">
         <FeatureGrid
-          title="Connect the systems your service desk already uses"
-          body="TicketOS sits above identity, collaboration, ticketing, monitoring, and HR systems so agents can execute with context."
+          eyebrow="Integrations"
+          title="Connect the systems your service desk already runs"
+          body="TicketOS sits above identity, collaboration, ticketing, monitoring, and HR systems so agents execute with full context."
           items={integrations}
         />
       </section>
 
+      {/* Governance */}
       <section id="security" className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <FeatureGrid
-          title="Governed execution before agents touch sensitive tools"
-          body="Every workflow can include approval stops, role boundaries, policy checks, and replayable audit history."
+          eyebrow="Governance"
+          title="Guardrails before agents touch sensitive tools"
+          body="Approval stops, role boundaries, policy checks, cost budgets, and a replayable audit trail — on every workflow."
           items={controls}
         />
       </section>
 
-      <section id="start" className="mx-auto grid max-w-7xl gap-10 border-t border-[#d8e4ee] px-5 py-16 md:px-8 lg:grid-cols-[0.48fr_0.52fr]">
-        <div>
-          <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">Run TicketOS from one clear workspace</h2>
-          <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
-            Sign in to review tickets, connect apps, approve workflows, and inspect agent execution history.
-          </p>
-        </div>
-        <div className="flex items-start justify-start lg:justify-end">
-          <Link href="/auth/sign-in" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#0b2a4a] px-5 text-sm font-semibold text-white">
+      {/* Final CTA */}
+      <section className="relative overflow-hidden bg-[#07111f] text-white">
+        <AuroraField intensity="soft" />
+        <GridOverlay tone="dark" />
+        <div className="relative mx-auto flex max-w-7xl flex-col items-start gap-8 px-5 py-20 md:px-8 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">
+              Run IT from one clear, governed workspace.
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-white/68">
+              Review tickets, connect apps, approve workflows, and inspect — and reverse — every agent action.
+            </p>
+          </div>
+          <Link
+            href="/auth/sign-in"
+            className="group inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#22c55e] px-7 text-base font-semibold text-[#03120a] shadow-lg shadow-[#22c55e]/20 transition hover:bg-[#34d36b]"
+          >
             Log in to TicketOS
-            <ArrowRight size={16} />
+            <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
           </Link>
         </div>
       </section>
+
+      <footer className="border-t border-[#d8e4ee] bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-sm text-slate-500 md:flex-row md:px-8">
+          <TicketOSLogo markSize="sm" />
+          <p>© {new Date().getFullYear()} TicketOS · AI-native IT operations</p>
+        </div>
+      </footer>
     </main>
   );
 }
 
 function FeatureGrid({
+  eyebrow,
   title,
   body,
   items,
 }: {
+  eyebrow: string;
   title: string;
   body: string;
   items: Array<[string, LucideIcon]>;
 }) {
   return (
-    <div className="grid gap-8 rounded-xl border border-[#d8e4ee] bg-white p-6 md:grid-cols-[0.36fr_0.64fr] md:p-8">
+    <motion.div
+      {...fadeUp}
+      className="grid gap-8 rounded-3xl border border-[#d8e4ee] bg-white p-6 md:grid-cols-[0.38fr_0.62fr] md:p-10"
+    >
       <div>
-        <h2 className="text-3xl font-semibold tracking-tight">{title}</h2>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">{eyebrow}</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight">{title}</h2>
         <p className="mt-4 text-base leading-7 text-slate-600">{body}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map(([label, Icon]) => (
-          <div key={label} className="flex items-center gap-3 rounded-md border border-[#d8e4ee] bg-[#f8fbfe] p-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[#e7f3ff] text-[#0b5f91]">
+          <div
+            key={label}
+            className="flex items-center gap-3 rounded-xl border border-[#d8e4ee] bg-[#f8fbfe] p-3 transition hover:border-[#b7d8f2] hover:bg-white"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f3ff] text-[#0b5f91]">
               <Icon size={17} />
             </span>
             <span className="text-sm font-semibold">{label}</span>
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

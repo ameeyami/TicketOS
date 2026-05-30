@@ -3,11 +3,18 @@
 import { FormEvent, type ReactNode, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowRight, Coins, Eye, EyeOff, Loader2, ShieldCheck, Undo2 } from "lucide-react";
 import { signInWithProvider } from "@/app/auth/actions";
+import { AuroraField, GridOverlay, OrbitArt } from "@/components/brand/backgrounds";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { PendingButton } from "@/components/ui/pending-button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+
+const authHighlights = [
+  ["Reverse any action an agent took", Undo2],
+  ["See the cost of every resolution", Coins],
+  ["Replayable audit on everything", ShieldCheck],
+] as const;
 
 type AuthMode = "sign-in" | "sign-up";
 
@@ -95,20 +102,54 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f8fb] text-[#07111f]">
-      <section className="flex min-h-screen flex-col px-5 py-5 md:px-8">
-        <Link href="/" className="flex w-fit items-center gap-3">
-          <TicketOSLogo markSize="lg" />
+    <main className="relative min-h-screen bg-[#f4f8fb] text-[#07111f] lg:grid lg:grid-cols-[1.05fr_1fr]">
+      <aside className="relative hidden overflow-hidden bg-[#07111f] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <AuroraField />
+        <GridOverlay tone="dark" />
+        <OrbitArt className="bottom-[-180px] right-[-180px] h-[560px] w-[560px] opacity-70" />
+
+        <Link href="/" className="relative flex w-fit items-center gap-3">
+          <TicketOSLogo markSize="lg" tone="dark" />
         </Link>
 
-        <div className="flex flex-1 items-center justify-center py-12">
+        <div className="relative max-w-md">
+          <h2 className="text-4xl font-semibold leading-[1.08] tracking-tight xl:text-5xl">
+            The autonomy you can{" "}
+            <span className="bg-gradient-to-r from-[#22c55e] to-[#38bdf8] bg-clip-text text-transparent">
+              audit, undo, and afford.
+            </span>
+          </h2>
+          <p className="mt-5 text-base leading-7 text-white/64">
+            Sign in to triage tickets, approve workflows, and inspect — and reverse — every agent action.
+          </p>
+          <ul className="mt-8 space-y-3">
+            {authHighlights.map(([label, Icon]) => (
+              <li key={label} className="flex items-center gap-3 text-sm font-medium text-white/82">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] text-[#7ef0a8]">
+                  <Icon size={16} />
+                </span>
+                {label}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-xs text-white/40">© {new Date().getFullYear()} TicketOS</p>
+      </aside>
+
+      <section className="flex min-h-screen flex-col px-5 py-8 md:px-10">
+        <Link href="/" className="flex w-fit items-center gap-3 lg:hidden">
+          <TicketOSLogo markSize="md" />
+        </Link>
+
+        <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[420px]">
-            <div className="mb-8 text-center">
-              <h1 className="text-4xl font-semibold tracking-tight">
-                {isSignUp ? "Create account" : "Log in"}
+            <div className="mb-8">
+              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+                {isSignUp ? "Create your workspace" : "Welcome back"}
               </h1>
-              <p className="mt-3 text-sm leading-6 text-black/52">
-                {isSignUp ? "Create your TicketOS workspace." : "Continue to your TicketOS workspace."}
+              <p className="mt-2 text-sm leading-6 text-black/52">
+                {isSignUp ? "Set up TicketOS in a couple of minutes." : "Continue to your TicketOS workspace."}
               </p>
             </div>
 
@@ -217,15 +258,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               {isSignUp ? "Already have an account?" : "New to TicketOS?"}{" "}
               <Link
                 href={isSignUp ? "/auth/sign-in" : "/auth/sign-up"}
-                className="font-semibold text-black"
+                className="font-semibold text-[#0b5f91] hover:text-[#07111f]"
               >
                 {isSignUp ? "Log in" : "Create account"}
               </Link>
             </p>
           </div>
         </div>
-
-        <p className="text-xs text-black/38">TicketOS</p>
       </section>
     </main>
   );

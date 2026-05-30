@@ -9,11 +9,13 @@ import {
   History,
   LockKeyhole,
   ShieldCheck,
+  Sparkles,
   StickyNote,
   Undo2,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { AuroraField } from "@/components/brand/backgrounds";
 import { decideApproval } from "@/app/app/tickets/[ticketId]/actions";
 import { updateTicketStatus } from "@/app/app/actions";
 import { reverseExecutionAction } from "@/app/app/executions/actions";
@@ -46,13 +48,16 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
     estimateWorkflowRunCost(costModel, steps.length, executedActionCount).costUsd;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid gap-4 border-b border-black/10 pb-5 lg:grid-cols-[1fr_300px] lg:items-start">
+    <main className="relative min-h-screen px-4 py-5 text-[#151914] md:px-8">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[340px] overflow-hidden">
+        <AuroraField intensity="soft" />
+      </div>
+      <div className="relative mx-auto max-w-6xl">
+        <div className="grid gap-5 border-b border-black/10 pb-6 lg:grid-cols-[1fr_300px] lg:items-start">
           <div>
             <Link
               href="/app/tickets"
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white/80 px-3 text-sm font-semibold backdrop-blur transition hover:bg-white"
             >
               <ArrowLeft size={16} />
               Tickets
@@ -66,12 +71,16 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 {titleCase(ticket.priority)}
               </span>
             </div>
-            <h1 className="mt-3 max-w-3xl text-2xl font-semibold tracking-tight md:text-3xl">
+            <h1 className="mt-4 max-w-3xl text-2xl font-semibold tracking-tight md:text-3xl">
               {ticket.title}
             </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-black/58">
-              {ticket.ai_summary ?? ticket.description}
-            </p>
+            <div className="mt-4 max-w-3xl rounded-xl border border-black/10 bg-white/70 p-4 backdrop-blur">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#0b5f91]">
+                <Sparkles size={13} />
+                AI summary
+              </p>
+              <p className="mt-2 text-sm leading-6 text-black/64">{ticket.ai_summary ?? ticket.description}</p>
+            </div>
           </div>
 
           <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
