@@ -17,6 +17,13 @@ import type { LucideIcon } from "lucide-react";
 import { decideApproval } from "@/app/app/tickets/[ticketId]/actions";
 import { updateTicketStatus } from "@/app/app/actions";
 import { reverseExecutionAction } from "@/app/app/executions/actions";
+import {
+  MODEL_PRICING,
+  estimateTicketTriageCost,
+  estimateWorkflowRunCost,
+  formatUsd,
+  modelForPriority,
+} from "@/lib/cost-model";
 import { getInverseAction } from "@/lib/integration-action-catalog";
 import {
   displayStepStatus,
@@ -31,6 +38,12 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
   const { ticket, steps, approval, policies, auditLogs, comments, executionActions } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
+
+  const costModel = modelForPriority(ticket.priority);
+  const executedActionCount = executionActions.filter((action) => !action.request_payload?.reverses_action_id).length;
+  const resolutionCost =
+    estimateTicketTriageCost(costModel, ticket.description, ticket.ai_summary).costUsd +
+    estimateWorkflowRunCost(costModel, steps.length, executedActionCount).costUsd;
 
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
@@ -71,6 +84,13 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 className="h-1.5 rounded-full bg-[#2f6f60]"
                 style={{ width: `${Number(ticket.ai_confidence)}%` }}
               />
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-black/8 pt-3">
+              <div>
+                <p className="text-sm font-medium text-black/52">Est. cost to resolve</p>
+                <p className="text-xs text-black/40">{MODEL_PRICING[costModel].label} · modeled</p>
+              </div>
+              <p className="text-xl font-semibold tracking-tight">{formatUsd(resolutionCost)}</p>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/42">Operator action</p>

@@ -21,6 +21,7 @@ import {
   UserPlus,
   UserRound,
   UserX,
+  Wallet,
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -58,6 +59,7 @@ const teams = [
     links: [
       { label: "Security", href: "/app/security", icon: LockKeyhole },
       { label: "Policies", href: "/app/policies", icon: ShieldCheck },
+      { label: "Costs", href: "/app/costs", icon: Wallet },
       { label: "Reports", href: "/app/reports", icon: FileText },
       { label: "Audit", href: "/app/audit", icon: ChartNoAxesColumn },
     ],
