@@ -69,12 +69,12 @@ export default async function ApprovalsPage() {
           <MetricCard label="Rejected" value={String(rejectedCount)} icon={XCircle} />
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
           <div className="space-y-4">
             <Panel title="Needs decision" icon={BadgeCheck}>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {pendingApprovals.map((approval) => (
-                  <article key={approval.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+                  <article key={approval.id} className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -91,15 +91,21 @@ export default async function ApprovalsPage() {
                             </span>
                           )}
                         </div>
-                        <h2 className="mt-3 text-xl font-semibold">{approval.title}</h2>
+                        <h2 className="mt-3 text-lg font-semibold">{approval.title}</h2>
                         <p className="mt-2 max-w-3xl text-sm leading-6 text-black/56">
                           {approval.description ?? "An AI workflow paused for human review."}
                         </p>
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-black/42">
+                          <span>{approval.tickets?.external_id ?? "Unlinked ticket"}</span>
+                          <span>{approval.workflow_runs?.workflows?.name ?? "Manual approval"}</span>
+                          <span>Due {formatDate(approval.due_at ?? approval.created_at)}</span>
+                          <span>Age {ageLabel(approval.created_at)}</span>
+                        </div>
                       </div>
                       {approval.ticket_id && (
                         <Link
                           href={`/app/tickets/${approval.ticket_id}`}
-                          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 px-3 text-sm font-semibold"
+                          className="inline-flex h-9 items-center gap-2 rounded-md border border-black/10 px-3 text-sm font-semibold"
                         >
                           Inspect ticket
                           <MessageSquareText size={15} />
@@ -107,25 +113,7 @@ export default async function ApprovalsPage() {
                       )}
                     </div>
 
-                    <div className="mt-5 grid gap-3 md:grid-cols-3">
-                      <Fact label="Ticket" value={approval.tickets?.external_id ?? "Unlinked"} />
-                      <Fact label="Workflow" value={approval.workflow_runs?.workflows?.name ?? "Manual approval"} />
-                      <Fact label="Due" value={formatDate(approval.due_at ?? approval.created_at)} />
-                    </div>
-
-                    <div className="mt-3 grid gap-3 md:grid-cols-3">
-                      <Fact label="Requester" value={approval.agents?.name ?? "TicketOS"} />
-                      <Fact label="Opened" value={formatDate(approval.created_at)} />
-                      <Fact label="Age" value={ageLabel(approval.created_at)} />
-                    </div>
-
-                    <div className="mt-5 rounded-lg border border-[#b7d8f2] bg-[#e7f3ff] p-4">
-                      <p className="text-sm font-semibold text-amber-950">Decision note</p>
-                      <p className="mt-1 text-sm leading-6 text-[#0b4f7a]">
-                        Optional, but useful for ticket references, manager context, or exception rationale. Approval resumes the workflow; rejection blocks it.
-                      </p>
-                      <ApprovalDecisionForms approval={approval} />
-                    </div>
+                    <ApprovalDecisionForm approval={approval} />
                   </article>
                 ))}
                 {pendingApprovals.length === 0 && (
@@ -178,7 +166,7 @@ export default async function ApprovalsPage() {
   );
 }
 
-function ApprovalDecisionForms({
+function ApprovalDecisionForm({
   approval,
 }: {
   approval: {
@@ -189,54 +177,37 @@ function ApprovalDecisionForms({
   };
 }) {
   return (
-    <div className="mt-4 grid gap-3 lg:grid-cols-2">
-      <DecisionForm approval={approval} decision="approved" />
-      <DecisionForm approval={approval} decision="rejected" />
-    </div>
-  );
-}
-
-function DecisionForm({
-  approval,
-  decision,
-}: {
-  approval: {
-    id: string;
-    ticket_id: string | null;
-    workflow_run_id: string | null;
-    organization_id: string;
-  };
-  decision: "approved" | "rejected";
-}) {
-  return (
-    <form action={decideApproval} className="rounded-lg border border-black/10 bg-white p-3">
+    <form action={decideApproval} className="mt-4 rounded-lg border border-[#d8e4ee] bg-[#f8fbfe] p-3">
       <input type="hidden" name="approvalId" value={approval.id} />
       <input type="hidden" name="ticketId" value={approval.ticket_id ?? ""} />
       <input type="hidden" name="workflowRunId" value={approval.workflow_run_id ?? ""} />
       <input type="hidden" name="organizationId" value={approval.organization_id} />
-      <input type="hidden" name="decision" value={decision} />
       <textarea
         name="note"
-        rows={3}
-        className="w-full resize-none rounded-lg border border-black/10 bg-[#f8faf5] px-3 py-2 text-sm outline-none placeholder:text-black/38 focus:border-[#2f6f60]"
-        placeholder={
-          decision === "approved"
-            ? "Optional approval note or ticket reference..."
-            : "Optional rejection reason or follow-up..."
-        }
+        rows={2}
+        className="w-full resize-none rounded-md border border-[#d8e4ee] bg-white px-3 py-2 text-sm outline-none placeholder:text-black/38 focus:border-[#0b5f91]"
+        placeholder="Optional note, ticket reference, or rejection reason..."
       />
-      <PendingButton
-        pendingText={decision === "approved" ? "Approving..." : "Rejecting..."}
-        className={cn(
-          "mt-3 h-10 w-full rounded-lg px-3 text-sm font-semibold",
-          decision === "approved"
-            ? "bg-[#17211c] text-white"
-            : "border border-black/10 bg-white text-[#151914]",
-        )}
-      >
-        {decision === "approved" ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
-        {decision === "approved" ? "Approve" : "Reject"}
-      </PendingButton>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <PendingButton
+          name="decision"
+          value="approved"
+          pendingText="Approving..."
+          className="h-9 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+        >
+          <CheckCircle2 size={16} />
+          Approve
+        </PendingButton>
+        <PendingButton
+          name="decision"
+          value="rejected"
+          pendingText="Rejecting..."
+          className="h-9 rounded-md border border-black/10 bg-white px-3 text-sm font-semibold text-[#07111f]"
+        >
+          <XCircle size={16} />
+          Reject
+        </PendingButton>
+      </div>
     </form>
   );
 }
@@ -283,15 +254,6 @@ function Panel({
         <h2 className="font-semibold">{title}</h2>
       </div>
       {children}
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-black/70">{value}</p>
     </div>
   );
 }
