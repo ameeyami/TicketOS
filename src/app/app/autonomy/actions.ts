@@ -1,7 +1,56 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { AUTONOMY_LEVELS, autonomyLevelMeta, type AutonomyLevel } from "@/lib/autonomy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export async function setWorkflowAutonomy(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const workflowId = String(formData.get("workflowId") ?? "");
+  const level = String(formData.get("level") ?? "") as AutonomyLevel;
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  if (!organizationId || !workflowId || !AUTONOMY_LEVELS.includes(level)) {
+    throw new Error("Choose a valid autonomy level.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to manage workflow autonomy.");
+  }
+
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("id, name")
+    .eq("id", workflowId)
+    .eq("organization_id", organizationId)
+    .single();
+
+  if (workflowError) {
+    throw workflowError;
+  }
+
+  // The latest audit-log entry for this workflow is the source of truth for its
+  // current level (the schema has no per-workflow settings column).
+  const { error } = await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "workflow_autonomy_updated",
+    event_summary: `${workflow.name}: autonomy set to ${autonomyLevelMeta[level].label}`,
+    metadata: { source: "autonomy_workspace", workflow_id: workflowId, level, reason: reason || null },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  revalidatePath("/app/autonomy");
+  revalidatePath("/app/workflows");
+  revalidatePath(`/app/workflows/${workflowId}`);
+  revalidatePath("/app/audit");
+}
 
 const autonomyModes = {
   autonomous: {

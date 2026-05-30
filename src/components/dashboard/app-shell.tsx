@@ -18,6 +18,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   UserPlus,
   UserRound,
@@ -70,6 +71,7 @@ const teams = [
 
 const utilityLinks = [
   { label: "Agents", href: "/app/agents", icon: Bot },
+  { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
   { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
   { label: "People", href: "/app/people", icon: UserRound },
   { label: "Memory", href: "/app/memory", icon: GitBranch },

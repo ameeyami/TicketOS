@@ -12,10 +12,24 @@ import {
   Play,
   ShieldCheck,
   SlidersHorizontal,
+  TrendingDown,
+  TrendingUp,
+  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { updateAgentAutonomy } from "@/app/app/autonomy/actions";
+import { setWorkflowAutonomy, updateAgentAutonomy } from "@/app/app/autonomy/actions";
 import { PendingButton } from "@/components/ui/pending-button";
+import {
+  AUTONOMY_LEVELS,
+  DEFAULT_AUTONOMY_LEVEL,
+  assessTrust,
+  autonomyLevelMeta,
+  compareLevels,
+  normalizeAutonomyLevel,
+  type AutonomyLevel,
+  type TrustAssessment,
+  type WorkflowTrack,
+} from "@/lib/autonomy";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -100,9 +114,65 @@ export default async function AutonomyPage() {
         .limit(10),
     ]);
 
+  const [{ data: workflows }, { data: wfRuns }, { data: wfActions }, { data: autonomyLevelLogs }] = await Promise.all([
+    supabase
+      .from("workflows")
+      .select("id, name, trigger_type, is_active")
+      .eq("organization_id", organization.id)
+      .order("created_at"),
+    supabase.from("workflow_runs").select("id, workflow_id, status").eq("organization_id", organization.id),
+    supabase
+      .from("execution_actions")
+      .select("workflow_run_id, response_payload")
+      .eq("organization_id", organization.id),
+    supabase
+      .from("audit_logs")
+      .select("metadata, created_at")
+      .eq("organization_id", organization.id)
+      .eq("event_type", "workflow_autonomy_updated")
+      .order("created_at", { ascending: false })
+      .limit(200),
+  ]);
+
   const agentRows = agents ?? [];
   const ticketRows = tickets ?? [];
   const policyRows = policies ?? [];
+
+  const wfRunRows = wfRuns ?? [];
+  const runWorkflowMap = new Map(wfRunRows.map((run) => [run.id, run.workflow_id]));
+  const rollbacksByWorkflow = new Map<string, number>();
+  for (const action of wfActions ?? []) {
+    if (action.response_payload?.reversed_at) {
+      const wfId = runWorkflowMap.get(action.workflow_run_id);
+      if (wfId) rollbacksByWorkflow.set(wfId, (rollbacksByWorkflow.get(wfId) ?? 0) + 1);
+    }
+  }
+  const levelByWorkflow = new Map<string, AutonomyLevel>();
+  for (const log of autonomyLevelLogs ?? []) {
+    const wfId = log.metadata?.workflow_id;
+    if (wfId && !levelByWorkflow.has(wfId)) {
+      levelByWorkflow.set(wfId, normalizeAutonomyLevel(log.metadata?.level));
+    }
+  }
+
+  const completedStatuses = ["succeeded", "failed", "blocked", "cancelled"];
+  const workflowAutonomy = (workflows ?? []).map((workflow) => {
+    const runs = wfRunRows.filter((run) => run.workflow_id === workflow.id);
+    const completed = runs.filter((run) => completedStatuses.includes(run.status));
+    const track: WorkflowTrack = {
+      totalRuns: runs.length,
+      completedRuns: completed.length,
+      successfulRuns: completed.filter((run) => run.status === "succeeded").length,
+      failedRuns: completed.filter((run) => ["failed", "blocked"].includes(run.status)).length,
+      rollbacks: rollbacksByWorkflow.get(workflow.id) ?? 0,
+    };
+    return {
+      workflow,
+      track,
+      assessment: assessTrust(track),
+      current: levelByWorkflow.get(workflow.id) ?? DEFAULT_AUTONOMY_LEVEL,
+    };
+  });
   const autonomousCount = agentRows.filter((agent) => readMode(agent.status) === "autonomous").length;
   const guardedPolicyCount = policyRows.filter(
     (policy) => policy.is_active && ["approval_required", "block"].includes(policy.decision),
@@ -251,8 +321,162 @@ export default async function AutonomyPage() {
             </Panel>
           </div>
         </section>
+
+        <WorkflowAutonomySection items={workflowAutonomy} organizationId={organization.id} />
       </div>
     </main>
+  );
+}
+
+function WorkflowAutonomySection({
+  items,
+  organizationId,
+}: {
+  items: Array<{
+    workflow: { id: string; name: string; trigger_type: string; is_active: boolean };
+    track: WorkflowTrack;
+    assessment: TrustAssessment;
+    current: AutonomyLevel;
+  }>;
+  organizationId: string;
+}) {
+  return (
+    <section className="mt-6">
+      <Panel title="Earned workflow autonomy" icon={Workflow}>
+        <p className="-mt-2 mb-5 text-sm leading-6 text-black/55">
+          Each workflow earns autonomy from its track record. TicketOS scores success and rollback rates, recommends a
+          level, and flags a tighten the moment trust drops — so workflows graduate to independence the way a new hire
+          would.
+        </p>
+        {items.length > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {items.map((item) => (
+              <WorkflowAutonomyCard key={item.workflow.id} item={item} organizationId={organizationId} />
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
+            Create a workflow to start earning autonomy.
+          </p>
+        )}
+      </Panel>
+    </section>
+  );
+}
+
+function WorkflowAutonomyCard({
+  item,
+  organizationId,
+}: {
+  item: {
+    workflow: { id: string; name: string; trigger_type: string; is_active: boolean };
+    track: WorkflowTrack;
+    assessment: TrustAssessment;
+    current: AutonomyLevel;
+  };
+  organizationId: string;
+}) {
+  const { workflow, track, assessment, current } = item;
+  const recommended = assessment.recommended;
+  const direction = compareLevels(recommended, current);
+  const scoreTone =
+    assessment.score >= 70 ? "text-emerald-700" : assessment.score >= 40 ? "text-amber-700" : "text-rose-700";
+  const barTone =
+    assessment.score >= 70 ? "bg-emerald-500" : assessment.score >= 40 ? "bg-amber-500" : "bg-rose-500";
+
+  return (
+    <article className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">{workflow.name}</h3>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-black/38">
+            {workflow.trigger_type.replaceAll("_", " ")}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className={cn("text-3xl font-semibold tracking-tight", scoreTone)}>{assessment.score}</p>
+          <p className="text-xs font-semibold text-black/40">trust score</p>
+        </div>
+      </div>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/8">
+        <div className={cn("h-full rounded-full", barTone)} style={{ width: `${Math.max(4, assessment.score)}%` }} />
+      </div>
+      <p className="mt-2 text-sm text-black/55">{assessment.rationale}</p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Fact label="Runs" value={String(track.totalRuns)} />
+        <Fact label="Success" value={`${assessment.successRate}%`} />
+        <Fact label="Rollbacks" value={String(track.rollbacks)} />
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-[#f8faf5] p-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-black/38">Current level</p>
+          <p className="mt-1 font-semibold">{autonomyLevelMeta[current].label}</p>
+        </div>
+        <span className="max-w-[55%] text-right text-xs leading-5 text-black/45">{autonomyLevelMeta[current].detail}</span>
+      </div>
+
+      {direction !== 0 && (
+        <form
+          action={setWorkflowAutonomy}
+          className={cn(
+            "mt-3 rounded-lg border p-3",
+            direction > 0 ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50",
+          )}
+        >
+          <input type="hidden" name="organizationId" value={organizationId} />
+          <input type="hidden" name="workflowId" value={workflow.id} />
+          <input type="hidden" name="level" value={recommended} />
+          <input
+            type="hidden"
+            name="reason"
+            value={direction > 0 ? "Applied earned promotion" : "Tightened after trust drop"}
+          />
+          <div className="flex items-center gap-2">
+            {direction > 0 ? (
+              <TrendingUp size={15} className="text-emerald-700" />
+            ) : (
+              <TrendingDown size={15} className="text-rose-700" />
+            )}
+            <p className={cn("text-sm font-semibold", direction > 0 ? "text-emerald-800" : "text-rose-700")}>
+              {direction > 0 ? "Trust earned" : "Trust dropped"} — recommend {autonomyLevelMeta[recommended].label}
+            </p>
+          </div>
+          <PendingButton
+            pendingText="Applying..."
+            className={cn(
+              "mt-3 h-9 w-full rounded-md px-3 text-sm font-semibold text-white",
+              direction > 0 ? "bg-emerald-700" : "bg-rose-700",
+            )}
+          >
+            {direction > 0 ? "Promote" : "Tighten"} to {autonomyLevelMeta[recommended].label}
+          </PendingButton>
+        </form>
+      )}
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        {AUTONOMY_LEVELS.map((level) => (
+          <form key={level} action={setWorkflowAutonomy}>
+            <input type="hidden" name="organizationId" value={organizationId} />
+            <input type="hidden" name="workflowId" value={workflow.id} />
+            <input type="hidden" name="level" value={level} />
+            <PendingButton
+              pendingText="Saving..."
+              className={cn(
+                "h-9 w-full rounded-md border px-2 text-xs font-semibold",
+                current === level
+                  ? "border-[#17211c] bg-[#17211c] text-white"
+                  : "border-black/10 bg-white text-[#151914]",
+              )}
+            >
+              {autonomyLevelMeta[level].label}
+            </PendingButton>
+          </form>
+        ))}
+      </div>
+    </article>
   );
 }
 
