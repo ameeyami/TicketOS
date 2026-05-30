@@ -27,6 +27,7 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { AuroraField, GridOverlay, OrbitArt } from "@/components/brand/backgrounds";
+import { MarketingFooter, MarketingNav } from "@/components/marketing/marketing-chrome";
 
 const heroSteps = [
   ["Request captured", "from Slack", true],
@@ -84,23 +85,7 @@ const fadeUp = {
 export function LandingPage() {
   return (
     <main className="min-h-screen bg-[#f4f8fb] text-[#07111f]">
-      <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/10 bg-[#07111f]/85 px-5 backdrop-blur-xl md:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <TicketOSLogo markSize="md" tone="dark" />
-        </Link>
-        <div className="hidden items-center gap-8 text-sm font-medium text-white/64 md:flex">
-          <a href="#features" className="transition hover:text-white">Product</a>
-          <a href="#integrations" className="transition hover:text-white">Integrations</a>
-          <a href="#security" className="transition hover:text-white">Governance</a>
-        </div>
-        <Link
-          href="/auth/sign-in"
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[#22c55e] px-5 text-sm font-semibold text-[#03120a] transition hover:bg-[#34d36b]"
-        >
-          Log in
-          <ArrowRight size={16} />
-        </Link>
-      </nav>
+      <MarketingNav />
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-[#07111f] text-white">
@@ -313,12 +298,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[#d8e4ee] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-sm text-slate-500 md:flex-row md:px-8">
-          <TicketOSLogo markSize="sm" />
-          <p>© {new Date().getFullYear()} TicketOS · AI-native IT operations</p>
-        </div>
-      </footer>
+      <MarketingFooter />
     </main>
   );
 }
