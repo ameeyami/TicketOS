@@ -1,20 +1,26 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
+  BadgeCheck,
+  Ban,
   Bot,
   CheckCircle2,
   CirclePause,
   Clock3,
   GitBranch,
   Play,
+  ScanSearch,
   ShieldCheck,
+  Undo2,
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { runWorkflow, updateWorkflowStatus } from "@/app/app/workflows/actions";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
+import { computeBlastRadius, type PlannedAction } from "@/lib/workflow-action-plan";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -89,6 +95,7 @@ export default async function WorkflowDetailPage({
 
   const latestVersion = versions?.[0] ?? null;
   const graph = readGraph(latestVersion?.graph);
+  const blastRadius = computeBlastRadius(workflow.trigger_type);
   const runRows = runs ?? [];
   const activeRuns = runRows.filter((run) => ["queued", "running", "waiting_for_approval"].includes(run.status)).length;
   const avgConfidence = runRows.length
@@ -140,9 +147,12 @@ export default async function WorkflowDetailPage({
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold">Start a governed run</h2>
-              <p className="mt-1 text-sm text-black/52">Choose the ticket this workflow should execute against.</p>
+              <p className="mt-1 text-sm text-black/52">
+                Preview the exact blast radius below, then choose the ticket this workflow runs against.
+              </p>
             </div>
           </div>
+          <BlastRadiusPreview blastRadius={blastRadius} />
           <RunWorkflowForm workflowId={workflow.id} organizationId={organization.id} tickets={tickets ?? []} />
         </section>
 
@@ -234,6 +244,85 @@ export default async function WorkflowDetailPage({
         </section>
       </div>
     </main>
+  );
+}
+
+function BlastRadiusPreview({ blastRadius }: { blastRadius: ReturnType<typeof computeBlastRadius> }) {
+  const riskStyles: Record<string, string> = {
+    low: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    medium: "border-amber-200 bg-amber-50 text-amber-800",
+    high: "border-rose-200 bg-rose-50 text-rose-700",
+  };
+
+  return (
+    <div className="mt-4 rounded-xl border border-black/10 bg-[#f8faf5] p-4">
+      <div className="flex items-center gap-2">
+        <ScanSearch size={16} className="text-[#2e6658]" />
+        <p className="text-sm font-semibold">Dry run · blast radius</p>
+        <span className="rounded-md border border-black/10 bg-white px-2 py-0.5 text-xs font-semibold text-black/45">
+          nothing runs yet
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-black/55">
+        {blastRadius.total} provider {blastRadius.total === 1 ? "action" : "actions"} across{" "}
+        {blastRadius.systems.join(", ")}. {blastRadius.approvalCount} will pause for approval,{" "}
+        {blastRadius.highRiskCount} high-risk, {blastRadius.reversibleCount} reversible,{" "}
+        {blastRadius.irreversibleCount} cannot be undone.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <SummaryChip icon={BadgeCheck} label={`${blastRadius.approvalCount} need approval`} />
+        <SummaryChip icon={AlertTriangle} label={`${blastRadius.highRiskCount} high-risk`} />
+        <SummaryChip icon={Undo2} label={`${blastRadius.reversibleCount} reversible`} />
+        <SummaryChip icon={Ban} label={`${blastRadius.irreversibleCount} irreversible`} />
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {blastRadius.actions.map((action: PlannedAction, index: number) => (
+          <div key={`${action.action_key}-${index}`} className="rounded-lg border border-black/10 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-md bg-[#eef5ea] text-xs font-bold text-[#2e6658]">
+                {index + 1}
+              </span>
+              <span className="text-sm font-semibold">{action.display_name}</span>
+              <span className="rounded-md border border-black/10 bg-white px-2 py-0.5 text-xs font-semibold text-black/45">
+                {action.target}
+              </span>
+              <span className={cn("rounded-md border px-2 py-0.5 text-xs font-semibold", riskStyles[action.risk_level])}>
+                {action.risk_level} risk
+              </span>
+              {action.requires_approval && (
+                <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                  <BadgeCheck size={11} />
+                  approval
+                </span>
+              )}
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold",
+                  action.reversible
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-rose-200 bg-rose-50 text-rose-700",
+                )}
+              >
+                {action.reversible ? <Undo2 size={11} /> : <Ban size={11} />}
+                {action.reversible ? "reversible" : "irreversible"}
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-black/55">{action.changes}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SummaryChip({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md border border-black/10 bg-white px-2.5 py-1 text-xs font-semibold text-black/60">
+      <Icon size={13} className="text-[#2e6658]" />
+      {label}
+    </span>
   );
 }
 

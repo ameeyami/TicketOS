@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getWorkflowActionPlan } from "@/lib/workflow-action-plan";
 import { workflowTemplates, type WorkflowTemplateKey } from "@/lib/workflow-templates";
 
 export async function runWorkflow(formData: FormData) {
@@ -165,30 +166,8 @@ function executionActionsForWorkflow(
     operator_note: note || null,
   };
 
-  const actionsByTrigger: Record<string, Array<[string, string, string]>> = {
-    ticket_intent: [
-      ["okta", "reset_password", "running"],
-      ["slack", "notify_requester", "pending"],
-    ],
-    onboarding_request: [
-      ["google-workspace", "create_user", "running"],
-      ["github", "invite_to_team", "pending"],
-      ["slack", "send_onboarding_message", "pending"],
-    ],
-    security_request: [
-      ["okta", "suspend_user", "running"],
-      ["github", "review_owned_repositories", "pending"],
-      ["google-workspace", "transfer_drive_files", "pending"],
-    ],
-    incident_signal: [
-      ["cisco-meraki", "inspect_gateway", "running"],
-      ["teams", "notify_incident_channel", "pending"],
-    ],
-  };
-
-  return (actionsByTrigger[triggerType] ?? actionsByTrigger.ticket_intent).map(
-    ([integrationKey, actionKey, status]) =>
-      executionAction(organizationId, workflowRunId, integrationKey, actionKey, status, basePayload),
+  return getWorkflowActionPlan(triggerType).map((action) =>
+    executionAction(organizationId, workflowRunId, action.integration_key, action.action_key, action.status, basePayload),
   );
 }
 
