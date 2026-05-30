@@ -35,7 +35,7 @@ export default async function ApprovalsPage() {
   const { data: approvals } = await
     supabase
       .from("approval_requests")
-      .select("*, tickets(id, external_id, title, priority, status, ai_confidence), agents(name)")
+      .select("*, tickets(id, external_id, title, priority, status, ai_confidence), agents(name), workflow_runs(id, status, confidence, workflows(name))")
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false });
 
@@ -85,6 +85,11 @@ export default async function ApprovalsPage() {
                           <span className="rounded-md border border-black/10 px-2 py-1 text-xs font-semibold text-black/52">
                             {Number(approval.tickets?.ai_confidence ?? 0)}% confidence
                           </span>
+                          {approval.workflow_runs?.status && (
+                            <span className="rounded-md border border-[#b7d8f2] bg-[#e7f3ff] px-2 py-1 text-xs font-semibold text-[#0b5f91]">
+                              run {approval.workflow_runs.status.replaceAll("_", " ")}
+                            </span>
+                          )}
                         </div>
                         <h2 className="mt-3 text-xl font-semibold">{approval.title}</h2>
                         <p className="mt-2 max-w-3xl text-sm leading-6 text-black/56">
@@ -104,14 +109,20 @@ export default async function ApprovalsPage() {
 
                     <div className="mt-5 grid gap-3 md:grid-cols-3">
                       <Fact label="Ticket" value={approval.tickets?.external_id ?? "Unlinked"} />
-                      <Fact label="Requester" value={approval.agents?.name ?? "TicketOS"} />
-                      <Fact label="Created" value={formatDate(approval.created_at)} />
+                      <Fact label="Workflow" value={approval.workflow_runs?.workflows?.name ?? "Manual approval"} />
+                      <Fact label="Due" value={formatDate(approval.due_at ?? approval.created_at)} />
                     </div>
 
-                    <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <div className="mt-3 grid gap-3 md:grid-cols-3">
+                      <Fact label="Requester" value={approval.agents?.name ?? "TicketOS"} />
+                      <Fact label="Opened" value={formatDate(approval.created_at)} />
+                      <Fact label="Age" value={ageLabel(approval.created_at)} />
+                    </div>
+
+                    <div className="mt-5 rounded-lg border border-[#b7d8f2] bg-[#e7f3ff] p-4">
                       <p className="text-sm font-semibold text-amber-950">Decision note</p>
-                      <p className="mt-1 text-sm leading-6 text-amber-900/72">
-                        Optional, but useful for ticket references, manager context, or exception rationale.
+                      <p className="mt-1 text-sm leading-6 text-[#0b4f7a]">
+                        Optional, but useful for ticket references, manager context, or exception rationale. Approval resumes the workflow; rejection blocks it.
                       </p>
                       <ApprovalDecisionForms approval={approval} />
                     </div>
@@ -136,6 +147,9 @@ export default async function ApprovalsPage() {
                         <p className="font-semibold">{approval.title}</p>
                         <p className="mt-1 text-sm text-black/52">
                           {approval.tickets?.external_id ?? "Ticket"} · {approval.tickets?.title ?? "No ticket title"}
+                        </p>
+                        <p className="mt-1 text-sm text-black/42">
+                          {approval.workflow_runs?.workflows?.name ?? "Manual approval"}
                         </p>
                       </div>
                       <StatusPill status={approval.status} />
@@ -170,6 +184,7 @@ function ApprovalDecisionForms({
   approval: {
     id: string;
     ticket_id: string | null;
+    workflow_run_id: string | null;
     organization_id: string;
   };
 }) {
@@ -188,6 +203,7 @@ function DecisionForm({
   approval: {
     id: string;
     ticket_id: string | null;
+    workflow_run_id: string | null;
     organization_id: string;
   };
   decision: "approved" | "rejected";
@@ -196,6 +212,7 @@ function DecisionForm({
     <form action={decideApproval} className="rounded-lg border border-black/10 bg-white p-3">
       <input type="hidden" name="approvalId" value={approval.id} />
       <input type="hidden" name="ticketId" value={approval.ticket_id ?? ""} />
+      <input type="hidden" name="workflowRunId" value={approval.workflow_run_id ?? ""} />
       <input type="hidden" name="organizationId" value={approval.organization_id} />
       <input type="hidden" name="decision" value={decision} />
       <textarea
@@ -303,4 +320,23 @@ function formatDate(value: string | null | undefined) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function ageLabel(value: string | null | undefined) {
+  if (!value) {
+    return "Unknown";
+  }
+
+  const ageMs = Date.now() - new Date(value).getTime();
+  const hours = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60)));
+
+  if (hours < 1) {
+    return "Under 1h";
+  }
+
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+
+  return `${Math.floor(hours / 24)}d`;
 }
