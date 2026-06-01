@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { triageTicket } from "@/lib/ai/triage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 
@@ -16,8 +17,8 @@ export async function createTicket(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim();
   const requesterName = String(formData.get("requesterName") ?? "").trim();
   const requesterEmail = String(formData.get("requesterEmail") ?? "").trim();
-  const category = String(formData.get("category") ?? "Identity");
-  const priority = String(formData.get("priority") ?? "medium");
+  const fallbackCategory = String(formData.get("category") ?? "Identity");
+  const fallbackPriority = String(formData.get("priority") ?? "medium");
 
   if (!title || !description) {
     throw new Error("Title and description are required.");
@@ -31,6 +32,11 @@ export async function createTicket(formData: FormData) {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
+
+  // Real LLM triage when ANTHROPIC_API_KEY is set; otherwise use the form values.
+  const triage = await triageTicket({ title, description });
+  const category = triage?.category ?? fallbackCategory;
+  const priority = triage?.priority ?? fallbackPriority;
   const { count } = await supabase
     .from("tickets")
     .select("id", { count: "exact", head: true })
@@ -45,9 +51,11 @@ export async function createTicket(formData: FormData) {
     .eq("name", agentName)
     .maybeSingle();
 
-  const confidence = category === "Security" ? 72 : category === "Network" ? 82 : 91;
+  const confidence = triage ? triage.confidence : category === "Security" ? 72 : category === "Network" ? 82 : 91;
   const status = category === "Security" ? "approval_required" : "triaging";
-  const summary = `TicketOS classified this as ${category.toLowerCase()} work with ${confidence}% confidence and queued it for ${agentName}.`;
+  const summary = triage
+    ? triage.summary
+    : `TicketOS classified this as ${category.toLowerCase()} work with ${confidence}% confidence and queued it for ${agentName}.`;
 
   const { data: ticket, error: ticketError } = await supabase
     .from("tickets")
@@ -79,8 +87,8 @@ export async function createTicket(formData: FormData) {
     actor_agent_id: agent?.id,
     ticket_id: ticket.id,
     event_type: "created",
-    event_summary: "Manual ticket created and classified",
-    metadata: { source: "new_ticket_form", category, confidence },
+    event_summary: triage ? "Ticket created and AI-triaged" : "Manual ticket created and classified",
+    metadata: { source: "new_ticket_form", category, confidence, ai_triage: Boolean(triage), reasoning: triage?.reasoning ?? null },
   });
 
   if (status === "approval_required") {

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { triageTicket } from "@/lib/ai/triage";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,7 @@ export async function submitChatRequest(formData: FormData) {
   const requesterName = String(formData.get("requesterName") ?? "").trim();
   const requesterEmail = String(formData.get("requesterEmail") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
-  const category = String(formData.get("category") ?? "Identity");
+  const fallbackCategory = String(formData.get("category") ?? "Identity");
 
   if (!chatChannels.has(channel)) {
     throw new Error("Choose a chat channel.");
@@ -37,6 +38,12 @@ export async function submitChatRequest(formData: FormData) {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
+
+  // Real LLM triage when ANTHROPIC_API_KEY is set; otherwise use the chosen category.
+  const title = deriveTitle(message);
+  const triage = await triageTicket({ title, description: message });
+  const category = triage?.category ?? fallbackCategory;
+
   const { count } = await supabase
     .from("tickets")
     .select("id", { count: "exact", head: true })
@@ -52,10 +59,11 @@ export async function submitChatRequest(formData: FormData) {
     .maybeSingle();
 
   const channelLabel = channel === "slack" ? "Slack" : "Microsoft Teams";
-  const confidence = category === "Security" ? 72 : category === "Network" ? 82 : 91;
+  const confidence = triage ? triage.confidence : category === "Security" ? 72 : category === "Network" ? 82 : 91;
   const status = category === "Security" ? "approval_required" : "triaging";
-  const title = deriveTitle(message);
-  const summary = `TicketOS picked up this ${channelLabel} request, classified it as ${category.toLowerCase()} work with ${confidence}% confidence, opened ${externalId}, and assigned ${agentName}.`;
+  const summary = triage
+    ? `${triage.summary} (Opened ${externalId} from ${channelLabel}, assigned ${agentName}.)`
+    : `TicketOS picked up this ${channelLabel} request, classified it as ${category.toLowerCase()} work with ${confidence}% confidence, opened ${externalId}, and assigned ${agentName}.`;
 
   const { data: ticket, error: ticketError } = await supabase
     .from("tickets")
@@ -99,8 +107,8 @@ export async function submitChatRequest(formData: FormData) {
     actor_agent_id: agent?.id,
     ticket_id: ticket.id,
     event_type: "chat_intake",
-    event_summary: `${channelLabel} request captured and classified`,
-    metadata: { source: `chat_${channel}`, channel, category, confidence },
+    event_summary: `${channelLabel} request captured and ${triage ? "AI-triaged" : "classified"}`,
+    metadata: { source: `chat_${channel}`, channel, category, confidence, ai_triage: Boolean(triage), reasoning: triage?.reasoning ?? null },
   });
 
   if (status === "approval_required") {
