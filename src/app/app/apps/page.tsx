@@ -108,6 +108,13 @@ export default async function AppsPage({
                           <CheckCircle2 size={12} />
                           Connected
                         </Link>
+                      ) : existing?.status === "disabled" ? (
+                        <Link
+                          href={`/app/integrations/${existing.id}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-200"
+                        >
+                          Disabled
+                        </Link>
                       ) : existing ? (
                         <Link
                           href={`/app/integrations/${existing.id}`}
