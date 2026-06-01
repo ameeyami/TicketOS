@@ -53,13 +53,15 @@ a {
 
 .app-content-frame {
   min-height: calc(100vh - 48px);
-  background-color: #e9f0f8;
+  background-color: #e8eff7;
   background-image:
-    radial-gradient(55% 48% at -2% -8%, rgba(34, 197, 94, 0.16), transparent 60%),
-    radial-gradient(52% 50% at 102% -4%, rgba(11, 95, 145, 0.18), transparent 60%),
-    radial-gradient(48% 46% at 94% 112%, rgba(99, 102, 241, 0.14), transparent 64%);
+    radial-gradient(circle at center, rgba(11, 42, 74, 0.07) 1px, transparent 1.6px),
+    radial-gradient(60% 55% at -6% -12%, rgba(34, 197, 94, 0.2), transparent 58%),
+    radial-gradient(58% 56% at 106% -6%, rgba(11, 95, 145, 0.22), transparent 58%),
+    radial-gradient(52% 52% at 96% 116%, rgba(99, 102, 241, 0.17), transparent 62%);
+  background-size: 24px 24px, 150% 150%, 150% 150%, 150% 150%;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
   background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 .app-content-frame > main {

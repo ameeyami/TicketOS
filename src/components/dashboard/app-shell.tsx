@@ -220,11 +220,11 @@ function NavLink({
       className={cn(
         "flex h-8 items-center gap-2.5 rounded-md py-1 pl-[34px] pr-2 text-sm transition",
         active
-          ? "bg-[#eaf2fb] font-medium text-[#0b2a4a]"
-          : "text-slate-500 hover:bg-[#f1f4f8] hover:text-slate-800",
+          ? "bg-[#0b2a4a] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(11,42,74,0.55)]"
+          : "text-slate-500 hover:bg-[#eef2f7] hover:text-slate-800",
       )}
     >
-      <item.icon size={15} className={active ? "text-[#0b5f91]" : "text-slate-400"} />
+      <item.icon size={15} className={active ? "text-[#7ef0a8]" : "text-slate-400"} />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.label === "Approvals" && (
         <span className="rounded-full bg-[#22c55e] px-1.5 py-0.5 text-[10px] font-semibold text-[#03120a]">2</span>
