@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   CheckCircle2,
   CirclePause,
   FileJson,
@@ -15,6 +13,7 @@ import {
   createPolicyRule,
   updatePolicyRuleStatus,
 } from "@/app/app/policies/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { policyRuleTemplates } from "@/lib/policy-rule-templates";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -59,23 +58,18 @@ export default async function PoliciesPage() {
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <Link href="/app" className="inline-flex items-center gap-2 text-sm font-medium text-black/52 hover:text-black">
-              <ArrowLeft size={15} />
-              Command center
-            </Link>
-            <h1 className="mt-5 text-3xl font-semibold tracking-tight">Policies</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-black/54">
-              Keep only the rules agents must check before approving, blocking, or executing work.
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 md:w-[360px]">
-            <PolicyStat label="Active" value={`${activePolicies}/${policyRows.length}`} />
-            <PolicyStat label="Approval" value={String(approvalPolicies)} />
-            <PolicyStat label="Blocked" value={String(blockPolicies)} />
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Governance" }, { label: "Policies" }]}
+          title="Policies"
+          description="Keep only the rules agents must check before approving, blocking, or executing work."
+          actions={
+            <div className="grid grid-cols-3 gap-2 md:w-[360px]">
+              <PolicyStat label="Active" value={`${activePolicies}/${policyRows.length}`} />
+              <PolicyStat label="Approval" value={String(approvalPolicies)} />
+              <PolicyStat label="Blocked" value={String(blockPolicies)} />
+            </div>
+          }
+        />
 
         <section className="mt-5 grid gap-3 md:grid-cols-2">
           <ActionDrawer title="Add from template" icon={<ShieldAlert size={17} />}>

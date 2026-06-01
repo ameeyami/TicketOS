@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Plus, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createTicket } from "@/app/app/tickets/new/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PendingButton } from "@/components/ui/pending-button";
 
@@ -16,28 +16,18 @@ export default async function NewTicketPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-3xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
+        <PageHeader
+          crumbs={[
+            { label: "IT" },
+            { label: "Tickets", href: "/app/tickets" },
+            { label: "New ticket" },
+          ]}
+          title="New ticket"
+          description="TicketOS will classify the request, assign an agent, and create an audit entry."
+        />
 
-        <section className="mt-6 rounded-xl border border-black/10 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="flex size-10 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-              <Sparkles size={18} />
-            </span>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">New IT request</h1>
-              <p className="mt-1 text-sm text-black/52">
-                TicketOS will classify the request, assign an agent, and create an audit entry.
-              </p>
-            </div>
-          </div>
-
-          <form action={createTicket} className="mt-8 grid gap-5">
+        <section className="rounded-xl border border-black/10 bg-white p-6 shadow-sm">
+          <form action={createTicket} className="grid gap-5">
             <label className="block">
               <span className="text-sm font-semibold">Request title</span>
               <input

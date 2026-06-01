@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Bot, MessagesSquare, Plus, Send, Sparkles } from "lucide-react";
+import { MessagesSquare, Plus, Send, Sparkles } from "lucide-react";
 import { askCopilot } from "@/app/app/copilot/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PendingButton } from "@/components/ui/pending-button";
@@ -46,34 +47,20 @@ export default async function CopilotPage({
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-              <Bot size={19} />
-            </span>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Operations Copilot</h1>
-              <p className="mt-1 text-sm text-black/52">
-                Ask about tickets, approvals, blocked workflows, and recent audit context.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/app/copilot"
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
-          >
-            <Plus size={16} />
-            New chat
-          </Link>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Other" }, { label: "Copilot" }]}
+          title="Operations Copilot"
+          description="Ask about tickets, approvals, and recent activity."
+          actions={
+            <Link
+              href="/app/copilot"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+            >
+              <Plus size={16} />
+              New chat
+            </Link>
+          }
+        />
 
         <section className="mt-6 grid gap-5 lg:grid-cols-[260px_1fr]">
           {/* Chat history */}

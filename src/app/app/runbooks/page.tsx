@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   BookOpenCheck,
   CheckCircle2,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { installRunbookPack } from "@/app/app/runbooks/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { policyRuleTemplates } from "@/lib/policy-rule-templates";
 import { runbookPacks } from "@/lib/runbook-packs";
@@ -74,30 +74,20 @@ export default async function RunbooksPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Runbook library</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Turn trusted playbooks into agent workflows.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Install governed IT runbooks with matching workflow graphs, policy guardrails, and audit visibility.
-            </p>
-          </div>
-          <Link
-            href="/app/workflows/new"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
-          >
-            Custom workflow
-            <ArrowRight size={16} />
-          </Link>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Runbooks" }]}
+          title="Runbooks"
+          description="Install governed IT runbooks with matching workflow graphs, policy guardrails, and audit visibility."
+          actions={
+            <Link
+              href="/app/workflows/new"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            >
+              Custom workflow
+              <ArrowRight size={16} />
+            </Link>
+          }
+        />
 
         <section className="mt-6 grid gap-3 md:grid-cols-4">
           <MetricCard label="Runbook packs" value={String(packRows.length)} icon={Library} />

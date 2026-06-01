@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   Bot,
   CheckCircle2,
   CircleAlert,
@@ -14,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -92,23 +92,11 @@ export default async function AuditPage({
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Audit</h1>
-            <p className="mt-2 text-sm text-black/54">Replay workflow runs and review agent decisions.</p>
-          </div>
-          <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold">
-            {organization.name}
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Governance" }, { label: "Audit" }]}
+          title="Audit"
+          description="Replay workflow runs and review agent decisions."
+        />
 
         <section className="mt-5 grid gap-3 md:grid-cols-4">
           <MetricCard label="Workflow runs" value={String(runs.length)} icon={Workflow} />

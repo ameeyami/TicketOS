@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, Play, Plus, ShieldCheck, Workflow } from "lucide-react";
+import { ArrowRight, Play, Plus, ShieldCheck, Workflow } from "lucide-react";
 import { runWorkflow } from "@/app/app/workflows/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PendingButton } from "@/components/ui/pending-button";
@@ -35,20 +36,11 @@ export default async function WorkflowsPage() {
   return (
     <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-5 flex flex-col gap-3 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Workflows</h1>
-            <p className="mt-2 text-sm text-slate-600">Run governed automations for repeat IT work.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Workflows" }]}
+          title="Workflows"
+          description="Run governed automations for repeat IT work."
+          actions={
             <Link
               href="/app/workflows/new"
               className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
@@ -56,11 +48,8 @@ export default async function WorkflowsPage() {
               <Plus size={16} />
               New workflow
             </Link>
-            <div className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-semibold">
-              {organization.name}
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         <section className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
           <div className="space-y-4">

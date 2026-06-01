@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   ChevronDown,
   MessageSquareText,
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
 import { recordPeopleReview, requestAccessReview } from "@/app/app/people/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -89,27 +89,20 @@ export default async function PeoplePage() {
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">People</h1>
-            <p className="mt-2 text-sm text-black/54">Review requesters and access review actions.</p>
-          </div>
-          <Link
-            href="/app/team"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
-          >
-            Team
-            <UsersRound size={16} />
-          </Link>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Other" }, { label: "People" }]}
+          title="People"
+          description="Review requesters and access review actions."
+          actions={
+            <Link
+              href="/app/team"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            >
+              Team
+              <UsersRound size={16} />
+            </Link>
+          }
+        />
 
         <section className="mt-5">
           <div className="space-y-4">

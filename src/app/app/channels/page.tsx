@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, Bot, CheckCircle2, MessagesSquare, Send, UserRound } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, MessagesSquare, Send, UserRound } from "lucide-react";
 import { submitChatRequest } from "@/app/app/channels/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -53,24 +54,11 @@ export default async function ChannelsPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Channels</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Intake where employees already work.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Requests arrive from Slack and Teams, get classified and opened as tickets automatically, and the agent
-              replies in the same thread — no portal hunt required.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Channels" }]}
+          title="Channels"
+          description="Requests arrive from Slack and Teams, get classified, and the agent replies in-thread."
+        />
 
         <section className="mt-6 grid gap-3 sm:grid-cols-2">
           {(["slack", "teams"] as const).map((provider) => {

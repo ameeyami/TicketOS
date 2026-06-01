@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   Bot,
   Brain,
   ShieldCheck,
@@ -9,6 +7,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { updateAgentMemory } from "@/app/app/agents/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -44,20 +43,11 @@ export default async function MemoryPage() {
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Memory</h1>
-            <p className="mt-2 text-sm text-black/54">Edit the context each agent can use.</p>
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Other" }, { label: "Memory" }]}
+          title="Memory"
+          description="Edit the context each agent can use."
+        />
 
         <section className="mt-5 grid gap-3 md:grid-cols-2">
           <MetricCard label="Scoped agents" value={`${scopedAgents}/${agentRows.length}`} icon={Brain} />

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   BadgeCheck,
   CheckCircle2,
   Clock3,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { decideAccessReview, logAccessCertification } from "@/app/app/access-reviews/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -107,27 +107,20 @@ export default async function AccessReviewsPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Access reviews</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Review access before agents proceed.</h1>
-          </div>
-          <Link
-            href="/app/people"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
-          >
-            People
-            <UserRound size={16} />
-          </Link>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Governance" }, { label: "Access reviews" }]}
+          title="Access reviews"
+          description="Review access before agents proceed."
+          actions={
+            <Link
+              href="/app/people"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            >
+              People
+              <UserRound size={16} />
+            </Link>
+          }
+        />
 
         <section className="mt-6 grid gap-3 md:grid-cols-4">
           <MetricCard label="Pending" value={String(pendingReviews.length)} icon={Clock3} />

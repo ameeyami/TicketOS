@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   Boxes,
   Cable,
   FileText,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { syncInventory } from "@/app/app/inventory/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -76,35 +76,25 @@ export default async function InventoryPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Inventory</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Map users, systems, and execution access.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Inspect the operational inventory agents use when provisioning, revoking, or escalating IT work.
-            </p>
-          </div>
-          <form action={syncInventory} className="rounded-xl border border-black/10 bg-white p-3">
-            <input type="hidden" name="organizationId" value={organization.id} />
-            <input
-              name="note"
-              className="mb-2 h-9 w-full rounded-lg border border-black/10 px-3 text-sm outline-none placeholder:text-black/38 focus:border-[#2f6f60]"
-              placeholder="Optional sync note"
-            />
-            <PendingButton pendingText="Syncing..." className="h-10 w-full rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
-              <RefreshCw size={16} />
-              Sync inventory
-            </PendingButton>
-          </form>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Inventory" }]}
+          title="Inventory"
+          description="Inspect the operational inventory agents use when provisioning, revoking, or escalating IT work."
+          actions={
+            <form action={syncInventory} className="flex items-center gap-2">
+              <input type="hidden" name="organizationId" value={organization.id} />
+              <input
+                name="note"
+                className="h-10 w-44 rounded-lg border border-black/10 px-3 text-sm outline-none placeholder:text-black/38 focus:border-[#2f6f60]"
+                placeholder="Optional sync note"
+              />
+              <PendingButton pendingText="Syncing..." className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                <RefreshCw size={16} />
+                Sync inventory
+              </PendingButton>
+            </form>
+          }
+        />
 
         <section className="mt-6 grid gap-3 md:grid-cols-4">
           <MetricCard label="Connected systems" value={`${connectedIntegrations}/${integrationRows.length}`} icon={Cable} />

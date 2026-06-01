@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   CircleAlert,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { reverseExecutionAction, updateExecutionActionStatus } from "@/app/app/executions/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { getInverseAction, type InverseActionDefinition } from "@/lib/integration-action-catalog";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -80,29 +80,20 @@ export default async function ExecutionsPage({
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Execution console</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/56">
-              Review provider actions, update the outcome, and roll back any action an agent took with one click.
-            </p>
-          </div>
-          <Link
-            href="/app/workflows"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
-          >
-            Run workflow
-            <ArrowRight size={16} />
-          </Link>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Executions" }]}
+          title="Executions"
+          description="Review provider actions, update the outcome, and roll back any action an agent took with one click."
+          actions={
+            <Link
+              href="/app/workflows"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+            >
+              Run workflow
+              <ArrowRight size={16} />
+            </Link>
+          }
+        />
 
         <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <MetricCard label="Running" value={String(runningActions)} icon={Loader2} />

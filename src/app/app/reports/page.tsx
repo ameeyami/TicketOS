@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Download, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Download, ShieldCheck, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { exportReport } from "@/app/app/reports/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -95,19 +95,11 @@ export default async function ReportsPage() {
   return (
     <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link href="/app" className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold">
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <section className="mt-5 border-b border-black/10 pb-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Reports</h1>
-              <p className="mt-2 text-sm text-black/52">
-                {organization.name} · {reportDate}
-              </p>
-            </div>
+        <PageHeader
+          crumbs={[{ label: "Governance" }, { label: "Reports" }]}
+          title="Reports"
+          description={reportDate}
+          actions={
             <form action={exportReport}>
               <input type="hidden" name="organizationId" value={organization.id} />
               <input type="hidden" name="reportName" value="Operations briefing" />
@@ -116,8 +108,8 @@ export default async function ReportsPage() {
                 Export
               </PendingButton>
             </form>
-          </div>
-        </section>
+          }
+        />
 
         <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {highlights.map((item) => (
