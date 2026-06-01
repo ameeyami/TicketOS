@@ -38,6 +38,8 @@ import { cn } from "@/lib/utils";
 const teams = [
   {
     name: "IT",
+    initial: "I",
+    tone: "bg-[#e7f0ff] text-[#0b5f91]",
     links: [
       { label: "Tickets", href: "/app/tickets", icon: MessageSquareText },
       { label: "Channels", href: "/app/channels", icon: MessagesSquare },
@@ -48,6 +50,8 @@ const teams = [
   },
   {
     name: "Operations",
+    initial: "O",
+    tone: "bg-[#e8f8ef] text-[#0f7a5f]",
     links: [
       { label: "Passwords", href: "/app/password-resets", icon: KeyRound },
       { label: "Onboarding", href: "/app/onboarding", icon: UserPlus },
@@ -57,6 +61,8 @@ const teams = [
   },
   {
     name: "Governance",
+    initial: "G",
+    tone: "bg-[#efeaff] text-[#5b4bc4]",
     links: [
       { label: "Security", href: "/app/security", icon: LockKeyhole },
       { label: "Policies", href: "/app/policies", icon: ShieldCheck },
@@ -67,15 +73,20 @@ const teams = [
   },
 ];
 
-const utilityLinks = [
-  { label: "Agents", href: "/app/agents", icon: Bot },
-  { label: "Copilot", href: "/app/copilot", icon: Sparkles },
-  { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
-  { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
-  { label: "People", href: "/app/people", icon: UserRound },
-  { label: "Memory", href: "/app/memory", icon: GitBranch },
-  { label: "AI status", href: "/app/diagnostics", icon: Activity },
-];
+const utilityTeam = {
+  name: "Other",
+  initial: "•",
+  tone: "bg-[#eef1f5] text-[#5b6b7e]",
+  links: [
+    { label: "Agents", href: "/app/agents", icon: Bot },
+    { label: "Copilot", href: "/app/copilot", icon: Sparkles },
+    { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
+    { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
+    { label: "People", href: "/app/people", icon: UserRound },
+    { label: "Memory", href: "/app/memory", icon: GitBranch },
+    { label: "AI status", href: "/app/diagnostics", icon: Activity },
+  ],
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -91,16 +102,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="ticketos-app-shell min-h-screen bg-[#f4f8fb] text-[#07111f]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[232px] shrink-0 bg-[#07111f] px-3 py-4 text-white lg:block">
-          <Link href="/app" className="flex h-9 items-center gap-2 px-1.5 text-sm font-semibold">
-            <TicketOSLogo markSize="sm" tone="dark" />
+        <aside className="hidden w-[240px] shrink-0 border-r border-[#e8edf3] bg-[#fbfcfe] px-3 py-4 lg:block">
+          <Link href="/app" className="flex h-9 items-center gap-2 rounded-md px-2 transition hover:bg-[#f1f4f8]">
+            <TicketOSLogo markSize="sm" />
+            <ChevronDown size={14} className="ml-auto text-slate-400" />
           </Link>
 
-          <div className="mt-6 space-y-4">
-            {teams.map((team) => (
+          <div className="mt-5 space-y-3">
+            {[...teams, utilityTeam].map((team) => (
               <SidebarSection
                 key={team.name}
                 name={team.name}
+                initial={team.initial}
+                tone={team.tone}
                 open={isSectionOpen(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
                 onToggle={() => toggleSection(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
               >
@@ -109,16 +123,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 ))}
               </SidebarSection>
             ))}
-
-            <SidebarSection
-              name="Other"
-              open={isSectionOpen("Other", utilityLinks.some((item) => isActivePath(item.href, pathname)))}
-              onToggle={() => toggleSection("Other", utilityLinks.some((item) => isActivePath(item.href, pathname)))}
-            >
-              {utilityLinks.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} />
-              ))}
-            </SidebarSection>
           </div>
         </aside>
 
@@ -169,11 +173,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function SidebarSection({
   name,
+  initial,
+  tone,
   open,
   onToggle,
   children,
 }: {
   name: string;
+  initial: string;
+  tone: string;
   open: boolean;
   onToggle: () => void;
   children: React.ReactNode;
@@ -184,12 +192,15 @@ function SidebarSection({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex h-7 w-full items-center gap-2 px-2.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-white/35 transition hover:text-white/65"
+        className="flex h-8 w-full items-center gap-2 rounded-md px-1.5 text-sm font-semibold text-slate-700 transition hover:bg-[#f1f4f8]"
       >
+        <span className={cn("flex size-5 items-center justify-center rounded text-[11px] font-bold", tone)}>
+          {initial}
+        </span>
         <span className="min-w-0 flex-1 truncate text-left">{name}</span>
-        <ChevronDown size={12} className={cn("text-white/30 transition", open && "rotate-180")} />
+        <ChevronDown size={13} className={cn("text-slate-400 transition", open && "rotate-180")} />
       </button>
-      {open && <div className="mt-1 space-y-0.5">{children}</div>}
+      {open && <div className="mt-0.5 space-y-0.5">{children}</div>}
     </div>
   );
 }
@@ -207,16 +218,13 @@ function NavLink({
     <Link
       href={item.href}
       className={cn(
-        "relative flex h-9 items-center gap-2.5 rounded-lg pl-3 pr-2 text-sm transition",
+        "flex h-8 items-center gap-2.5 rounded-md py-1 pl-[34px] pr-2 text-sm transition",
         active
-          ? "bg-white/[0.10] font-medium text-white"
-          : "text-white/55 hover:bg-white/[0.05] hover:text-white/90",
+          ? "bg-[#eaf2fb] font-medium text-[#0b2a4a]"
+          : "text-slate-500 hover:bg-[#f1f4f8] hover:text-slate-800",
       )}
     >
-      {active && (
-        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-[#22c55e]" />
-      )}
-      <item.icon size={15} className={active ? "text-[#7ef0a8]" : "text-white/45"} />
+      <item.icon size={15} className={active ? "text-[#0b5f91]" : "text-slate-400"} />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.label === "Approvals" && (
         <span className="rounded-full bg-[#22c55e] px-1.5 py-0.5 text-[10px] font-semibold text-[#03120a]">2</span>
