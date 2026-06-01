@@ -1,15 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { answerCopilot, type CopilotTurn } from "@/lib/ai/copilot";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function askCopilot(formData: FormData) {
-  const threadId = String(formData.get("threadId") ?? "");
+  const threadIdInput = String(formData.get("threadId") ?? "").trim();
   const organizationId = String(formData.get("organizationId") ?? "");
   const question = String(formData.get("question") ?? "").trim();
 
-  if (!threadId || !organizationId || !question) {
+  if (!organizationId || !question) {
     throw new Error("Ask a question before sending.");
   }
 
@@ -18,6 +18,24 @@ export async function askCopilot(formData: FormData) {
 
   if (userError || !userData.user) {
     throw new Error("You must be signed in to use Copilot.");
+  }
+
+  // Start a fresh chat thread on the first message (lazy — avoids empty threads).
+  let threadId = threadIdInput;
+  if (!threadId) {
+    const { data: created, error: threadError } = await supabase
+      .from("copilot_threads")
+      .insert({
+        organization_id: organizationId,
+        created_by: userData.user.id,
+        title: deriveThreadTitle(question),
+      })
+      .select("id")
+      .single();
+    if (threadError) {
+      throw threadError;
+    }
+    threadId = created.id;
   }
 
   await supabase.from("copilot_messages").insert({
@@ -71,7 +89,19 @@ export async function askCopilot(formData: FormData) {
     ],
   });
 
-  revalidatePath("/app/copilot");
+  // Bump the thread so it sorts to the top of the chat history.
+  await supabase
+    .from("copilot_threads")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", threadId)
+    .eq("organization_id", organizationId);
+
+  redirect(`/app/copilot?thread=${threadId}`);
+}
+
+function deriveThreadTitle(question: string) {
+  const cleaned = question.replace(/\s+/g, " ").trim();
+  return cleaned.length > 48 ? `${cleaned.slice(0, 45)}…` : cleaned || "New chat";
 }
 
 function buildCopilotAnswer(
