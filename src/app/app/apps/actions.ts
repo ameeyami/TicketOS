@@ -38,21 +38,35 @@ export async function connectApp(formData: FormData) {
     redirect(`/app/apps?${back.toString()}`);
   }
 
-  const { error: upsertError } = await supabase.from("integrations").upsert(
-    {
+  // If it already exists, just go to its setup/manage page — never silently flip
+  // a real connection.
+  const { data: existing } = await supabase
+    .from("integrations")
+    .select("id")
+    .eq("organization_id", organization.id)
+    .eq("provider_key", slug)
+    .maybeSingle();
+
+  if (existing) {
+    redirect(`/app/integrations/${existing.id}`);
+  }
+
+  // Add the app as NOT connected — connecting requires real setup (a workspace /
+  // tenant ID) on the integration page. Clicking "Connect" must not fake it.
+  const { data: created, error: insertError } = await supabase
+    .from("integrations")
+    .insert({
       organization_id: organization.id,
       provider_key: slug,
       display_name: name,
-      status: "connected",
+      status: "not_connected",
       scopes: ["read", "execute"],
       config: { source: "app_catalog", category },
-      connected_by: userData.user.id,
-      connected_at: new Date().toISOString(),
-    },
-    { onConflict: "organization_id,provider_key" },
-  );
+    })
+    .select("id")
+    .single();
 
-  if (upsertError) {
+  if (insertError || !created) {
     back.set("notice", "error");
     redirect(`/app/apps?${back.toString()}`);
   }
@@ -60,13 +74,11 @@ export async function connectApp(formData: FormData) {
   await supabase.from("audit_logs").insert({
     organization_id: organization.id,
     actor_user_id: userData.user.id,
-    event_type: "app_connected",
-    event_summary: `${name} connected`,
+    event_type: "app_added",
+    event_summary: `${name} added — connection setup required`,
     metadata: { source: "app_catalog", provider_key: slug, category },
   });
 
   revalidatePath("/app/apps");
-  revalidatePath("/app/integrations");
-  back.set("notice", "connected");
-  redirect(`/app/apps?${back.toString()}`);
+  redirect(`/app/integrations/${created.id}`);
 }

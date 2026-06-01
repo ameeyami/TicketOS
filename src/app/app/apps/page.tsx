@@ -31,10 +31,8 @@ export default async function AppsPage({
     .from("integrations")
     .select("id, provider_key, status")
     .eq("organization_id", organization.id);
-  const connectedId = new Map(
-    (integrations ?? [])
-      .filter((row) => row.status === "connected")
-      .map((row) => [row.provider_key, row.id as string]),
+  const byProvider = new Map(
+    (integrations ?? []).map((row) => [row.provider_key, { id: row.id as string, status: row.status as string }]),
   );
 
   const apps = appCatalog.filter((app) => {
@@ -90,7 +88,7 @@ export default async function AppsPage({
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {apps.map((app) => {
-                const integrationId = connectedId.get(app.slug);
+                const existing = byProvider.get(app.slug);
                 return (
                   <div key={app.slug} className="flex flex-col justify-between rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -102,13 +100,21 @@ export default async function AppsPage({
                       >
                         {app.name.charAt(0)}
                       </span>
-                      {integrationId ? (
+                      {existing?.status === "connected" ? (
                         <Link
-                          href={`/app/integrations/${integrationId}`}
+                          href={`/app/integrations/${existing.id}`}
                           className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
                         >
                           <CheckCircle2 size={12} />
                           Connected
+                        </Link>
+                      ) : existing ? (
+                        <Link
+                          href={`/app/integrations/${existing.id}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
+                        >
+                          <CircleAlert size={12} />
+                          Set up
                         </Link>
                       ) : (
                         <form action={connectApp}>
