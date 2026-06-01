@@ -82,7 +82,7 @@ export async function reverseExecutionAction(formData: FormData) {
   const { data: action, error: readError } = await supabase
     .from("execution_actions")
     .select(
-      "id, organization_id, workflow_run_id, workflow_run_step_id, integration_key, action_key, status, request_payload, response_payload",
+      "id, organization_id, workflow_run_id, workflow_run_step_id, integration_key, action_key, status, request_payload, response_payload, reversed_at, reverses_action_id",
     )
     .eq("id", actionId)
     .eq("organization_id", organizationId)
@@ -97,11 +97,11 @@ export async function reverseExecutionAction(formData: FormData) {
   }
 
   const existingResponse = (action.response_payload ?? {}) as Record<string, unknown>;
-  if (existingResponse.reversed_at) {
+  if (action.reversed_at || existingResponse.reversed_at) {
     throw new Error("This action has already been rolled back.");
   }
 
-  if (action.request_payload?.reverses_action_id) {
+  if (action.reverses_action_id || action.request_payload?.reverses_action_id) {
     throw new Error("A rollback action cannot itself be rolled back.");
   }
 
@@ -125,6 +125,7 @@ export async function reverseExecutionAction(formData: FormData) {
       integration_key: action.integration_key,
       action_key: inverse.action_key,
       status: "succeeded",
+      reverses_action_id: action.id,
       request_payload: {
         reverses_action_id: action.id,
         original_action_key: action.action_key,
@@ -146,6 +147,9 @@ export async function reverseExecutionAction(formData: FormData) {
   const { error: updateError } = await supabase
     .from("execution_actions")
     .update({
+      reversed_at: reversedAt,
+      reversed_by: userData.user.id,
+      reversal_action_id: reversal.id,
       response_payload: {
         ...existingResponse,
         reversed_at: reversedAt,

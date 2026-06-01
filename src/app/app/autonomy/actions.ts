@@ -32,8 +32,17 @@ export async function setWorkflowAutonomy(formData: FormData) {
     throw workflowError;
   }
 
-  // The latest audit-log entry for this workflow is the source of truth for its
-  // current level (the schema has no per-workflow settings column).
+  const { error: levelError } = await supabase
+    .from("workflows")
+    .update({ autonomy_level: level })
+    .eq("id", workflowId)
+    .eq("organization_id", organizationId);
+
+  if (levelError) {
+    throw levelError;
+  }
+
+  // Also keep an audit-log entry as a change history of autonomy edits.
   const { error } = await supabase.from("audit_logs").insert({
     organization_id: organizationId,
     actor_user_id: userData.user.id,

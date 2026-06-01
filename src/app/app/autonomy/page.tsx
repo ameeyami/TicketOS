@@ -21,7 +21,6 @@ import { setWorkflowAutonomy, updateAgentAutonomy } from "@/app/app/autonomy/act
 import { PendingButton } from "@/components/ui/pending-button";
 import {
   AUTONOMY_LEVELS,
-  DEFAULT_AUTONOMY_LEVEL,
   assessTrust,
   autonomyLevelMeta,
   compareLevels,
@@ -114,24 +113,17 @@ export default async function AutonomyPage() {
         .limit(10),
     ]);
 
-  const [{ data: workflows }, { data: wfRuns }, { data: wfActions }, { data: autonomyLevelLogs }] = await Promise.all([
+  const [{ data: workflows }, { data: wfRuns }, { data: wfActions }] = await Promise.all([
     supabase
       .from("workflows")
-      .select("id, name, trigger_type, is_active")
+      .select("id, name, trigger_type, is_active, autonomy_level")
       .eq("organization_id", organization.id)
       .order("created_at"),
     supabase.from("workflow_runs").select("id, workflow_id, status").eq("organization_id", organization.id),
     supabase
       .from("execution_actions")
-      .select("workflow_run_id, response_payload")
+      .select("workflow_run_id, reversed_at, response_payload")
       .eq("organization_id", organization.id),
-    supabase
-      .from("audit_logs")
-      .select("metadata, created_at")
-      .eq("organization_id", organization.id)
-      .eq("event_type", "workflow_autonomy_updated")
-      .order("created_at", { ascending: false })
-      .limit(200),
   ]);
 
   const agentRows = agents ?? [];
@@ -142,16 +134,9 @@ export default async function AutonomyPage() {
   const runWorkflowMap = new Map(wfRunRows.map((run) => [run.id, run.workflow_id]));
   const rollbacksByWorkflow = new Map<string, number>();
   for (const action of wfActions ?? []) {
-    if (action.response_payload?.reversed_at) {
+    if (action.reversed_at ?? action.response_payload?.reversed_at) {
       const wfId = runWorkflowMap.get(action.workflow_run_id);
       if (wfId) rollbacksByWorkflow.set(wfId, (rollbacksByWorkflow.get(wfId) ?? 0) + 1);
-    }
-  }
-  const levelByWorkflow = new Map<string, AutonomyLevel>();
-  for (const log of autonomyLevelLogs ?? []) {
-    const wfId = log.metadata?.workflow_id;
-    if (wfId && !levelByWorkflow.has(wfId)) {
-      levelByWorkflow.set(wfId, normalizeAutonomyLevel(log.metadata?.level));
     }
   }
 
@@ -170,7 +155,7 @@ export default async function AutonomyPage() {
       workflow,
       track,
       assessment: assessTrust(track),
-      current: levelByWorkflow.get(workflow.id) ?? DEFAULT_AUTONOMY_LEVEL,
+      current: normalizeAutonomyLevel(workflow.autonomy_level),
     };
   });
   const autonomousCount = agentRows.filter((agent) => readMode(agent.status) === "autonomous").length;

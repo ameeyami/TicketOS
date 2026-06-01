@@ -52,7 +52,7 @@ export default async function CostsPage() {
     { data: actions },
     { data: agents },
     { data: membership },
-    { data: budgetLogs },
+    { data: orgBudget },
   ] = await Promise.all([
     supabase
       .from("tickets")
@@ -73,12 +73,10 @@ export default async function CostsPage() {
       .eq("user_id", userData.user.id)
       .maybeSingle(),
     supabase
-      .from("audit_logs")
-      .select("metadata, created_at")
-      .eq("organization_id", organization.id)
-      .eq("event_type", "cost_budget_updated")
-      .order("created_at", { ascending: false })
-      .limit(1),
+      .from("organizations")
+      .select("monthly_ai_budget_usd")
+      .eq("id", organization.id)
+      .maybeSingle(),
   ]);
 
   const ticketRows = tickets ?? [];
@@ -88,7 +86,7 @@ export default async function CostsPage() {
   const agentById = new Map((agents ?? []).map((agent) => [agent.id, agent.name]));
   const ticketById = new Map(ticketRows.map((ticket) => [ticket.id, ticket]));
   const canManage = membership?.role === "owner" || membership?.role === "admin";
-  const monthlyBudget = Number(budgetLogs?.[0]?.metadata?.monthly_budget_usd ?? DEFAULT_MONTHLY_BUDGET_USD);
+  const monthlyBudget = Number(orgBudget?.monthly_ai_budget_usd ?? DEFAULT_MONTHLY_BUDGET_USD);
 
   // Per-ticket totals (triage + linked run execution) drive the "cost per resolution" story.
   const ticketCosts = ticketRows.map((ticket) => {

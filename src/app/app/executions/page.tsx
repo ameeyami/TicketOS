@@ -154,8 +154,8 @@ export default async function ExecutionsPage({
           <div className="divide-y divide-black/8">
             {filteredActions.map((action) => {
               const inverse = getInverseAction(action.integration_key, action.action_key);
-              const reversedAt = action.response_payload?.reversed_at as string | undefined;
-              const isReversal = Boolean(action.request_payload?.reverses_action_id);
+              const reversedAt = (action.reversed_at ?? action.response_payload?.reversed_at) as string | undefined;
+              const isReversal = Boolean(action.reverses_action_id ?? action.request_payload?.reverses_action_id);
               const undoable = canReverse(action);
 
               return (
@@ -388,13 +388,15 @@ function canReverse(action: {
   status: string;
   integration_key: string;
   action_key: string;
+  reversed_at?: string | null;
+  reverses_action_id?: string | null;
   request_payload?: { reverses_action_id?: string } | null;
   response_payload?: { reversed_at?: string } | null;
 }) {
   return (
     action.status === "succeeded" &&
-    !action.response_payload?.reversed_at &&
-    !action.request_payload?.reverses_action_id &&
+    !(action.reversed_at ?? action.response_payload?.reversed_at) &&
+    !(action.reverses_action_id ?? action.request_payload?.reverses_action_id) &&
     Boolean(getInverseAction(action.integration_key, action.action_key))
   );
 }

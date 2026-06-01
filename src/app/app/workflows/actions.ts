@@ -30,7 +30,7 @@ export async function runWorkflow(formData: FormData) {
 
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
-    .select("id, name, trigger_type")
+    .select("id, name, trigger_type, autonomy_level")
     .eq("id", workflowId)
     .eq("organization_id", organizationId)
     .single();
@@ -64,17 +64,7 @@ export async function runWorkflow(formData: FormData) {
 
   // Earned autonomy: read the workflow's current level and let it decide how
   // much runs without a human (see src/lib/autonomy.ts).
-  const { data: autonomyLogs } = await supabase
-    .from("audit_logs")
-    .select("metadata, created_at")
-    .eq("organization_id", organizationId)
-    .eq("event_type", "workflow_autonomy_updated")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  const level = normalizeAutonomyLevel(
-    autonomyLogs?.find((log) => log.metadata?.workflow_id === workflowId)?.metadata?.level,
-  );
+  const level = normalizeAutonomyLevel(workflow.autonomy_level);
   const levelLabel = autonomyLevelMeta[level].label;
   const plan = getWorkflowActionPlan(workflow.trigger_type);
   const decision = planExecution(level, plan);

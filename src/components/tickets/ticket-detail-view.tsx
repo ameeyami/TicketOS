@@ -42,7 +42,9 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
   const policy = policies[0];
 
   const costModel = modelForPriority(ticket.priority);
-  const executedActionCount = executionActions.filter((action) => !action.request_payload?.reverses_action_id).length;
+  const executedActionCount = executionActions.filter(
+    (action) => !(action.reverses_action_id ?? action.request_payload?.reverses_action_id),
+  ).length;
   const resolutionCost =
     estimateTicketTriageCost(costModel, ticket.description, ticket.ai_summary).costUsd +
     estimateWorkflowRunCost(costModel, steps.length, executedActionCount).costUsd;
@@ -373,8 +375,8 @@ function ProviderActions({
     <div className="space-y-3">
       {actions.map((action) => {
         const inverse = getInverseAction(action.integration_key, action.action_key);
-        const reversedAt = action.response_payload?.reversed_at as string | undefined;
-        const isReversal = Boolean(action.request_payload?.reverses_action_id);
+        const reversedAt = (action.reversed_at ?? action.response_payload?.reversed_at) as string | undefined;
+        const isReversal = Boolean(action.reverses_action_id ?? action.request_payload?.reverses_action_id);
         const undoable = action.status === "succeeded" && !reversedAt && !isReversal && Boolean(inverse);
 
         return (

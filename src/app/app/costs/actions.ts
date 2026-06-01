@@ -33,8 +33,16 @@ export async function updateCostBudget(formData: FormData) {
     throw new Error("Only owners and admins can update the budget.");
   }
 
-  // Persisted the same way as operational controls: the latest audit-log entry of
-  // this event type is the source of truth (no settings table in this schema).
+  const { error: budgetError } = await supabase
+    .from("organizations")
+    .update({ monthly_ai_budget_usd: budget })
+    .eq("id", organizationId);
+
+  if (budgetError) {
+    throw budgetError;
+  }
+
+  // Also keep an audit-log entry as a change history of budget edits.
   const { error } = await supabase.from("audit_logs").insert({
     organization_id: organizationId,
     actor_user_id: userData.user.id,
