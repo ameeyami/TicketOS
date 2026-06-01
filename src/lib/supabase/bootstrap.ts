@@ -347,7 +347,7 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
   const { data: organization, error: orgError } = await supabase
     .from("organizations")
     .insert({
-      name: "Amee Labs",
+      name: deriveWorkspaceName(user),
       slug,
       created_by: user.id,
     })
@@ -639,6 +639,23 @@ function audit(
 function readFullName(user: User) {
   const metadata = user.user_metadata as { full_name?: string; name?: string };
   return metadata.full_name ?? metadata.name ?? user.email ?? "TicketOS Operator";
+}
+
+// Name the workspace after the user's company (email domain) when possible,
+// otherwise after their first name — never a hardcoded value.
+function deriveWorkspaceName(user: User) {
+  const email = (user.email ?? "").toLowerCase();
+  const sld = (email.split("@")[1] ?? "").split(".")[0] ?? "";
+  const freeProviders = new Set([
+    "gmail", "googlemail", "outlook", "hotmail", "yahoo", "icloud",
+    "proton", "protonmail", "live", "aol", "me", "msn",
+  ]);
+  if (sld && !freeProviders.has(sld)) {
+    return sld.charAt(0).toUpperCase() + sld.slice(1);
+  }
+  const metadata = user.user_metadata as { full_name?: string; name?: string };
+  const first = (metadata.full_name ?? metadata.name ?? email.split("@")[0] ?? "My").trim().split(/\s+/)[0] || "My";
+  return `${first.charAt(0).toUpperCase()}${first.slice(1)}'s workspace`;
 }
 
 function titleCase(value: string) {

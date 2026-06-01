@@ -86,7 +86,7 @@ const utilityTeam = {
   ],
 };
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, orgName }: { children: React.ReactNode; orgName: string }) {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const isSectionOpen = (name: string, active: boolean) => openSections[name] ?? active;
@@ -157,7 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <SignOutButton />
               <Link href="/app/team" className="hidden h-8 items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-2 text-xs font-semibold md:inline-flex">
                 <Building2 size={14} />
-                Amee Labs
+                {orgName}
               </Link>
             </div>
           </header>

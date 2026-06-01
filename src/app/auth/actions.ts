@@ -32,34 +32,15 @@ export async function signInWithProvider(formData: FormData) {
   });
 
   if (error || !data.url) {
-    redirectWithError(`${label} login could not start. Check the Supabase provider settings.`);
-  }
-
-  const providerReady = await verifyProviderIsEnabled(data.url);
-
-  if (!providerReady) {
     redirectWithError(
-      `${label} login is not enabled in Supabase yet. Enable it in Authentication > Providers and add the provider client ID and secret.`,
+      `${label} login could not start. Make sure ${label} is enabled in Supabase → Authentication → Providers.`,
     );
   }
 
+  // Hand off to Supabase's OAuth authorize URL (it redirects to the provider).
   const redirectUrl = new URL(data.url);
   redirectUrl.searchParams.delete("skip_http_redirect");
   redirect(redirectUrl.toString());
-}
-
-async function verifyProviderIsEnabled(url: string) {
-  try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      headers: { accept: "application/json" },
-      redirect: "manual",
-    });
-
-    return response.ok;
-  } catch {
-    return true;
-  }
 }
 
 function redirectWithError(message: string): never {
