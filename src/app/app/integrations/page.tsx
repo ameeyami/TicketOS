@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, Cable, CheckCircle2, LockKeyhole } from "lucide-react";
+import { ArrowRight, Cable, CheckCircle2, LockKeyhole } from "lucide-react";
 import { updateIntegrationStatus } from "@/app/app/integrations/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -25,18 +26,11 @@ export default async function IntegrationsPage() {
   return (
     <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-5 border-b border-black/10 pb-5">
-          <h1 className="text-3xl font-semibold tracking-tight">Applications</h1>
-          <p className="mt-2 text-sm text-slate-600">Connect IT systems with a verified workspace or tenant ID.</p>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Applications" }]}
+          title="Applications"
+          description="Connect IT systems with a verified workspace or tenant ID."
+        />
 
         <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {(integrations ?? []).map((integration) => {

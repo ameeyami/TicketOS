@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   BarChart3,
   Bot,
   CheckCircle2,
@@ -9,11 +7,11 @@ import {
   Clock3,
   Gauge,
   GitBranch,
-  ShieldCheck,
   TrendingDown,
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -92,10 +90,8 @@ export default async function IntelligencePage() {
 
   const ticketStatusCounts = countBy(ticketRows, "status");
   const workflowStatusCounts = countBy(runRows, "status");
-  const categoryCounts = countBy(ticketRows, "category");
   const maxTicketStatus = maxCount(ticketStatusCounts);
   const maxWorkflowStatus = maxCount(workflowStatusCounts);
-  const maxCategory = maxCount(categoryCounts);
   const connectedIntegrations = integrationRows.filter((integration) => integration.status === "connected").length;
   const blockedPolicies = policyRows.filter((policy) => policy.decision === "block").length;
   const approvalPolicies = policyRows.filter((policy) => policy.decision === "approval_required").length;
@@ -109,26 +105,11 @@ export default async function IntelligencePage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Operational intelligence</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Find where IT execution slows down.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              TicketOS turns execution data into bottlenecks, automation rates, agent load, and risk signals.
-            </p>
-          </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-            {organization.name}
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Governance" }, { label: "Intelligence" }]}
+          title="Intelligence"
+          description="Where IT execution slows down — bottlenecks, automation, agent load, and risk."
+        />
 
         <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Automation coverage" value={`${automationRate}%`} detail={`${automatedTickets}/${ticketRows.length} tickets`} icon={Gauge} />
@@ -204,46 +185,16 @@ export default async function IntelligencePage() {
               </Panel>
             </section>
 
-            <Panel title="Demand mix" icon={BarChart3}>
-              <BarList
-                rows={Object.entries(categoryCounts).map(([category, count]) => ({
-                  label: category || "Uncategorized",
-                  value: count,
-                  max: maxCategory,
-                }))}
-              />
+            <Panel title="Recommended moves" icon={Clock3}>
+              <div className="space-y-3">
+                {recommendations({ pendingApprovals, blockedTickets, connectedIntegrations, integrationTotal: integrationRows.length }).map((item) => (
+                  <div key={item.title} className="rounded-lg border border-black/10 p-4">
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-black/55">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
             </Panel>
-
-            <section className="grid gap-6 lg:grid-cols-2">
-              <Panel title="Integration readiness" icon={ShieldCheck}>
-                <div className="rounded-lg border border-black/10 bg-[#111713] p-5 text-white">
-                  <p className="text-sm text-white/50">Connected systems</p>
-                  <p className="mt-3 text-3xl font-semibold">{connectedIntegrations}/{integrationRows.length}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/58">
-                    Agents can execute reliably only where integrations and scopes are connected.
-                  </p>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {integrationRows.map((integration) => (
-                    <div key={integration.id} className="flex items-center justify-between rounded-lg border border-black/10 p-3">
-                      <span className="text-sm font-semibold">{integration.display_name}</span>
-                      <span className="text-xs font-semibold text-black/45">{integration.status.replaceAll("_", " ")}</span>
-                    </div>
-                  ))}
-                </div>
-              </Panel>
-
-              <Panel title="Recommended moves" icon={Clock3}>
-                <div className="space-y-3">
-                  {recommendations({ pendingApprovals, blockedTickets, connectedIntegrations, integrationTotal: integrationRows.length }).map((item) => (
-                    <div key={item.title} className="rounded-lg border border-black/10 p-4">
-                      <p className="font-semibold">{item.title}</p>
-                      <p className="mt-1 text-sm leading-6 text-black/55">{item.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </Panel>
-            </section>
           </div>
         </section>
       </div>

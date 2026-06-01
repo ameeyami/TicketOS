@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Filter,
@@ -9,6 +8,7 @@ import {
   Search,
 } from "lucide-react";
 import { updateTicketStatus } from "@/app/app/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ticketIcons } from "@/lib/dashboard-data";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -90,27 +90,20 @@ export default async function TicketInboxPage({
   return (
     <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-5 flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Tickets</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Filter the queue, inspect requests, and resolve work.</p>
-          </div>
-          <Link
-            href="/app/tickets/new"
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
-          >
-            <Plus size={16} />
-            New ticket
-          </Link>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Tickets" }]}
+          title="Tickets"
+          description="Filter the queue, inspect requests, and resolve work."
+          actions={
+            <Link
+              href="/app/tickets/new"
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+            >
+              <Plus size={16} />
+              New ticket
+            </Link>
+          }
+        />
 
         <section className="mt-5 grid gap-5 xl:grid-cols-[300px_1fr]">
           <aside>

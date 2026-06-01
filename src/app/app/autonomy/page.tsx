@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   BadgeCheck,
   Bot,
   CircleAlert,
@@ -18,6 +16,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { setWorkflowAutonomy, updateAgentAutonomy } from "@/app/app/autonomy/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import {
   AUTONOMY_LEVELS,
@@ -168,26 +167,11 @@ export default async function AutonomyPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Autonomy controls</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Set the execution boundary for every agent.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Choose which agents can act independently, which need supervision, and which must stay blocked.
-            </p>
-          </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-            {organization.name}
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "Other" }, { label: "Autonomy" }]}
+          title="Autonomy"
+          description="Set how independently each agent and workflow can act."
+        />
 
         <section className="mt-6 grid gap-3 md:grid-cols-4">
           <MetricCard label="Autonomous agents" value={`${autonomousCount}/${agentRows.length}`} icon={Bot} />
@@ -238,34 +222,28 @@ export default async function AutonomyPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-3">
-                    {autonomyModes.map((item) => (
-                      <form key={item.mode} action={updateAgentAutonomy} className="rounded-lg border border-black/10 bg-[#f8faf5] p-3">
-                        <input type="hidden" name="organizationId" value={organization.id} />
-                        <input type="hidden" name="agentId" value={agent.id} />
-                        <input type="hidden" name="mode" value={item.mode} />
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex gap-3">
-                            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#2e6658]">
-                              <item.icon size={17} />
-                            </span>
-                            <div>
-                              <p className="font-semibold">{item.label}</p>
-                              <p className="mt-1 text-sm leading-6 text-black/52">{item.detail}</p>
-                            </div>
-                          </div>
+                  <div className="mt-5">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-black/40">Autonomy mode</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {autonomyModes.map((item) => (
+                        <form key={item.mode} action={updateAgentAutonomy}>
+                          <input type="hidden" name="organizationId" value={organization.id} />
+                          <input type="hidden" name="agentId" value={agent.id} />
+                          <input type="hidden" name="mode" value={item.mode} />
                           <PendingButton
                             pendingText="Saving..."
                             className={cn(
-                              "h-10 shrink-0 rounded-lg px-3 text-sm font-semibold",
-                              mode === item.mode ? "bg-[#17211c] text-white" : "border border-black/10 bg-white text-[#151914]",
+                              "h-9 w-full rounded-md border px-2 text-xs font-semibold",
+                              mode === item.mode
+                                ? "border-[#17211c] bg-[#17211c] text-white"
+                                : "border-black/10 bg-white text-[#151914]",
                             )}
                           >
-                            {mode === item.mode ? "Current" : "Set mode"}
+                            {item.label}
                           </PendingButton>
-                        </div>
-                      </form>
-                    ))}
+                        </form>
+                      ))}
+                    </div>
                   </div>
                 </article>
               );
