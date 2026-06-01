@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   BadgeCheck,
   Bell,
   Bot,
@@ -76,6 +77,7 @@ const utilityLinks = [
   { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
   { label: "People", href: "/app/people", icon: UserRound },
   { label: "Memory", href: "/app/memory", icon: GitBranch },
+  { label: "AI status", href: "/app/diagnostics", icon: Activity },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
