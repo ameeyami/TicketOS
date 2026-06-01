@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { workflowTemplates } from "@/lib/workflow-templates";
 
 type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
@@ -459,6 +460,39 @@ async function ensureDemoData(supabase: SupabaseClient, organizationId: string, 
         .select("id")
         .single()
     : { data: null };
+
+  // Seed the rest of the workflow library so the Workflows page shows a real catalog.
+  for (const [key, template] of Object.entries(workflowTemplates)) {
+    if (key === "identity_password_reset") {
+      continue;
+    }
+    const { data: libWorkflow } = await supabase
+      .from("workflows")
+      .upsert(
+        {
+          organization_id: organizationId,
+          name: template.name,
+          description: template.description,
+          trigger_type: template.trigger_type,
+        },
+        { onConflict: "organization_id,name" },
+      )
+      .select("id")
+      .single();
+
+    if (libWorkflow) {
+      await supabase.from("workflow_versions").upsert(
+        {
+          organization_id: organizationId,
+          workflow_id: libWorkflow.id,
+          version: 1,
+          created_by: userId,
+          graph: { ...template.graph, template: key },
+        },
+        { onConflict: "workflow_id,version" },
+      );
+    }
+  }
 
   const passwordResetTicket = insertedTickets?.find((ticket) => ticket.external_id === "TOS-1842");
   const { data: run } =

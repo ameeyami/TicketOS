@@ -39,7 +39,7 @@ export default async function WorkflowsPage() {
         <PageHeader
           crumbs={[{ label: "IT" }, { label: "Workflows" }]}
           title="Workflows"
-          description="Run governed automations for repeat IT work."
+          description="Run a governed automation against a ticket — the agent executes each provider step, gated by policy and earned autonomy, and every action stays reversible."
           actions={
             <Link
               href="/app/workflows/new"

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Bot, CheckCircle2, MessagesSquare, Send, UserRound } from "lucide-react";
+import { CheckCircle2, MessagesSquare, Send } from "lucide-react";
 import { submitChatRequest } from "@/app/app/channels/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
@@ -153,57 +153,35 @@ export default async function ChannelsPage() {
               </span>
               <h2 className="text-lg font-semibold">Conversations</h2>
             </div>
-            <div className="space-y-4">
+            <div className="divide-y divide-black/8">
               {conversations.length > 0 ? (
                 conversations.map((ticket) => {
                   const meta = channelMeta[ticket.source] ?? { label: ticket.source, handle: "" };
                   return (
-                    <div key={ticket.id} className="rounded-xl border border-black/10 bg-[#f8faf5] p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                    <Link
+                      key={ticket.id}
+                      href={`/app/tickets/${ticket.id}`}
+                      className="flex items-start justify-between gap-3 py-3 transition hover:opacity-80"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded-md border border-black/10 bg-white px-2 py-0.5 text-xs font-semibold text-black/55">
-                            {meta.label} · {meta.handle}
+                            {meta.label}
                           </span>
                           <span className="text-xs font-semibold text-black/40">{ticket.external_id}</span>
+                          <span className="text-xs text-black/45">{ticket.requester_name ?? "Employee"}</span>
                         </div>
-                        <span className="rounded-md bg-[#edf5e9] px-2 py-0.5 text-xs font-semibold text-[#315f4f]">
-                          {statusLabels[ticket.status] ?? ticket.status}
-                        </span>
+                        <p className="mt-1 truncate text-sm text-black/70">{ticket.description ?? ticket.title}</p>
                       </div>
-
-                      <div className="mt-3 flex gap-2">
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#dbe7f2] text-[#0b4f7a]">
-                          <UserRound size={14} />
-                        </span>
-                        <div className="rounded-2xl rounded-tl-sm border border-black/10 bg-white px-3 py-2 text-sm leading-6">
-                          <p className="text-xs font-semibold text-black/45">{ticket.requester_name ?? "Employee"}</p>
-                          <p className="mt-0.5">{ticket.description ?? ticket.title}</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-2 flex flex-row-reverse gap-2">
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#e7f5ee] text-[#2e6658]">
-                          <Bot size={14} />
-                        </span>
-                        <div className="rounded-2xl rounded-tr-sm border border-[#cfe8da] bg-[#eef7f1] px-3 py-2 text-sm leading-6">
-                          <p className="text-xs font-semibold text-[#2e6658]">{agentName(ticket.agents)}</p>
-                          <p className="mt-0.5 text-black/72">{ticket.ai_summary ?? "Working on it."}</p>
-                        </div>
-                      </div>
-
-                      <Link
-                        href={`/app/tickets/${ticket.id}`}
-                        className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0b5f91]"
-                      >
-                        Open ticket
-                        <ArrowRight size={14} />
-                      </Link>
-                    </div>
+                      <span className="shrink-0 rounded-md bg-[#edf5e9] px-2 py-0.5 text-xs font-semibold text-[#315f4f]">
+                        {statusLabels[ticket.status] ?? ticket.status}
+                      </span>
+                    </Link>
                   );
                 })
               ) : (
-                <p className="rounded-lg border border-dashed border-black/15 p-6 text-center text-sm text-black/48">
-                  No chat requests yet. Send one on the left to see it appear here.
+                <p className="py-6 text-center text-sm text-black/48">
+                  No chat requests yet. Send one on the left to see it here.
                 </p>
               )}
             </div>
@@ -216,13 +194,6 @@ export default async function ChannelsPage() {
 
 const inputClass =
   "mt-2 h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60]";
-
-// Supabase types embedded relations as an array or object depending on inference.
-function agentName(relation: unknown): string {
-  if (Array.isArray(relation)) return relation[0]?.name ?? "TicketOS";
-  if (relation && typeof relation === "object") return (relation as { name?: string }).name ?? "TicketOS";
-  return "TicketOS";
-}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

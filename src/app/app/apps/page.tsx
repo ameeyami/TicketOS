@@ -29,10 +29,12 @@ export default async function AppsPage({
 
   const { data: integrations } = await supabase
     .from("integrations")
-    .select("provider_key, status")
+    .select("id, provider_key, status")
     .eq("organization_id", organization.id);
-  const connected = new Set(
-    (integrations ?? []).filter((row) => row.status === "connected").map((row) => row.provider_key),
+  const connectedId = new Map(
+    (integrations ?? [])
+      .filter((row) => row.status === "connected")
+      .map((row) => [row.provider_key, row.id as string]),
   );
 
   const apps = appCatalog.filter((app) => {
@@ -45,8 +47,8 @@ export default async function AppsPage({
     <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
-          crumbs={[{ label: "Other" }, { label: "Apps" }]}
-          title="Apps"
+          crumbs={[{ label: "IT" }, { label: "Applications" }]}
+          title="Applications"
           description="Browse and connect the tools your team uses."
         />
 
@@ -88,7 +90,7 @@ export default async function AppsPage({
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {apps.map((app) => {
-                const isConnected = connected.has(app.slug);
+                const integrationId = connectedId.get(app.slug);
                 return (
                   <div key={app.slug} className="flex flex-col justify-between rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -100,11 +102,14 @@ export default async function AppsPage({
                       >
                         {app.name.charAt(0)}
                       </span>
-                      {isConnected ? (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+                      {integrationId ? (
+                        <Link
+                          href={`/app/integrations/${integrationId}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                        >
                           <CheckCircle2 size={12} />
                           Connected
-                        </span>
+                        </Link>
                       ) : (
                         <form action={connectApp}>
                           <input type="hidden" name="slug" value={app.slug} />

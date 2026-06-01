@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, CheckCircle2, GitBranch, ShieldCheck, Workflow } from "lucide-react";
+import { CheckCircle2, GitBranch, ShieldCheck, Workflow } from "lucide-react";
 import { createWorkflowFromTemplate } from "@/app/app/workflows/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -20,26 +20,11 @@ export default async function NewWorkflowPage() {
   return (
     <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href="/app/workflows"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Workflow library
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Workflow templates</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Create governed automations.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-              Start from an IT operations template, then inspect the generated graph and execution guardrails.
-            </p>
-          </div>
-          <div className="rounded-lg border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-            {organization.name}
-          </div>
-        </div>
+        <PageHeader
+          crumbs={[{ label: "IT" }, { label: "Workflows", href: "/app/workflows" }, { label: "New" }]}
+          title="New workflow"
+          description="Start from an IT operations template, then inspect the graph and guardrails."
+        />
 
         <section className="mt-6 grid gap-4 md:grid-cols-2">
           {Object.entries(workflowTemplates).map(([key, template]) => (
