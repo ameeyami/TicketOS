@@ -15,7 +15,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
 
   return (
     <div className="ticketos-dashboard-content">
-      <section className="rounded-lg border border-black/10 bg-white">
+      <section className="rounded-lg border border-black/10 bg-white shadow-sm">
         <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
           <div className="p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -78,7 +78,7 @@ export function CommandCenter({ data }: { data: DashboardData }) {
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
-        <div className="rounded-lg border border-black/10 bg-white">
+        <div className="rounded-lg border border-black/10 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
             <div>
               <h2 className="font-semibold">Service queue</h2>
@@ -210,7 +210,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-white p-4">
+    <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-md bg-[#e7f3ff] text-[#0b5f91]">

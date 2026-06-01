@@ -53,7 +53,13 @@ a {
 
 .app-content-frame {
   min-height: calc(100vh - 48px);
-  background: #f4f8fb;
+  background-color: #eaf1f8;
+  background-image:
+    radial-gradient(58% 48% at 4% -8%, rgba(34, 197, 94, 0.08), transparent 72%),
+    radial-gradient(52% 48% at 104% -4%, rgba(11, 95, 145, 0.1), transparent 72%),
+    radial-gradient(48% 44% at 84% 114%, rgba(99, 102, 241, 0.07), transparent 72%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 .app-content-frame > main {
@@ -76,16 +82,22 @@ a {
 }
 
 .ticketos-app-shell .rounded-xl {
+  border-radius: 14px;
+}
+
+.ticketos-app-shell .rounded-lg {
+  border-radius: 11px;
+}
+
+.ticketos-app-shell .rounded-md {
   border-radius: 8px;
 }
 
-.ticketos-app-shell .rounded-lg,
-.ticketos-app-shell .rounded-md {
-  border-radius: 6px;
-}
-
+/* Soft floating cards give the flat UI depth and hierarchy. */
 .ticketos-app-shell .shadow-sm {
-  box-shadow: none;
+  box-shadow:
+    0 1px 2px rgba(7, 17, 31, 0.04),
+    0 4px 12px rgba(7, 17, 31, 0.05) !important;
 }
 
 .ticketos-app-shell .border-black\/10 {
@@ -96,12 +108,17 @@ a {
   border-color: rgb(216 228 238) !important;
 }
 
+/* Page-level surfaces become transparent so the textured frame shows through. */
 .ticketos-app-shell .bg-\[\#f6f7f2\],
+.ticketos-app-shell .bg-\[\#fbfaf8\] {
+  background-color: transparent !important;
+}
+
+/* Inner tiles / soft panels keep a gentle tint that reads cleanly on white cards. */
 .ticketos-app-shell .bg-\[\#f8faf5\],
 .ticketos-app-shell .bg-\[\#fbfcf8\],
-.ticketos-app-shell .bg-\[\#fbfaf8\],
 .ticketos-app-shell .bg-\[\#faf7f5\] {
-  background-color: #f4f8fb !important;
+  background-color: #f2f6fb !important;
 }
 
 .ticketos-app-shell .bg-\[\#17211c\],

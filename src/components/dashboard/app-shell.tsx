@@ -38,7 +38,6 @@ import { cn } from "@/lib/utils";
 const teams = [
   {
     name: "IT",
-    initial: "I",
     links: [
       { label: "Tickets", href: "/app/tickets", icon: MessageSquareText },
       { label: "Channels", href: "/app/channels", icon: MessagesSquare },
@@ -49,7 +48,6 @@ const teams = [
   },
   {
     name: "Operations",
-    initial: "O",
     links: [
       { label: "Passwords", href: "/app/password-resets", icon: KeyRound },
       { label: "Onboarding", href: "/app/onboarding", icon: UserPlus },
@@ -59,7 +57,6 @@ const teams = [
   },
   {
     name: "Governance",
-    initial: "G",
     links: [
       { label: "Security", href: "/app/security", icon: LockKeyhole },
       { label: "Policies", href: "/app/policies", icon: ShieldCheck },
@@ -94,19 +91,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="ticketos-app-shell min-h-screen bg-[#f4f8fb] text-[#07111f]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[226px] shrink-0 border-r border-[#d8e4ee] bg-[#07111f] px-3 py-4 text-white lg:block">
-          <Link href="/app" className="flex h-9 items-center gap-2 px-2 text-sm font-semibold">
+        <aside className="hidden w-[232px] shrink-0 bg-[#07111f] px-3 py-4 text-white lg:block">
+          <Link href="/app" className="flex h-9 items-center gap-2 px-1.5 text-sm font-semibold">
             <TicketOSLogo markSize="sm" tone="dark" />
-            <ChevronDown size={13} className="text-white/40" />
           </Link>
 
-          <div className="mt-7 space-y-1">
+          <div className="mt-6 space-y-4">
             {teams.map((team) => (
               <SidebarSection
                 key={team.name}
                 name={team.name}
-                initial={team.initial}
-                active={team.links.some((item) => isActivePath(item.href, pathname))}
                 open={isSectionOpen(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
                 onToggle={() => toggleSection(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
               >
@@ -118,8 +112,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <SidebarSection
               name="Other"
-              initial="O"
-              active={utilityLinks.some((item) => isActivePath(item.href, pathname))}
               open={isSectionOpen("Other", utilityLinks.some((item) => isActivePath(item.href, pathname)))}
               onToggle={() => toggleSection("Other", utilityLinks.some((item) => isActivePath(item.href, pathname)))}
             >
@@ -177,15 +169,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function SidebarSection({
   name,
-  initial,
-  active,
   open,
   onToggle,
   children,
 }: {
   name: string;
-  initial: string;
-  active: boolean;
   open: boolean;
   onToggle: () => void;
   children: React.ReactNode;
@@ -196,21 +184,12 @@ function SidebarSection({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className={cn(
-          "flex h-9 w-full items-center gap-2 rounded-md px-2 text-sm font-semibold text-white/76 transition hover:bg-white/10",
-          active && "bg-white/12 text-white",
-        )}
+        className="flex h-7 w-full items-center gap-2 px-2.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-white/35 transition hover:text-white/65"
       >
-        <span className="flex size-5 items-center justify-center rounded bg-[#dbeafe] text-[11px] font-bold text-[#0b4f7a]">
-          {initial}
-        </span>
-        <span className="min-w-0 flex-1 truncate">{name}</span>
-        <ChevronDown
-          size={13}
-          className={cn("text-white/35 transition", open && "rotate-180")}
-        />
+        <span className="min-w-0 flex-1 truncate text-left">{name}</span>
+        <ChevronDown size={12} className={cn("text-white/30 transition", open && "rotate-180")} />
       </button>
-      {open && <div className="mt-1 space-y-1 pb-3">{children}</div>}
+      {open && <div className="mt-1 space-y-0.5">{children}</div>}
     </div>
   );
 }
@@ -228,13 +207,20 @@ function NavLink({
     <Link
       href={item.href}
       className={cn(
-        "flex h-8 items-center gap-2 rounded-md px-2 text-sm font-medium text-white/62 transition hover:bg-white/10 hover:text-white",
-        active && "bg-white/12 text-white",
+        "relative flex h-9 items-center gap-2.5 rounded-lg pl-3 pr-2 text-sm transition",
+        active
+          ? "bg-white/[0.10] font-medium text-white"
+          : "text-white/55 hover:bg-white/[0.05] hover:text-white/90",
       )}
     >
-      <item.icon size={14} className="text-current opacity-80" />
+      {active && (
+        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-[#22c55e]" />
+      )}
+      <item.icon size={15} className={active ? "text-[#7ef0a8]" : "text-white/45"} />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
-      {item.label === "Approvals" && <span className="rounded bg-[#22c55e] px-1.5 py-0.5 text-[11px] text-[#03120a]">2</span>}
+      {item.label === "Approvals" && (
+        <span className="rounded-full bg-[#22c55e] px-1.5 py-0.5 text-[10px] font-semibold text-[#03120a]">2</span>
+      )}
     </Link>
   );
 }
