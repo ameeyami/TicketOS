@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAnthropicClient, hasAnthropicKey } from "@/lib/ai/client";
 
 /**
  * Real LLM answers for the Operations Copilot, grounded in the org's live data.
@@ -56,7 +56,7 @@ ${auditLines}
 }
 
 export async function answerCopilot(history: CopilotTurn[], context: CopilotContext): Promise<string | null> {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!hasAnthropicKey()) {
     return null;
   }
 
@@ -70,7 +70,7 @@ export async function answerCopilot(history: CopilotTurn[], context: CopilotCont
   }
 
   try {
-    const client = new Anthropic();
+    const client = createAnthropicClient();
     const response = await client.messages.create({
       model: COPILOT_MODEL,
       max_tokens: 1024,

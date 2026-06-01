@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, CheckCircle2, CircleAlert, Cpu, KeyRound, PlugZap, Sparkles } from "lucide-react";
 import { testAiConnection } from "@/app/app/diagnostics/actions";
 import { PendingButton } from "@/components/ui/pending-button";
+import { hasAnthropicKey } from "@/lib/ai/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,7 @@ export default async function DiagnosticsPage({
   }
 
   const params = await searchParams;
-  const keyDetected = Boolean(process.env.ANTHROPIC_API_KEY);
+  const keyDetected = hasAnthropicKey();
   const model = params.model ?? process.env.TICKETOS_TRIAGE_MODEL ?? "claude-opus-4-8";
   const status = params.status;
 

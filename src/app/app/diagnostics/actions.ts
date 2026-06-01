@@ -1,7 +1,7 @@
 "use server";
 
-import Anthropic from "@anthropic-ai/sdk";
 import { redirect } from "next/navigation";
+import { createAnthropicClient, hasAnthropicKey } from "@/lib/ai/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function testAiConnection() {
@@ -11,7 +11,7 @@ export async function testAiConnection() {
     redirect("/auth/sign-in?message=Sign in to test AI status.");
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!hasAnthropicKey()) {
     redirect("/app/diagnostics?status=nokey");
   }
 
@@ -20,7 +20,7 @@ export async function testAiConnection() {
   let detail = "";
 
   try {
-    const client = new Anthropic();
+    const client = createAnthropicClient();
     const response = await client.messages.create({
       model,
       max_tokens: 16,
