@@ -84,7 +84,7 @@ const utilityTeam = {
     { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
     { label: "People", href: "/app/people", icon: UserRound },
     { label: "Memory", href: "/app/memory", icon: GitBranch },
-    { label: "AI status", href: "/app/diagnostics", icon: Activity },
+    { label: "Claude API", href: "/app/diagnostics", icon: Activity },
   ],
 };
 
