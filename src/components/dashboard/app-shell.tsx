@@ -71,6 +71,7 @@ const teams = [
 
 const utilityLinks = [
   { label: "Agents", href: "/app/agents", icon: Bot },
+  { label: "Copilot", href: "/app/copilot", icon: Sparkles },
   { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
   { label: "Apps", href: "/app/apps", icon: BriefcaseBusiness },
   { label: "People", href: "/app/people", icon: UserRound },
@@ -143,6 +144,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </form>
             </div>
             <div className="flex items-center gap-2">
+              <Link
+                href="/app/copilot"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#0b2a4a] px-2.5 text-xs font-semibold text-white transition hover:bg-[#07111f]"
+                title="Operations Copilot"
+              >
+                <Sparkles size={14} />
+                <span className="hidden sm:inline">Copilot</span>
+              </Link>
               <Link href="/app/notifications" className="app-icon-button" title="Notifications">
                 <Bell size={15} />
               </Link>
