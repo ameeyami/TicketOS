@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import { triageTicket } from "@/lib/ai/triage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -33,8 +34,9 @@ export async function createTicket(formData: FormData) {
 
   const organization = await ensureWorkspace(supabase, userData.user);
 
-  // Real LLM triage when ANTHROPIC_API_KEY is set; otherwise use the form values.
-  const triage = await triageTicket({ title, description });
+  // Real LLM triage using THIS org's own Claude key; otherwise use the form values.
+  const apiKey = await getOrgAnthropicKey(supabase, organization.id);
+  const triage = await triageTicket({ title, description }, apiKey);
   const category = triage?.category ?? fallbackCategory;
   const priority = triage?.priority ?? fallbackPriority;
   const { count } = await supabase

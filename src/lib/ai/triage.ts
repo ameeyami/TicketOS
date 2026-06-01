@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { createAnthropicClient, hasAnthropicKey } from "@/lib/ai/client";
+import { createAnthropicClient } from "@/lib/ai/client";
 
 /**
  * Real LLM triage for incoming tickets.
@@ -63,17 +63,16 @@ const TRIAGE_TOOL: Anthropic.Tool = {
   },
 };
 
-export function isTriageEnabled() {
-  return hasAnthropicKey();
-}
-
-export async function triageTicket(input: { title: string; description: string }): Promise<TriageResult | null> {
-  if (!hasAnthropicKey()) {
+export async function triageTicket(
+  input: { title: string; description: string },
+  apiKey: string | null,
+): Promise<TriageResult | null> {
+  if (!apiKey) {
     return null;
   }
 
   try {
-    const client = createAnthropicClient();
+    const client = createAnthropicClient(apiKey);
     const response = await client.messages.create({
       model: TRIAGE_MODEL,
       max_tokens: 1024,

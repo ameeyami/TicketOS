@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { answerCopilot, type CopilotTurn } from "@/lib/ai/copilot";
+import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function askCopilot(formData: FormData) {
@@ -68,12 +69,17 @@ export async function askCopilot(formData: FormData) {
     .filter((message) => message.role === "user" || message.role === "assistant")
     .map((message) => ({ role: message.role as "user" | "assistant", content: message.content }));
 
-  // Real Claude when ANTHROPIC_API_KEY is set; otherwise the built-in heuristic.
-  const aiAnswer = await answerCopilot(turns, {
-    tickets: tickets ?? [],
-    approvals: approvals ?? [],
-    audits: audits ?? [],
-  });
+  // Real Claude using THIS org's own key; otherwise the built-in heuristic.
+  const apiKey = await getOrgAnthropicKey(supabase, organizationId);
+  const aiAnswer = await answerCopilot(
+    turns,
+    {
+      tickets: tickets ?? [],
+      approvals: approvals ?? [],
+      audits: audits ?? [],
+    },
+    apiKey,
+  );
   const answer = aiAnswer ?? buildCopilotAnswer(question, tickets ?? [], approvals ?? [], audits ?? []);
 
   await supabase.from("copilot_messages").insert({

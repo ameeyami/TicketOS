@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, CheckCircle2, CircleAlert, Cpu, KeyRound, PlugZap, Sparkles } from "lucide-react";
-import { testAiConnection } from "@/app/app/diagnostics/actions";
+import { CheckCircle2, CircleAlert, Cpu, KeyRound, PlugZap, Sparkles } from "lucide-react";
+import { saveAnthropicKey, testAiConnection } from "@/app/app/diagnostics/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
-import { hasAnthropicKey } from "@/lib/ai/client";
+import { getOrgAnthropicKeyMeta } from "@/lib/ai/org-key";
+import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -15,153 +16,141 @@ export default async function DiagnosticsPage({
   const supabase = await createSupabaseServerClient();
   const { data: userData, error } = await supabase.auth.getUser();
   if (error || !userData.user) {
-    redirect("/auth/sign-in?message=Sign in to view AI status.");
+    redirect("/auth/sign-in?message=Sign in to manage the Claude API key.");
   }
 
+  const organization = await ensureWorkspace(supabase, userData.user);
+  const [{ data: membership }, keyMeta] = await Promise.all([
+    supabase
+      .from("organization_members")
+      .select("role")
+      .eq("organization_id", organization.id)
+      .eq("user_id", userData.user.id)
+      .maybeSingle(),
+    getOrgAnthropicKeyMeta(supabase, organization.id),
+  ]);
+
   const params = await searchParams;
-  const keyDetected = hasAnthropicKey();
+  const canManage = membership?.role === "owner" || membership?.role === "admin";
   const model = params.model ?? process.env.TICKETOS_TRIAGE_MODEL ?? "claude-opus-4-8";
-  const status = params.status;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-3xl">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          Command center
-        </Link>
+        <PageHeader
+          crumbs={[{ label: "Other" }, { label: "Claude API" }]}
+          title="Claude API key"
+          description="TicketOS uses your own Anthropic key for all AI — triage, Copilot, and summaries. Connect it to turn AI on."
+        />
 
-        <div className="mt-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Diagnostics</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">AI status</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
-            Check whether real Claude triage and Copilot are active. If the API key isn&apos;t detected or the test
-            fails, TicketOS falls back to the built-in heuristic (the app keeps working, just without real AI).
-          </p>
-        </div>
+        {params.status && <Banner status={params.status} detail={params.detail ?? ""} model={model} />}
 
-        <section className="mt-6 grid gap-3 sm:grid-cols-2">
-          <StatusCard
-            icon={KeyRound}
-            label="Anthropic API key"
-            value={keyDetected ? "Detected" : "Not set"}
-            good={keyDetected}
-            detail={keyDetected ? "Found in this deployment's environment." : "Add ANTHROPIC_API_KEY in Vercel, then redeploy."}
-          />
-          <StatusCard icon={Cpu} label="Triage model" value={model} good detail="Override with TICKETOS_TRIAGE_MODEL." />
+        {/* Connect key */}
+        <section className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                <KeyRound size={18} />
+              </span>
+              <h2 className="text-lg font-semibold">Anthropic API key</h2>
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold",
+                keyMeta.connected
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-800",
+              )}
+            >
+              {keyMeta.connected ? <CheckCircle2 size={12} /> : <CircleAlert size={12} />}
+              {keyMeta.connected ? `Connected · ••••${keyMeta.lastFour ?? ""}` : "Not connected"}
+            </span>
+          </div>
+
+          {canManage ? (
+            <form action={saveAnthropicKey} className="mt-4 grid gap-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.12em] text-black/40">
+                {keyMeta.connected ? "Replace key" : "Paste your key (starts with sk-ant-…)"}
+                <input
+                  name="apiKey"
+                  type="password"
+                  required
+                  autoComplete="off"
+                  placeholder="sk-ant-..."
+                  className="mt-2 h-11 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60]"
+                />
+              </label>
+              <PendingButton
+                pendingText="Saving..."
+                className="h-11 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+              >
+                <PlugZap size={16} />
+                {keyMeta.connected ? "Update key" : "Connect Claude"}
+              </PendingButton>
+              <p className="mt-1 text-xs leading-5 text-black/45">
+                Get a key at console.anthropic.com → API Keys. It is stored for this workspace only and used to bill
+                your own Anthropic account.
+              </p>
+            </form>
+          ) : (
+            <p className="mt-4 rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
+              Ask an owner or admin to connect the workspace&apos;s Claude API key.
+            </p>
+          )}
         </section>
 
+        {/* Test */}
         <section className="mt-4 rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-2 flex items-center gap-2">
             <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-              <PlugZap size={18} />
+              <Cpu size={18} />
             </span>
-            <h2 className="text-lg font-semibold">Live connection test</h2>
+            <h2 className="text-lg font-semibold">Test the connection</h2>
           </div>
-          <p className="-mt-1 mb-4 text-sm leading-6 text-black/55">
-            Sends one tiny message to Claude and reports the exact result — the fastest way to confirm the key works
-            and your account can use the model.
+          <p className="mb-4 text-sm leading-6 text-black/55">
+            Sends one tiny message to Claude with the saved key and reports the exact result. Model: {model}.
           </p>
-
-          {status && <TestResult status={status} detail={params.detail ?? ""} model={model} />}
-
-          <form action={testAiConnection} className="mt-4">
+          <form action={testAiConnection}>
             <PendingButton
               pendingText="Testing..."
-              className="h-11 rounded-lg bg-[#0b2a4a] px-4 text-sm font-semibold text-white"
+              className="h-11 rounded-lg border border-black/10 bg-white px-4 text-sm font-semibold text-[#0b2a4a]"
             >
               <Sparkles size={16} />
               Run connection test
             </PendingButton>
           </form>
         </section>
-
-        <p className="mt-4 text-xs leading-6 text-black/45">
-          Note: environment variables only take effect on a <strong>new</strong> deployment. After adding or changing
-          the key in Vercel, trigger a redeploy, then create a fresh ticket to see the AI summary.
-        </p>
       </div>
     </main>
   );
 }
 
-function TestResult({ status, detail, model }: { status: string; detail: string; model: string }) {
-  if (status === "ok") {
-    return (
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-        <p className="flex items-center gap-2 font-semibold text-emerald-800">
-          <CheckCircle2 size={17} />
-          Connected — real AI is active
-        </p>
-        <p className="mt-1 text-sm text-emerald-900/72">
-          {model} replied: “{detail}”. New tickets and Copilot now use Claude.
-        </p>
-      </div>
-    );
-  }
-  if (status === "nokey") {
-    return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-        <p className="flex items-center gap-2 font-semibold text-amber-800">
-          <CircleAlert size={17} />
-          No API key in this deployment
-        </p>
-        <p className="mt-1 text-sm text-amber-900/72">
-          Add <code>ANTHROPIC_API_KEY</code> in Vercel → Settings → Environment Variables (Production), then redeploy.
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
-      <p className="flex items-center gap-2 font-semibold text-rose-800">
-        <CircleAlert size={17} />
-        Connection failed
-      </p>
-      <p className="mt-1 break-words text-sm text-rose-900/75">{detail}</p>
-      <p className="mt-2 text-xs text-rose-900/60">
-        401 = invalid key · 403/404 = your account can&apos;t use this model (try TICKETOS_TRIAGE_MODEL=claude-haiku-4-5)
-        · 429 = rate limited / no credit.
-      </p>
-    </div>
-  );
-}
+function Banner({ status, detail, model }: { status: string; detail: string; model: string }) {
+  const map: Record<string, { tone: "good" | "warn" | "bad"; title: string; body: string }> = {
+    saved: { tone: "good", title: "Key saved", body: "Run the connection test below to confirm it works." },
+    ok: { tone: "good", title: "Connected — AI is active", body: `${model} replied: “${detail}”. Triage and Copilot now use your key.` },
+    nokey: { tone: "warn", title: "No key connected", body: "Add your Anthropic API key below to enable AI." },
+    invalidkey: { tone: "warn", title: "That doesn't look like a Claude key", body: "Keys start with sk-ant-. Paste the full key and try again." },
+    forbidden: { tone: "warn", title: "Owners/admins only", body: "Only an owner or admin can change the workspace key." },
+    error: { tone: "bad", title: "Connection failed", body: `${detail} — 401 = wrong key, 403/404 = model access, 429 = no credit.` },
+  };
+  const cfg = map[status];
+  if (!cfg) return null;
 
-function StatusCard({
-  icon: Icon,
-  label,
-  value,
-  good,
-  detail,
-}: {
-  icon: typeof KeyRound;
-  label: string;
-  value: string;
-  good: boolean;
-  detail: string;
-}) {
+  const styles =
+    cfg.tone === "good"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+      : cfg.tone === "bad"
+        ? "border-rose-200 bg-rose-50 text-rose-900"
+        : "border-amber-200 bg-amber-50 text-amber-900";
+
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-            <Icon size={18} />
-          </span>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-        </div>
-        <span
-          className={cn(
-            "rounded-md border px-2 py-1 text-xs font-semibold",
-            good ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-800",
-          )}
-        >
-          {value}
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-black/55">{detail}</p>
+    <div className={cn("mb-4 rounded-xl border p-4", styles)}>
+      <p className="flex items-center gap-2 font-semibold">
+        {cfg.tone === "good" ? <CheckCircle2 size={17} /> : <CircleAlert size={17} />}
+        {cfg.title}
+      </p>
+      <p className="mt-1 break-words text-sm opacity-80">{cfg.body}</p>
     </div>
   );
 }

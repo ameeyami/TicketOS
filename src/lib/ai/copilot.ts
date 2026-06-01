@@ -1,4 +1,4 @@
-import { createAnthropicClient, hasAnthropicKey } from "@/lib/ai/client";
+import { createAnthropicClient } from "@/lib/ai/client";
 
 /**
  * Real LLM answers for the Operations Copilot, grounded in the org's live data.
@@ -55,8 +55,12 @@ ${auditLines}
 === END SNAPSHOT ===`;
 }
 
-export async function answerCopilot(history: CopilotTurn[], context: CopilotContext): Promise<string | null> {
-  if (!hasAnthropicKey()) {
+export async function answerCopilot(
+  history: CopilotTurn[],
+  context: CopilotContext,
+  apiKey: string | null,
+): Promise<string | null> {
+  if (!apiKey) {
     return null;
   }
 
@@ -70,7 +74,7 @@ export async function answerCopilot(history: CopilotTurn[], context: CopilotCont
   }
 
   try {
-    const client = createAnthropicClient();
+    const client = createAnthropicClient(apiKey);
     const response = await client.messages.create({
       model: COPILOT_MODEL,
       max_tokens: 1024,

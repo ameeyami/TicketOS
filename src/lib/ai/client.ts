@@ -1,23 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 /**
- * Read ANTHROPIC_API_KEY, tolerating common copy-paste mistakes from env config:
- * surrounding quotes and leading/trailing whitespace or newlines (which would
- * otherwise cause a 401 even when the underlying key is correct).
+ * Strip accidental wrapping quotes / whitespace from a pasted API key — a common
+ * copy-paste mistake that otherwise causes a 401 even with a correct key.
  */
-export function anthropicApiKey(): string | undefined {
-  const raw = process.env.ANTHROPIC_API_KEY;
+export function cleanApiKey(raw: string | null | undefined): string | null {
   if (!raw) {
-    return undefined;
+    return null;
   }
-  const cleaned = raw.trim().replace(/^['"]+|['"]+$/g, "").trim();
-  return cleaned || undefined;
+  const cleaned = String(raw).trim().replace(/^['"]+|['"]+$/g, "").trim();
+  return cleaned || null;
 }
 
-export function hasAnthropicKey(): boolean {
-  return Boolean(anthropicApiKey());
-}
-
-export function createAnthropicClient(): Anthropic {
-  return new Anthropic({ apiKey: anthropicApiKey() });
+export function createAnthropicClient(apiKey: string): Anthropic {
+  return new Anthropic({ apiKey });
 }

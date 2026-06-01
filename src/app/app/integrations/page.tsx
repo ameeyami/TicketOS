@@ -33,7 +33,7 @@ export default async function IntegrationsPage() {
         />
 
         <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {(integrations ?? []).map((integration) => {
+          {(integrations ?? []).filter((integration) => integration.provider_key !== "anthropic").map((integration) => {
             const config = integration.config as {
               connection_id?: string;
               admin_email?: string | null;

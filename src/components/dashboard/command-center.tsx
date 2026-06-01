@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, BadgeCheck, Filter, MoreHorizontal, Plus, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Filter, MoreHorizontal, Plus, ShieldCheck, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { decideApproval } from "@/app/app/actions";
@@ -10,11 +10,26 @@ import { ticketIcons } from "@/lib/dashboard-data";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 import { cn } from "@/lib/utils";
 
-export function CommandCenter({ data }: { data: DashboardData }) {
+export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; aiKeyConnected: boolean }) {
   const primaryMetrics = data.metrics.slice(0, 3);
 
   return (
     <div className="ticketos-dashboard-content">
+      {!aiKeyConnected && (
+        <Link
+          href="/app/diagnostics"
+          className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+        >
+          <span className="flex items-center gap-2">
+            <Sparkles size={16} />
+            Connect your Claude API key to turn on AI triage and Copilot.
+          </span>
+          <span className="inline-flex items-center gap-1">
+            Connect
+            <ArrowRight size={15} />
+          </span>
+        </Link>
+      )}
       <section className="rounded-lg border border-black/10 bg-white shadow-sm">
         <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
           <div className="p-5 md:p-6">
