@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { answerCopilot, type CopilotTurn } from "@/lib/ai/copilot";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function askCopilot(formData: FormData) {
@@ -26,7 +27,7 @@ export async function askCopilot(formData: FormData) {
     content: question,
   });
 
-  const [{ data: tickets }, { data: approvals }, { data: audits }] = await Promise.all([
+  const [{ data: tickets }, { data: approvals }, { data: audits }, { data: history }] = await Promise.all([
     supabase.from("tickets").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }),
     supabase
       .from("approval_requests")
@@ -35,9 +36,27 @@ export async function askCopilot(formData: FormData) {
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     supabase.from("audit_logs").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
+    supabase
+      .from("copilot_messages")
+      .select("role, content")
+      .eq("thread_id", threadId)
+      .order("created_at", { ascending: false })
+      .limit(12),
   ]);
 
-  const answer = buildCopilotAnswer(question, tickets ?? [], approvals ?? [], audits ?? []);
+  // Most-recent-first → chronological, keep only user/assistant turns.
+  const turns: CopilotTurn[] = [...(history ?? [])]
+    .reverse()
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .map((message) => ({ role: message.role as "user" | "assistant", content: message.content }));
+
+  // Real Claude when ANTHROPIC_API_KEY is set; otherwise the built-in heuristic.
+  const aiAnswer = await answerCopilot(turns, {
+    tickets: tickets ?? [],
+    approvals: approvals ?? [],
+    audits: audits ?? [],
+  });
+  const answer = aiAnswer ?? buildCopilotAnswer(question, tickets ?? [], approvals ?? [], audits ?? []);
 
   await supabase.from("copilot_messages").insert({
     organization_id: organizationId,
@@ -48,6 +67,7 @@ export async function askCopilot(formData: FormData) {
       { type: "tickets", count: tickets?.length ?? 0 },
       { type: "approvals", count: approvals?.length ?? 0 },
       { type: "audit_logs", count: audits?.length ?? 0 },
+      { type: "engine", value: aiAnswer ? "claude" : "heuristic" },
     ],
   });
 
