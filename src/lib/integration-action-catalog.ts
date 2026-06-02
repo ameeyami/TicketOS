@@ -24,6 +24,18 @@ export type IntegrationActionDefinition = {
 export const integrationActionCatalog: Record<string, IntegrationActionDefinition[]> = {
   slack: [
     {
+      action_key: "post_message",
+      display_name: "Post Slack message",
+      risk_level: "low",
+      requires_approval: false,
+      inverse: {
+        action_key: "delete_message",
+        display_name: "Delete Slack message",
+        description: "Delete the message TicketOS posted to Slack.",
+      },
+      schema: { inputs: ["channel", "text"], output: "message_ts" },
+    },
+    {
       action_key: "send_ephemeral_message",
       display_name: "Send employee message",
       risk_level: "low",
