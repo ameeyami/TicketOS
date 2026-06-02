@@ -203,10 +203,10 @@ export default async function IntegrationDetailPage({
 
           <div className="space-y-6">
             <Panel title="Scope readiness" icon={ShieldCheck}>
-              <div className="rounded-lg border border-black/10 bg-[#0b2a4a] p-5 text-white">
-                <p className="text-sm text-white/48">Provider key</p>
-                <p className="mt-2 text-2xl font-semibold">{integration.provider_key}</p>
-                <p className="mt-3 text-sm leading-6 text-white/58">
+              <div className="rounded-lg border border-[#d8e4ee] bg-[#f1f6fb] p-5">
+                <p className="text-sm text-slate-400">Provider key</p>
+                <p className="mt-2 text-2xl font-semibold text-[#0b1a2e]">{integration.provider_key}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
                   {missingActions > 0
                     ? `${missingActions} catalog actions are not yet synced.`
                     : "The provider action catalog is synced for this workspace."}

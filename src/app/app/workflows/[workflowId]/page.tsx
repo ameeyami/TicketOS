@@ -158,13 +158,13 @@ export default async function WorkflowDetailPage({
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.08fr_.92fr]">
           <Panel title="Execution graph" icon={GitBranch}>
-            <div className="rounded-lg border border-black/10 bg-[#0b2a4a] p-5 text-white">
+            <div className="rounded-lg border border-[#d8e4ee] bg-[#f1f6fb] p-5">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-md border border-white/10 bg-white/8 px-2 py-1 text-xs font-semibold text-white/62">
+                <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-slate-600">
                   {workflow.trigger_type}
                 </span>
                 {graph.template && (
-                  <span className="rounded-md border border-white/10 bg-white/8 px-2 py-1 text-xs font-semibold text-white/62">
+                  <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-slate-600">
                     {graph.template.replaceAll("_", " ")}
                   </span>
                 )}
@@ -173,14 +173,14 @@ export default async function WorkflowDetailPage({
                 {graph.nodes.map((node, index) => (
                   <div key={`${node}-${index}`} className="grid grid-cols-[42px_1fr] gap-4">
                     <div className="flex flex-col items-center">
-                      <span className="flex size-10 items-center justify-center rounded-lg bg-[#7ef0a8] text-[#0b2a4a]">
+                      <span className="flex size-10 items-center justify-center rounded-lg bg-[#0b2a4a] text-sm font-bold text-white">
                         {index + 1}
                       </span>
-                      {index !== graph.nodes.length - 1 && <span className="mt-2 h-8 w-px bg-white/14" />}
+                      {index !== graph.nodes.length - 1 && <span className="mt-2 h-8 w-px bg-black/10" />}
                     </div>
-                    <div className="rounded-lg border border-white/10 bg-white/[.06] p-4">
+                    <div className="rounded-lg border border-black/10 bg-white p-4">
                       <p className="font-semibold">{titleCase(node.replaceAll("_", " "))}</p>
-                      <p className="mt-1 text-sm text-white/48">{findOutgoingEdges(graph.edges, node)}</p>
+                      <p className="mt-1 text-sm text-slate-500">{findOutgoingEdges(graph.edges, node)}</p>
                     </div>
                   </div>
                 ))}
