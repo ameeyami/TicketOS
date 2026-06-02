@@ -78,19 +78,19 @@ export default async function ExecutionsPage({
   const reversibleActions = actionRows.filter(canReverse).length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
-          crumbs={[{ label: "IT" }, { label: "Executions" }]}
+          crumbs={[{ label: "Governance" }, { label: "Executions" }]}
           title="Executions"
           description="Review provider actions, update the outcome, and roll back any action an agent took with one click."
           actions={
             <Link
               href="/app/workflows"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
             >
               Run workflow
-              <ArrowRight size={16} />
+              <ArrowRight size={15} />
             </Link>
           }
         />
@@ -317,13 +317,13 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -347,7 +347,7 @@ function SelectFilter({
       <select
         name={name}
         defaultValue={value}
-        className="mt-2 h-11 w-full rounded-lg border border-black/10 bg-[#f8faf5] px-3 text-sm outline-none focus:border-[#2f6f60]"
+        className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
