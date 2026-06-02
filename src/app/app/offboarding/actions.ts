@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isEmailConfigured, sendEmail } from "@/lib/email/send";
 import { offboardingNoticeEmail } from "@/lib/email/templates";
+import { isSlackConfigured } from "@/lib/integrations/slack";
+import { executeSlackPost } from "@/lib/integrations/slack-execute";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -173,9 +175,21 @@ export async function createOffboardingRun(formData: FormData) {
     });
   }
 
+  // Real provider action: announce the offboarding in Slack (reversible).
+  if (isSlackConfigured()) {
+    await executeSlackPost(
+      supabase,
+      organization.id,
+      userData.user.id,
+      `:warning: Offboarding ${employeeName} — last day ${lastDay}. Revoking: ${selectedApps}. Reason: ${reason}.`,
+      { source: "offboarding", extraRequest: { ticket_id: ticket.id } },
+    );
+  }
+
   revalidatePath("/app/offboarding");
   revalidatePath("/app/security");
   revalidatePath("/app/tickets");
+  revalidatePath("/app/executions");
   redirect(`/app/tickets/${ticket.id}`);
 }
 

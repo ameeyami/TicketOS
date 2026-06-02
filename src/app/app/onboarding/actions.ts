@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isEmailConfigured, sendEmail } from "@/lib/email/send";
 import { onboardingWelcomeEmail } from "@/lib/email/templates";
+import { isSlackConfigured } from "@/lib/integrations/slack";
+import { executeSlackPost } from "@/lib/integrations/slack-execute";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -166,8 +168,20 @@ export async function createOnboardingPlan(formData: FormData) {
     });
   }
 
+  // Real provider action: announce the onboarding in Slack (reversible).
+  if (isSlackConfigured()) {
+    await executeSlackPost(
+      supabase,
+      organization.id,
+      userData.user.id,
+      `:tada: Onboarding ${employeeName} (${employmentType}) — start ${startDate}. Apps: ${selectedApps}. Manager: ${managerEmail}.`,
+      { source: "onboarding", extraRequest: { ticket_id: ticket.id } },
+    );
+  }
+
   revalidatePath("/app/onboarding");
   revalidatePath("/app/tickets");
+  revalidatePath("/app/executions");
   redirect(`/app/tickets/${ticket.id}`);
 }
 

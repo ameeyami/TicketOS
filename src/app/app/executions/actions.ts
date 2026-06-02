@@ -437,16 +437,39 @@ export async function runSlackAction(formData: FormData) {
   }
 
   if (policy.decision === "approval_required" && !isManager) {
-    await supabase.from("approval_requests").insert({
+    const { data: approvalRow } = await supabase
+      .from("approval_requests")
+      .insert({
+        organization_id: organizationId,
+        title: "Slack message requires approval",
+        description: `Approve before TicketOS posts to Slack: "${message.slice(0, 140)}"`,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    // Park a PENDING execution action linked to the approval; decideApproval
+    // posts it to Slack for real once a manager approves.
+    await supabase.from("execution_actions").insert({
       organization_id: organizationId,
-      title: "Slack message requires approval",
-      description: `Approve before TicketOS posts to Slack: "${message.slice(0, 140)}"`,
+      integration_key: "slack",
+      action_key: "post_message",
       status: "pending",
+      request_payload: {
+        text: message,
+        approval_id: approvalRow?.id ?? null,
+        decision: policy.decision,
+        policy: policy.name,
+        note: "Awaiting manager approval.",
+      },
+      response_payload: {},
     });
-    await recordSlackAction(supabase, organizationId, userData.user.id, {
-      status: "blocked",
-      request: { text: message, decision: policy.decision, policy: policy.name },
-      error: `Awaiting manager approval (policy "${policy.name}").`,
+    await supabase.from("audit_logs").insert({
+      organization_id: organizationId,
+      actor_user_id: userData.user.id,
+      event_type: "execution_action_pending",
+      event_summary: "slack.post_message queued for approval",
+      metadata: { source: "execution_console", approval_id: approvalRow?.id ?? null },
     });
     revalidateExecutionViews();
     return;
