@@ -11,6 +11,7 @@ import { updateTicketStatus } from "@/app/app/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ticketIcons } from "@/lib/dashboard-data";
+import { computeSla } from "@/lib/sla";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -174,6 +175,12 @@ export default async function TicketInboxPage({
             <div className="divide-y divide-black/8">
               {filteredTickets.map((ticket) => {
                 const TicketIcon = ticketIcons[ticket.category as keyof typeof ticketIcons] ?? ticketIcons.Default;
+                const sla = computeSla({
+                  priority: ticket.priority,
+                  createdAt: ticket.created_at,
+                  status: ticket.status,
+                  resolvedAt: ticket.resolved_at,
+                });
 
                 return (
                   <article key={ticket.id} className="grid gap-4 px-4 py-3 transition hover:bg-[#f8fbfe] lg:grid-cols-[1fr_190px]">
@@ -187,6 +194,9 @@ export default async function TicketInboxPage({
                           <StatusPill status={ticket.status} />
                           <span className="rounded-md border border-black/10 px-2 py-1 text-xs font-semibold text-black/52">
                             {ticket.priority}
+                          </span>
+                          <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", sla.badgeClass)}>
+                            SLA: {sla.label}
                           </span>
                           {pendingApprovalTicketIds.has(ticket.id) && (
                             <span className="rounded-md border border-[#b7d8f2] bg-[#e7f3ff] px-2 py-1 text-xs font-semibold text-[#0b5f91]">

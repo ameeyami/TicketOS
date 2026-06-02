@@ -96,6 +96,11 @@ export default async function NewTicketPage() {
               </label>
             </div>
 
+            <div className="rounded-lg border border-[#d8e4ee] bg-[#f1f6fb] p-3 text-xs leading-5 text-slate-600">
+              <span className="font-semibold text-[#0b1a2e]">SLA response targets:</span>{" "}
+              Critical 2h · High 8h · Medium 24h · Low 72h. The SLA clock starts when the ticket is created and is tracked on the ticket and inbox.
+            </div>
+
             <PendingButton
               pendingText="Creating..."
               className="h-12 rounded-lg bg-[#0b2a4a] px-4 text-sm font-semibold text-white"

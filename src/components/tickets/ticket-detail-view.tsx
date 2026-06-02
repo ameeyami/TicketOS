@@ -27,6 +27,7 @@ import {
   modelForPriority,
 } from "@/lib/cost-model";
 import { getInverseAction } from "@/lib/integration-action-catalog";
+import { computeSla } from "@/lib/sla";
 import {
   displayStepStatus,
   displayTicketStatus,
@@ -48,6 +49,14 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
   const resolutionCost =
     estimateTicketTriageCost(costModel, ticket.description, ticket.ai_summary).costUsd +
     estimateWorkflowRunCost(costModel, steps.length, executedActionCount).costUsd;
+
+  const sla = computeSla({
+    priority: ticket.priority,
+    createdAt: ticket.created_at,
+    status: ticket.status,
+    resolvedAt: ticket.resolved_at,
+  });
+  const slaDue = sla.dueAt.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
   return (
     <main className="relative min-h-screen px-4 py-5 text-[#151914] md:px-8">
@@ -102,6 +111,13 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 <p className="text-xs text-black/40">{MODEL_PRICING[costModel].label} · modeled</p>
               </div>
               <p className="text-xl font-semibold tracking-tight">{formatUsd(resolutionCost)}</p>
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-black/8 pt-3">
+              <div>
+                <p className="text-sm font-medium text-black/52">SLA</p>
+                <p className="text-xs text-black/40">{sla.targetHours}h target · due {slaDue}</p>
+              </div>
+              <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", sla.badgeClass)}>{sla.label}</span>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/42">Operator action</p>

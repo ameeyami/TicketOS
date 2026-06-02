@@ -1,5 +1,6 @@
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { reportToCsv, reportToPdf, type Report, type ReportTable } from "@/lib/reports/export";
+import { computeSla } from "@/lib/sla";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const statusLabels: Record<string, string> = {
@@ -11,8 +12,6 @@ const statusLabels: Record<string, string> = {
   failed: "Failed",
   blocked: "Blocked",
 };
-
-const slaHours: Record<string, number> = { critical: 2, high: 8, medium: 24, low: 72 };
 
 type TicketRow = {
   id: string;
@@ -49,15 +48,6 @@ function formatDate(value: string | null | undefined) {
 function agentName(row: TicketRow): string {
   const rel = Array.isArray(row.agents) ? row.agents[0] : row.agents;
   return rel?.name ?? (row.assigned_agent_id ? "Assigned" : "Unassigned");
-}
-
-function slaLabel(row: TicketRow): string {
-  if (row.status === "resolved") return "Met (resolved)";
-  const targetMs = (slaHours[row.priority] ?? 24) * 60 * 60 * 1000;
-  const ageMs = Date.now() - new Date(row.created_at).getTime();
-  const remainingMs = targetMs - ageMs;
-  const hours = Math.round(Math.abs(remainingMs) / (60 * 60 * 1000));
-  return remainingMs <= 0 ? `Breached (${hours}h over)` : `On track (${hours}h left)`;
 }
 
 export async function GET(request: Request) {
@@ -170,7 +160,7 @@ export async function GET(request: Request) {
         agentName(t),
         t.requester_name ?? t.requester_email ?? "—",
         formatDate(t.created_at),
-        slaLabel(t),
+        computeSla({ priority: t.priority, createdAt: t.created_at, status: t.status, resolvedAt: t.resolved_at }).label,
         `${Math.round(Number(t.ai_confidence ?? 0))}%`,
       ]),
     };
