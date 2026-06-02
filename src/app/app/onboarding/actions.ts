@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isEmailConfigured, sendEmail } from "@/lib/email/send";
 import { onboardingWelcomeEmail } from "@/lib/email/templates";
-import { isSlackConfigured } from "@/lib/integrations/slack";
-import { executeSlackPost } from "@/lib/integrations/slack-execute";
+import { runGatedAction } from "@/lib/integrations/execute";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -168,16 +167,22 @@ export async function createOnboardingPlan(formData: FormData) {
     });
   }
 
-  // Real provider action: announce the onboarding in Slack (reversible).
-  if (isSlackConfigured()) {
-    await executeSlackPost(
-      supabase,
-      organization.id,
-      userData.user.id,
-      `:tada: Onboarding ${employeeName} (${employmentType}) — start ${startDate}. Apps: ${selectedApps}. Manager: ${managerEmail}.`,
-      { source: "onboarding", extraRequest: { ticket_id: ticket.id } },
-    );
-  }
+  // Real provider action: announce in Slack, gated by policy + role (no-op if
+  // Slack isn't configured; parked for approval if a policy requires it).
+  const { data: onboardMembership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  await runGatedAction(supabase, organization.id, userData.user.id, onboardMembership?.role ?? "operator", {
+    integrationKey: "slack",
+    actionKey: "post_message",
+    request: {
+      text: `:tada: Onboarding ${employeeName} (${employmentType}) — start ${startDate}. Apps: ${selectedApps}. Manager: ${managerEmail}.`,
+    },
+    source: "onboarding",
+  });
 
   revalidatePath("/app/onboarding");
   revalidatePath("/app/tickets");

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cancelPendingSlackApproval, fulfillPendingSlackApproval } from "@/lib/integrations/slack-execute";
+import { cancelPendingApproval, fulfillPendingApproval } from "@/lib/integrations/execute";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function decideApproval(formData: FormData) {
@@ -137,9 +137,9 @@ export async function decideApproval(formData: FormData) {
   // Async execution: approving fires any real provider action that was parked
   // for this approval (e.g. a Slack post); rejecting cancels it.
   if (decision === "approved") {
-    await fulfillPendingSlackApproval(supabase, organizationId, userData.user.id, approvalId);
+    await fulfillPendingApproval(supabase, organizationId, userData.user.id, approvalId);
   } else {
-    await cancelPendingSlackApproval(supabase, organizationId, approvalId);
+    await cancelPendingApproval(supabase, organizationId, approvalId);
   }
 
   const { error: auditError } = await supabase.from("audit_logs").insert({

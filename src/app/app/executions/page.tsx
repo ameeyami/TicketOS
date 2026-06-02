@@ -9,14 +9,16 @@ import {
   Loader2,
   Send,
   ShieldAlert,
+  SquareKanban,
   Undo2,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { reverseExecutionAction, runSlackAction, updateExecutionActionStatus } from "@/app/app/executions/actions";
+import { reverseExecutionAction, runJiraAction, runSlackAction, updateExecutionActionStatus } from "@/app/app/executions/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { getInverseAction, type InverseActionDefinition } from "@/lib/integration-action-catalog";
+import { isJiraConfigured } from "@/lib/integrations/jira";
 import { isSlackConfigured } from "@/lib/integrations/slack";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -87,6 +89,7 @@ export default async function ExecutionsPage({
     .maybeSingle();
   const canRun = (membership?.role ?? "operator") !== "viewer";
   const slackReady = isSlackConfigured();
+  const jiraReady = isJiraConfigured();
 
   return (
     <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
@@ -151,6 +154,49 @@ export default async function ExecutionsPage({
             <p className="mt-2 text-xs text-slate-500">
               Runs through your policy checks, posts to Slack for real, and appears below with one-click rollback that
               actually deletes the message.
+            </p>
+          </section>
+        )}
+
+        {canRun && (
+          <section className="mt-5 rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+                <SquareKanban size={15} />
+              </span>
+              <h2 className="text-sm font-semibold">Run a real action — Jira issue</h2>
+            </div>
+            {jiraReady ? (
+              <form action={runJiraAction} className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input type="hidden" name="organizationId" value={organization.id} />
+                <input
+                  name="summary"
+                  required
+                  placeholder="Issue summary (e.g. Provision laptop for Jordan)"
+                  className="h-10 min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]"
+                />
+                <PendingButton
+                  pendingText="Creating..."
+                  className="h-10 shrink-0 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
+                >
+                  <SquareKanban size={15} />
+                  Create Jira issue
+                </PendingButton>
+              </form>
+            ) : (
+              <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <CircleAlert size={15} className="mt-0.5 shrink-0" />
+                <span>
+                  Jira isn&apos;t connected yet. Add <code className="rounded bg-white px-1">JIRA_BASE_URL</code>,{" "}
+                  <code className="rounded bg-white px-1">JIRA_EMAIL</code>,{" "}
+                  <code className="rounded bg-white px-1">JIRA_API_TOKEN</code> and{" "}
+                  <code className="rounded bg-white px-1">JIRA_PROJECT_KEY</code> to create issues for real.
+                </span>
+              </p>
+            )}
+            <p className="mt-2 text-xs text-slate-500">
+              Creates a real Jira issue (policy-gated) that appears below with one-click rollback that actually deletes
+              it.
             </p>
           </section>
         )}

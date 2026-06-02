@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getInverseAction } from "@/lib/integration-action-catalog";
-import { isSlackConfigured, slackDeleteMessage, slackPostMessage } from "@/lib/integrations/slack";
+import { providerReverse, runGatedAction } from "@/lib/integrations/execute";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const allowedActionStatuses = ["pending", "running", "succeeded", "failed", "blocked", "skipped"];
@@ -111,15 +111,15 @@ export async function reverseExecutionAction(formData: FormData) {
     throw new Error("This action is not reversible.");
   }
 
-  // Real provider rollback: actually delete the Slack message we posted.
-  if (action.integration_key === "slack" && action.action_key === "post_message") {
-    const payload = (action.response_payload ?? {}) as { channel?: string; ts?: string };
-    if (payload.channel && payload.ts) {
-      const deleted = await slackDeleteMessage(payload.channel, payload.ts);
-      if (!deleted.ok) {
-        throw new Error(`Couldn't delete the Slack message (${deleted.error}).`);
-      }
-    }
+  // Real provider rollback: actually undo the action at the provider (e.g.
+  // delete the Slack message, delete the Jira issue). Unknown actions no-op.
+  const reversalResult = await providerReverse(
+    action.integration_key,
+    action.action_key,
+    (action.response_payload ?? {}) as Record<string, unknown>,
+  );
+  if (!reversalResult.ok) {
+    throw new Error(`Couldn't roll back ${action.integration_key}.${action.action_key} (${reversalResult.error}).`);
   }
 
   const reversedAt = new Date().toISOString();
@@ -339,60 +339,30 @@ function getWorkflowRunStatus(actionStatuses: string[]) {
   return "queued";
 }
 
-type PolicyRule = { name: string; decision: string; action_pattern: string | null };
-
-function evaluateSlackPolicy(rules: PolicyRule[]): { decision: "allow" | "approval_required" | "block"; name: string | null } {
-  const matches = rules.filter((rule) => {
-    const pattern = (rule.action_pattern ?? "").toLowerCase();
-    return pattern === "slack" || pattern === "slack.*" || pattern.startsWith("slack.");
-  });
-  const blocking = matches.find((m) => m.decision === "block");
-  if (blocking) return { decision: "block", name: blocking.name };
-  const approval = matches.find((m) => m.decision === "approval_required");
-  if (approval) return { decision: "approval_required", name: approval.name };
-  return { decision: "allow", name: null };
-}
-
-async function recordSlackAction(
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
-  organizationId: string,
-  userId: string,
-  opts: { status: string; request: Record<string, unknown>; response?: Record<string, unknown>; error?: string | null },
-) {
-  await supabase.from("execution_actions").insert({
-    organization_id: organizationId,
-    integration_key: "slack",
-    action_key: "post_message",
-    status: opts.status,
-    request_payload: opts.request,
-    response_payload: opts.response ?? {},
-    error_message: opts.error ?? null,
-  });
-  await supabase.from("audit_logs").insert({
-    organization_id: organizationId,
-    actor_user_id: userId,
-    event_type: `execution_action_${opts.status}`,
-    event_summary: `slack.post_message ${opts.status}`,
-    metadata: { source: "execution_console", real: true },
-  });
-}
-
 function revalidateExecutionViews() {
   revalidatePath("/app/executions");
   revalidatePath("/app/audit");
   revalidatePath("/app");
 }
 
-/**
- * Runs a REAL Slack post, gated by policy + role:
- *  - policy "block"             -> records a blocked action, never calls Slack
- *  - policy "approval_required" -> non-managers get an approval request; managers proceed
- *  - otherwise                  -> posts to Slack for real (reversible via rollback)
- */
+async function currentRole(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  organizationId: string,
+  userId: string,
+): Promise<string> {
+  const { data } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.role ?? "operator";
+}
+
+/** Real Slack post, gated by policy + role (see runGatedAction). */
 export async function runSlackAction(formData: FormData) {
   const organizationId = String(formData.get("organizationId") ?? "");
   const message = String(formData.get("message") ?? "").trim();
-
   if (!organizationId || !message) {
     throw new Error("Enter a message to post to Slack.");
   }
@@ -402,85 +372,50 @@ export async function runSlackAction(formData: FormData) {
   if (userError || !userData.user) {
     throw new Error("You must be signed in to run actions.");
   }
-
-  const { data: membership } = await supabase
-    .from("organization_members")
-    .select("role")
-    .eq("organization_id", organizationId)
-    .eq("user_id", userData.user.id)
-    .maybeSingle();
-  const role = membership?.role ?? "operator";
+  const role = await currentRole(supabase, organizationId, userData.user.id);
   if (role === "viewer") {
     throw new Error("Viewers can't run provider actions.");
   }
 
-  if (!isSlackConfigured()) {
+  const outcome = await runGatedAction(supabase, organizationId, userData.user.id, role, {
+    integrationKey: "slack",
+    actionKey: "post_message",
+    request: { text: message },
+    source: "execution_console",
+  });
+  if (outcome.outcome === "not_configured") {
     throw new Error("Slack isn't connected. Add SLACK_BOT_TOKEN and SLACK_DEFAULT_CHANNEL in your environment.");
   }
+  revalidateExecutionViews();
+}
 
-  const { data: rules } = await supabase
-    .from("policy_rules")
-    .select("name, decision, action_pattern, is_active")
-    .eq("organization_id", organizationId)
-    .eq("is_active", true);
-  const policy = evaluateSlackPolicy((rules ?? []) as PolicyRule[]);
-  const isManager = role === "owner" || role === "admin";
-
-  if (policy.decision === "block") {
-    await recordSlackAction(supabase, organizationId, userData.user.id, {
-      status: "blocked",
-      request: { text: message, decision: policy.decision, policy: policy.name },
-      error: `Blocked by policy "${policy.name}".`,
-    });
-    revalidateExecutionViews();
-    return;
+/** Real Jira issue create, gated by policy + role (see runGatedAction). */
+export async function runJiraAction(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const summary = String(formData.get("summary") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  if (!organizationId || !summary) {
+    throw new Error("Enter a summary for the Jira issue.");
   }
 
-  if (policy.decision === "approval_required" && !isManager) {
-    const { data: approvalRow } = await supabase
-      .from("approval_requests")
-      .insert({
-        organization_id: organizationId,
-        title: "Slack message requires approval",
-        description: `Approve before TicketOS posts to Slack: "${message.slice(0, 140)}"`,
-        status: "pending",
-      })
-      .select("id")
-      .single();
-
-    // Park a PENDING execution action linked to the approval; decideApproval
-    // posts it to Slack for real once a manager approves.
-    await supabase.from("execution_actions").insert({
-      organization_id: organizationId,
-      integration_key: "slack",
-      action_key: "post_message",
-      status: "pending",
-      request_payload: {
-        text: message,
-        approval_id: approvalRow?.id ?? null,
-        decision: policy.decision,
-        policy: policy.name,
-        note: "Awaiting manager approval.",
-      },
-      response_payload: {},
-    });
-    await supabase.from("audit_logs").insert({
-      organization_id: organizationId,
-      actor_user_id: userData.user.id,
-      event_type: "execution_action_pending",
-      event_summary: "slack.post_message queued for approval",
-      metadata: { source: "execution_console", approval_id: approvalRow?.id ?? null },
-    });
-    revalidateExecutionViews();
-    return;
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to run actions.");
+  }
+  const role = await currentRole(supabase, organizationId, userData.user.id);
+  if (role === "viewer") {
+    throw new Error("Viewers can't run provider actions.");
   }
 
-  const result = await slackPostMessage(message);
-  await recordSlackAction(supabase, organizationId, userData.user.id, {
-    status: result.ok ? "succeeded" : "failed",
-    request: { text: message, decision: policy.decision, policy: policy.name },
-    response: result.ok ? { detail: "Posted message to Slack.", channel: result.channel, ts: result.ts } : {},
-    error: result.ok ? null : `Slack error: ${result.error}`,
+  const outcome = await runGatedAction(supabase, organizationId, userData.user.id, role, {
+    integrationKey: "jira",
+    actionKey: "create_issue",
+    request: { summary, description: description || undefined },
+    source: "execution_console",
   });
+  if (outcome.outcome === "not_configured") {
+    throw new Error("Jira isn't connected. Add JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN and JIRA_PROJECT_KEY.");
+  }
   revalidateExecutionViews();
 }

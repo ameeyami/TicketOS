@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isEmailConfigured, sendEmail } from "@/lib/email/send";
 import { offboardingNoticeEmail } from "@/lib/email/templates";
-import { isSlackConfigured } from "@/lib/integrations/slack";
-import { executeSlackPost } from "@/lib/integrations/slack-execute";
+import { runGatedAction } from "@/lib/integrations/execute";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -175,16 +174,36 @@ export async function createOffboardingRun(formData: FormData) {
     });
   }
 
-  // Real provider action: announce the offboarding in Slack (reversible).
-  if (isSlackConfigured()) {
-    await executeSlackPost(
-      supabase,
-      organization.id,
-      userData.user.id,
-      `:warning: Offboarding ${employeeName} — last day ${lastDay}. Revoking: ${selectedApps}. Reason: ${reason}.`,
-      { source: "offboarding", extraRequest: { ticket_id: ticket.id } },
-    );
-  }
+  // Real provider actions, gated by policy + role (no-ops if not configured;
+  // parked for approval if a policy requires it):
+  //   1. announce the offboarding in Slack
+  //   2. open a Jira de-provisioning task
+  const { data: offboardMembership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  const offboardRole = offboardMembership?.role ?? "operator";
+
+  await runGatedAction(supabase, organization.id, userData.user.id, offboardRole, {
+    integrationKey: "slack",
+    actionKey: "post_message",
+    request: {
+      text: `:warning: Offboarding ${employeeName} — last day ${lastDay}. Revoking: ${selectedApps}. Reason: ${reason}.`,
+    },
+    source: "offboarding",
+  });
+
+  await runGatedAction(supabase, organization.id, userData.user.id, offboardRole, {
+    integrationKey: "jira",
+    actionKey: "create_issue",
+    request: {
+      summary: `Revoke access for ${employeeName}`,
+      description: `Offboarding ${employeeName}. Last day ${lastDay}. Revoke: ${selectedApps}. Reason: ${reason}.`,
+    },
+    source: "offboarding",
+  });
 
   revalidatePath("/app/offboarding");
   revalidatePath("/app/security");

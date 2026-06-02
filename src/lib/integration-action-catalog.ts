@@ -103,6 +103,18 @@ export const integrationActionCatalog: Record<string, IntegrationActionDefinitio
   ],
   jira: [
     {
+      action_key: "create_issue",
+      display_name: "Create Jira issue",
+      risk_level: "low",
+      requires_approval: false,
+      inverse: {
+        action_key: "delete_issue",
+        display_name: "Delete Jira issue",
+        description: "Delete the Jira issue TicketOS created.",
+      },
+      schema: { inputs: ["summary", "description"], output: "issue_key" },
+    },
+    {
       action_key: "create_it_ticket",
       display_name: "Create IT ticket",
       risk_level: "low",
