@@ -137,7 +137,7 @@ export default async function TeamPage() {
     <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
-          crumbs={[{ label: "Settings" }, { label: "Team" }]}
+          crumbs={[{ label: "Other" }, { label: "Team" }]}
           title="Team"
           description="Members and roles."
         />
