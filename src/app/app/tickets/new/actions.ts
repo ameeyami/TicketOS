@@ -20,6 +20,8 @@ export async function createTicket(formData: FormData) {
   const requesterEmail = String(formData.get("requesterEmail") ?? "").trim();
   const fallbackCategory = String(formData.get("category") ?? "Identity");
   const fallbackPriority = String(formData.get("priority") ?? "medium");
+  const requestingTeamId = String(formData.get("requestingTeamId") ?? "").trim() || null;
+  const assignedTeamId = String(formData.get("assignedTeamId") ?? "").trim() || null;
 
   if (!title || !description) {
     throw new Error("Title and description are required.");
@@ -75,6 +77,8 @@ export async function createTicket(formData: FormData) {
       ai_summary: summary,
       ai_confidence: confidence,
       assigned_agent_id: agent?.id,
+      requesting_team_id: requestingTeamId,
+      assigned_team_id: assignedTeamId,
     })
     .select("id")
     .single();

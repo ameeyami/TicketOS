@@ -73,6 +73,12 @@ export async function getTicketDetail(ticketId: string) {
         .order("created_at", { ascending: false })
     : { data: [] };
 
+  const teamIds = [ticket.requesting_team_id, ticket.assigned_team_id].filter(Boolean) as string[];
+  const { data: teamRows } = teamIds.length
+    ? await supabase.from("teams").select("id, name, color").in("id", teamIds)
+    : { data: [] as Array<{ id: string; name: string; color: string | null }> };
+  const teamsById = new Map((teamRows ?? []).map((team) => [team.id, team]));
+
   return {
     ticket,
     latestRun,
@@ -83,6 +89,8 @@ export async function getTicketDetail(ticketId: string) {
     auditLogs: auditLogs ?? [],
     comments: comments ?? [],
     executionActions: executionActions ?? [],
+    requestingTeam: ticket.requesting_team_id ? teamsById.get(ticket.requesting_team_id) ?? null : null,
+    assignedTeam: ticket.assigned_team_id ? teamsById.get(ticket.assigned_team_id) ?? null : null,
   };
 }
 

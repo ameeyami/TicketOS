@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ticketIcons } from "@/lib/dashboard-data";
 import { computeSla } from "@/lib/sla";
+import { canSeeTicket, loadTeamContext } from "@/lib/teams";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -58,7 +59,7 @@ const statusLabels: Record<string, string> = {
 export default async function TicketInboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; priority?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; priority?: string; category?: string; team?: string }>;
 }) {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -82,11 +83,21 @@ export default async function TicketInboxPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  const ticketRows = tickets ?? [];
+  const ctx = await loadTeamContext(supabase, organization.id, userData.user);
+  const teamsById = new Map(ctx.teams.map((team) => [team.id, team]));
+  const canCreate = ctx.orgRole !== "viewer";
+
+  // App-level team scoping: members only see tickets for their teams (owners/admins see all).
+  const ticketRows = (tickets ?? []).filter((ticket) => canSeeTicket(ticket, ctx));
   const pendingApprovalTicketIds = new Set((approvals ?? []).filter((approval) => approval.status === "pending").map((approval) => approval.ticket_id));
   const categories = Array.from(new Set(ticketRows.map((ticket) => ticket.category).filter(Boolean))).sort();
   const hasAppliedFilter = hasTicketFilter(params);
-  const filteredTickets = hasAppliedFilter ? filterTickets(ticketRows, params) : [];
+  let filteredTickets = hasAppliedFilter ? filterTickets(ticketRows, params) : [];
+  if (hasAppliedFilter && params.team && params.team !== "all") {
+    filteredTickets = filteredTickets.filter(
+      (ticket) => ticket.requesting_team_id === params.team || ticket.assigned_team_id === params.team,
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
@@ -96,13 +107,15 @@ export default async function TicketInboxPage({
           title="Tickets"
           description="Filter the queue, inspect requests, and resolve work."
           actions={
-            <Link
-              href="/app/tickets/new"
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
-            >
-              <Plus size={16} />
-              New ticket
-            </Link>
+            canCreate ? (
+              <Link
+                href="/app/tickets/new"
+                className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+              >
+                <Plus size={16} />
+                New ticket
+              </Link>
+            ) : undefined
           }
         />
 
@@ -138,6 +151,18 @@ export default async function TicketInboxPage({
                     ...categories.map((category) => ({ value: String(category), label: String(category) })),
                   ]}
                 />
+
+                {ctx.teams.length > 0 && (
+                  <SelectFilter
+                    name="team"
+                    label="Team"
+                    value={params.team ?? "all"}
+                    options={[
+                      { value: "all", label: "All teams" },
+                      ...ctx.teams.map((team) => ({ value: team.id, label: team.name })),
+                    ]}
+                  />
+                )}
 
                 <button className="h-10 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
                   Apply filters
@@ -212,6 +237,12 @@ export default async function TicketInboxPage({
                           <span>{ticket.category ?? "Uncategorized"}</span>
                           <span>{ticket.requester_name ?? ticket.requester_email ?? "Unknown requester"}</span>
                           <span>{formatDate(ticket.created_at)}</span>
+                          {(ticket.requesting_team_id || ticket.assigned_team_id) && (
+                            <span className="text-[#0b5f91]">
+                              {teamsById.get(ticket.requesting_team_id)?.name ?? "—"} →{" "}
+                              {teamsById.get(ticket.assigned_team_id)?.name ?? "Unassigned"}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -229,7 +260,7 @@ export default async function TicketInboxPage({
                           Inspect
                           <ArrowRight size={15} />
                         </Link>
-                        {!["resolved", "blocked"].includes(ticket.status) && (
+                        {canCreate && !["resolved", "blocked"].includes(ticket.status) && (
                           <QuickStatusForm ticketId={ticket.id} organizationId={organization.id} status="resolved" label="Resolve" />
                         )}
                       </div>
@@ -371,12 +402,13 @@ function filterTickets<
   return filtered;
 }
 
-function hasTicketFilter(params: { q?: string; status?: string; priority?: string; category?: string }) {
+function hasTicketFilter(params: { q?: string; status?: string; priority?: string; category?: string; team?: string }) {
   return Boolean(
     params.q?.trim() ||
       (params.status && params.status !== "all") ||
       (params.priority && params.priority !== "all") ||
-      (params.category && params.category !== "all"),
+      (params.category && params.category !== "all") ||
+      (params.team && params.team !== "all"),
   );
 }
 

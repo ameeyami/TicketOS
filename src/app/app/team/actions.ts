@@ -253,4 +253,215 @@ function revalidateTeamViews() {
   revalidatePath("/app/team");
   revalidatePath("/app/settings");
   revalidatePath("/app/audit");
+  revalidatePath("/app/tickets");
+  revalidatePath("/app/tickets/new");
+}
+
+const TEAM_COLORS = ["#0b5f91", "#0f7a5f", "#5b4bc4", "#b4612f", "#0b2a4a", "#a3215b"];
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+export async function createTeam(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const slugInput = String(formData.get("slug") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!organizationId || name.length < 2) {
+    throw new Error("Enter a team name (at least 2 characters).");
+  }
+  const slug = slugify(slugInput || name);
+  if (slug.length < 2) {
+    throw new Error("Identifier must be at least 2 characters (letters or numbers).");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to create a team.");
+  }
+
+  const color = TEAM_COLORS[slug.length % TEAM_COLORS.length];
+  const { data: team, error } = await supabase
+    .from("teams")
+    .insert({
+      organization_id: organizationId,
+      name,
+      slug,
+      description: description || null,
+      color,
+      created_by: userData.user.id,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("A team with that identifier already exists.");
+    }
+    throw error;
+  }
+
+  await supabase.from("team_members").insert({
+    team_id: team.id,
+    organization_id: organizationId,
+    user_id: userData.user.id,
+    member_email: (userData.user.email ?? "").toLowerCase(),
+    member_name: userData.user.email ?? "",
+    role: "owner",
+    added_by: userData.user.id,
+  });
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "team_created",
+    event_summary: `Team "${name}" created`,
+    metadata: { source: "teams", team_id: team.id, slug },
+  });
+
+  revalidateTeamViews();
+}
+
+export async function addTeamMember(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const teamId = String(formData.get("teamId") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const memberName = String(formData.get("memberName") ?? "").trim();
+  const role = String(formData.get("role") ?? "operator");
+
+  if (!organizationId || !teamId || !email.includes("@") || !memberRoles.has(role)) {
+    throw new Error("Enter a valid email address and role.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to add team members.");
+  }
+
+  const linkedUserId = (userData.user.email ?? "").toLowerCase() === email ? userData.user.id : null;
+
+  const { error } = await supabase.from("team_members").insert({
+    team_id: teamId,
+    organization_id: organizationId,
+    user_id: linkedUserId,
+    member_email: email,
+    member_name: memberName || email,
+    role,
+    added_by: userData.user.id,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("That person is already on this team.");
+    }
+    throw error;
+  }
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "team_member_added",
+    event_summary: `${email} added to a team`,
+    metadata: { source: "teams", team_id: teamId, email, role },
+  });
+
+  revalidateTeamViews();
+}
+
+export async function updateTeamMemberRole(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const teamMemberId = String(formData.get("teamMemberId") ?? "");
+  const role = String(formData.get("role") ?? "");
+
+  if (!organizationId || !teamMemberId || !memberRoles.has(role)) {
+    throw new Error("A valid member and role are required.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to manage team roles.");
+  }
+
+  const { error } = await supabase
+    .from("team_members")
+    .update({ role })
+    .eq("id", teamMemberId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    throw error;
+  }
+
+  revalidateTeamViews();
+}
+
+export async function removeTeamMember(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const teamMemberId = String(formData.get("teamMemberId") ?? "");
+
+  if (!organizationId || !teamMemberId) {
+    throw new Error("A valid member is required.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to remove team members.");
+  }
+
+  const { error } = await supabase
+    .from("team_members")
+    .delete()
+    .eq("id", teamMemberId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    throw error;
+  }
+
+  revalidateTeamViews();
+}
+
+export async function deleteTeam(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const teamId = String(formData.get("teamId") ?? "");
+
+  if (!organizationId || !teamId) {
+    throw new Error("A valid team is required.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to delete a team.");
+  }
+
+  const { error } = await supabase
+    .from("teams")
+    .delete()
+    .eq("id", teamId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    throw error;
+  }
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "team_deleted",
+    event_summary: "Team deleted",
+    metadata: { source: "teams", team_id: teamId },
+  });
+
+  revalidateTeamViews();
 }

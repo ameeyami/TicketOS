@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DEFAULT_TEAMS } from "@/lib/teams";
 import { workflowTemplates } from "@/lib/workflow-templates";
 
 type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
@@ -342,6 +343,7 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
   const existingOrganization = existingMembership?.organizations;
   if (existingOrganization) {
     const org = Array.isArray(existingOrganization) ? existingOrganization[0] : existingOrganization;
+    let resolved = org;
 
     if (org?.name === LEGACY_DEFAULT_WORKSPACE_NAME) {
       const { error } = await supabase
@@ -349,11 +351,12 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
         .update({ name: DEFAULT_WORKSPACE_BRAND })
         .eq("id", org.id);
       if (!error) {
-        return { ...org, name: DEFAULT_WORKSPACE_BRAND };
+        resolved = { ...org, name: DEFAULT_WORKSPACE_BRAND };
       }
     }
 
-    return org;
+    await ensureTeams(supabase, resolved, user);
+    return resolved;
   }
 
   const fullName = readFullName(user);
@@ -387,7 +390,48 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
     throw membershipError;
   }
 
+  await ensureTeams(supabase, organization, user);
   return organization;
+}
+
+// Seed default teams + add the current user as their owner. Resilient: if the
+// teams migration hasn't been applied yet, the count query errors and we no-op.
+async function ensureTeams(supabase: SupabaseClient, organization: { id: string }, user: User) {
+  const { count, error } = await supabase
+    .from("teams")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organization.id);
+  if (error || (count ?? 0) > 0) {
+    return;
+  }
+
+  const email = user.email ?? "";
+  const memberName = readFullName(user) ?? email;
+
+  for (const template of DEFAULT_TEAMS) {
+    const { data: team } = await supabase
+      .from("teams")
+      .insert({
+        organization_id: organization.id,
+        name: template.name,
+        slug: template.slug,
+        description: template.description,
+        color: template.color,
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
+    if (!team) continue;
+    await supabase.from("team_members").insert({
+      team_id: team.id,
+      organization_id: organization.id,
+      user_id: user.id,
+      member_email: email,
+      member_name: memberName,
+      role: "owner",
+      added_by: user.id,
+    });
+  }
 }
 
 async function ensureDemoData(supabase: SupabaseClient, organizationId: string, userId: string) {

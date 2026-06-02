@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { PendingButton } from "@/components/ui/pending-button";
 
 export function TicketDetailView({ data }: { data: TicketDetailData }) {
-  const { ticket, steps, approval, policies, auditLogs, comments, executionActions } = data;
+  const { ticket, steps, approval, policies, auditLogs, comments, executionActions, requestingTeam, assignedTeam } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
 
@@ -118,6 +118,17 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                 <p className="text-xs text-black/40">{sla.targetHours}h target · due {slaDue}</p>
               </div>
               <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", sla.badgeClass)}>{sla.label}</span>
+            </div>
+            <div className="mt-4 border-t border-black/8 pt-3">
+              <p className="text-sm font-medium text-black/52">Teams</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-slate-600">
+                  From: {requestingTeam?.name ?? "—"}
+                </span>
+                <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-slate-600">
+                  To: {assignedTeam?.name ?? "Unassigned"}
+                </span>
+              </div>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/42">Operator action</p>
