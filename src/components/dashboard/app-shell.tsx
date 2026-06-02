@@ -21,6 +21,7 @@ import {
   Undo2,
   UserPlus,
   UserRound,
+  UsersRound,
   UserX,
   Wallet,
   Workflow,
@@ -77,6 +78,7 @@ const utilityTeam = {
   tone: "bg-[#eef1f5] text-[#5b6b7e]",
   links: [
     { label: "Copilot", href: "/app/copilot", icon: Sparkles },
+    { label: "Team", href: "/app/team", icon: UsersRound },
     { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
     { label: "People", href: "/app/people", icon: UserRound },
     { label: "Memory", href: "/app/memory", icon: GitBranch },
