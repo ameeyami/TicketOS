@@ -150,7 +150,18 @@ export async function GET(request: Request) {
     });
     table = {
       title: `Tickets (${filtered.length})`,
-      columns: ["Ticket ID", "Title", "Status", "Priority", "Category", "Assignee", "Requester", "Created", "SLA", "AI confidence"],
+      columns: [
+        { header: "Ticket ID", width: 56 },
+        { header: "Title", width: 128 },
+        { header: "Status", width: 62 },
+        { header: "Priority", width: 48 },
+        { header: "Category", width: 62 },
+        { header: "Assignee", width: 82 },
+        { header: "Requester", width: 80 },
+        { header: "Created", width: 56 },
+        { header: "SLA", width: 86 },
+        { header: "Confidence", width: 52 },
+      ],
       rows: filtered.map((t) => [
         t.external_id ?? t.id.slice(0, 8),
         t.title,
