@@ -24,5 +24,13 @@ export default async function AppPage({
   });
   const { connected: aiKeyConnected } = await getOrgAnthropicKeyMeta(supabase, organization.id);
 
-  return <CommandCenter data={dashboardData} aiKeyConnected={aiKeyConnected} />;
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+  const canApprove = membership ? ["owner", "admin"].includes(membership.role) : false;
+
+  return <CommandCenter data={dashboardData} aiKeyConnected={aiKeyConnected} canApprove={canApprove} />;
 }

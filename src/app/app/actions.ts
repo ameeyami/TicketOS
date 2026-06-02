@@ -22,6 +22,18 @@ export async function decideApproval(formData: FormData) {
     throw new Error("You must be signed in to decide approvals.");
   }
 
+  // Only workspace owners/admins (managers) may approve or reject.
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    throw new Error("Only workspace owners and admins can approve or reject requests.");
+  }
+
   const safeTicketId = ticketId || null;
   const safeWorkflowRunId = workflowRunId || null;
   const decidedAt = new Date().toISOString();

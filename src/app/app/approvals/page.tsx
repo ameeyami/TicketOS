@@ -39,6 +39,14 @@ export default async function ApprovalsPage() {
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false });
 
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  const canApprove = membership ? ["owner", "admin"].includes(membership.role) : false;
+
   const approvalRows = approvals ?? [];
   const pendingApprovals = approvalRows.filter((approval) => approval.status === "pending");
   const resolvedApprovals = approvalRows.filter((approval) => approval.status !== "pending");
@@ -104,7 +112,13 @@ export default async function ApprovalsPage() {
                       )}
                     </div>
 
-                    <ApprovalDecisionForm approval={approval} />
+                    {canApprove ? (
+                      <ApprovalDecisionForm approval={approval} />
+                    ) : (
+                      <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900">
+                        Only workspace owners and admins can approve or reject this request.
+                      </p>
+                    )}
                   </article>
                 ))}
                 {pendingApprovals.length === 0 && (

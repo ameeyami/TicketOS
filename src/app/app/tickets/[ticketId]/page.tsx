@@ -18,5 +18,13 @@ export default async function TicketDetailPage({
   const { ticketId } = await params;
   const detail = await getTicketDetail(ticketId);
 
-  return <TicketDetailView data={detail} />;
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", detail.ticket.organization_id)
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+  const canApprove = membership ? ["owner", "admin"].includes(membership.role) : false;
+
+  return <TicketDetailView data={detail} canApprove={canApprove} />;
 }

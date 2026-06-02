@@ -10,7 +10,15 @@ import { ticketIcons } from "@/lib/dashboard-data";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 import { cn } from "@/lib/utils";
 
-export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; aiKeyConnected: boolean }) {
+export function CommandCenter({
+  data,
+  aiKeyConnected,
+  canApprove = false,
+}: {
+  data: DashboardData;
+  aiKeyConnected: boolean;
+  canApprove?: boolean;
+}) {
   const primaryMetrics = data.metrics.slice(0, 3);
   const hasFilter = Boolean(data.filters.query) || data.filters.view === "approvals";
   // The full ticket list lives on the inbox. On the dashboard, show only the
@@ -166,12 +174,15 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
           <Panel title="Approval queue" icon={BadgeCheck}>
             <div className="rounded-md border border-black/10 bg-[#f8fbfe] p-3">
               <p className="font-semibold text-[#07111f]">{data.approval?.title ?? "No approvals waiting"}</p>
-              {data.approval?.status === "pending" && (
-                <div className="mt-4 flex gap-2">
-                  <ApprovalForm approval={data.approval} decision="approved" />
-                  <ApprovalForm approval={data.approval} decision="rejected" />
-                </div>
-              )}
+              {data.approval?.status === "pending" &&
+                (canApprove ? (
+                  <div className="mt-4 flex gap-2">
+                    <ApprovalForm approval={data.approval} decision="approved" />
+                    <ApprovalForm approval={data.approval} decision="rejected" />
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs font-medium text-amber-700">Awaiting an owner or admin decision.</p>
+                ))}
             </div>
           </Panel>
 

@@ -37,7 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PendingButton } from "@/components/ui/pending-button";
 
-export function TicketDetailView({ data }: { data: TicketDetailData }) {
+export function TicketDetailView({ data, canApprove = false }: { data: TicketDetailData; canApprove?: boolean }) {
   const { ticket, steps, approval, policies, auditLogs, comments, executionActions, requestingTeam, assignedTeam } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
@@ -192,22 +192,27 @@ export function TicketDetailView({ data }: { data: TicketDetailData }) {
                   <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-amber-900/52">
                     Status: {titleCase(approval.status)}
                   </p>
-                  {approval.status === "pending" && (
-                    <div className="mt-3 grid gap-3">
-                      <ApprovalForm
-                        approvalId={approval.id}
-                        ticketId={ticket.id}
-                        organizationId={ticket.organization_id}
-                        decision="approved"
-                      />
-                      <ApprovalForm
-                        approvalId={approval.id}
-                        ticketId={ticket.id}
-                        organizationId={ticket.organization_id}
-                        decision="rejected"
-                      />
-                    </div>
-                  )}
+                  {approval.status === "pending" &&
+                    (canApprove ? (
+                      <div className="mt-3 grid gap-3">
+                        <ApprovalForm
+                          approvalId={approval.id}
+                          ticketId={ticket.id}
+                          organizationId={ticket.organization_id}
+                          decision="approved"
+                        />
+                        <ApprovalForm
+                          approvalId={approval.id}
+                          ticketId={ticket.id}
+                          organizationId={ticket.organization_id}
+                          decision="rejected"
+                        />
+                      </div>
+                    ) : (
+                      <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs font-medium text-amber-900">
+                        Only owners and admins can approve or reject this request.
+                      </p>
+                    ))}
                 </div>
               ) : (
                 <EmptyState text="No approval is attached to this ticket." />
