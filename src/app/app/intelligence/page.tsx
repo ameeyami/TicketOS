@@ -103,7 +103,7 @@ export default async function IntelligencePage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           crumbs={[{ label: "Governance" }, { label: "Intelligence" }]}
@@ -111,7 +111,7 @@ export default async function IntelligencePage() {
           description="Where IT execution slows down — bottlenecks, automation, agent load, and risk."
         />
 
-        <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Automation coverage" value={`${automationRate}%`} detail={`${automatedTickets}/${ticketRows.length} tickets`} icon={Gauge} />
           <MetricCard label="Workflow success" value={`${successRate}%`} detail={`${successfulRuns} successful runs`} icon={CheckCircle2} />
           <MetricCard label="Workload reduced" value={`${workloadHoursSaved}h`} detail="estimated operator time saved" icon={TrendingDown} />
@@ -149,7 +149,7 @@ export default async function IntelligencePage() {
                           <p className="font-semibold">{agent.name}</p>
                           <p className="mt-1 text-sm text-black/50">{agent.status} · {agent.memory_scope ?? "General operations"}</p>
                         </div>
-                        <span className="rounded-md bg-[#edf5e9] px-2 py-1 text-xs font-semibold text-[#315f4f]">
+                        <span className="rounded-md bg-[#e7f0ff] px-2 py-1 text-xs font-semibold text-[#0b5f91]">
                           {activeWorkload} active
                         </span>
                       </div>
@@ -214,15 +214,15 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-2 text-sm text-black/45">{detail}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-1 text-xs text-slate-400">{detail}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -239,12 +239,12 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
@@ -254,8 +254,8 @@ function Panel({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-black/10 bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-2 text-xl font-semibold">{value}</p>
     </div>
   );
 }
@@ -291,7 +291,7 @@ function Progress({ value, max }: { value: number; max: number }) {
 
   return (
     <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/8">
-      <div className="h-full rounded-full bg-[#2f6f60]" style={{ width: `${width}%` }} />
+      <div className="h-full rounded-full bg-[#0b5f91]" style={{ width: `${width}%` }} />
     </div>
   );
 }

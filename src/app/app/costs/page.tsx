@@ -154,7 +154,7 @@ export default async function CostsPage() {
   const topTickets = [...ticketCosts].sort((a, b) => b.total - a.total).slice(0, 6);
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           crumbs={[{ label: "Governance" }, { label: "Costs" }]}
@@ -162,7 +162,7 @@ export default async function CostsPage() {
           description="What AI execution costs — per resolution, workflow, and agent — against a hard monthly budget."
         />
 
-        <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Cost per resolution" value={formatUsd(costPerResolution)} detail={`per ${resolutionLabel}`} icon={Receipt} />
           <MetricCard label="Spend this month" value={formatUsd(monthToDate)} detail={`${budgetUsedPct}% of budget used`} icon={Coins} />
           <MetricCard label="Projected month" value={formatUsd(projectedMonthly)} detail={`${projectedPct}% of budget`} icon={TrendingUp} />
@@ -210,13 +210,13 @@ export default async function CostsPage() {
                       min={0}
                       step={50}
                       defaultValue={Math.round(monthlyBudget)}
-                      className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60]"
+                      className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]"
                     />
                   </div>
                 </label>
                 <PendingButton
                   pendingText="Saving budget..."
-                  className="h-10 rounded-md bg-[#17211c] px-3 text-sm font-semibold text-white"
+                  className="h-10 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
                 >
                   Set budget
                 </PendingButton>
@@ -258,7 +258,7 @@ export default async function CostsPage() {
                         <span className="text-xs font-semibold text-black/42">
                           {entry.ticket.external_id ?? entry.ticket.id.slice(0, 8)}
                         </span>
-                        <span className="rounded-md bg-[#edf5e9] px-2 py-0.5 text-xs font-semibold text-[#315f4f]">
+                        <span className="rounded-md bg-[#e7f0ff] px-2 py-0.5 text-xs font-semibold text-[#0b5f91]">
                           {MODEL_PRICING[entry.model].label}
                         </span>
                       </div>
@@ -324,15 +324,15 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-2 text-sm text-black/45">{detail}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-1 text-xs text-slate-400">{detail}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -349,12 +349,12 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
@@ -382,7 +382,7 @@ function BarList({
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/8">
             <div
-              className="h-full rounded-full bg-[#2f6f60]"
+              className="h-full rounded-full bg-[#0b5f91]"
               style={{ width: `${Math.max(6, Math.round(row.ratio * 100))}%` }}
             />
           </div>

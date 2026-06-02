@@ -81,7 +81,7 @@ export default async function PoliciesPage() {
   const blockPolicies = policyRows.filter((policy) => policy.decision === "block").length;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Governance" }, { label: "Policies" }]}
@@ -137,7 +137,7 @@ export default async function PoliciesPage() {
                 <select
                   name="decision"
                   defaultValue="approval_required"
-                  className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-[#fbfaf8] px-3 text-sm outline-none focus:border-black/25"
+                  className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]"
                 >
                   <option value="allow">Allow</option>
                   <option value="approval_required">Require approval</option>
@@ -148,7 +148,7 @@ export default async function PoliciesPage() {
               <input type="hidden" name="conditions" value="{}" />
               <PendingButton
                 pendingText="Creating..."
-                className="h-10 rounded-lg bg-black px-3 text-sm font-semibold text-white"
+                className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
               >
                 <Plus size={16} />
                 Create rule
@@ -160,7 +160,7 @@ export default async function PoliciesPage() {
         <section className="mt-5 rounded-xl border border-black/10 bg-white">
           <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="grid size-8 place-items-center rounded-lg bg-[#f6eee8] text-[#e4611f]">
+              <span className="grid size-8 place-items-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                 <ShieldCheck size={17} />
               </span>
               <h2 className="font-semibold">Guardrail rules</h2>
@@ -299,7 +299,7 @@ function ActionDrawer({
     <details className={cn("group rounded-xl border border-black/10 bg-white", className)}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
         <span className="flex items-center gap-2 font-semibold">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#f6eee8] text-[#e4611f]">{icon}</span>
+          <span className="grid size-8 place-items-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">{icon}</span>
           {title}
         </span>
         <Plus size={16} className="text-black/38 transition group-open:rotate-45" />

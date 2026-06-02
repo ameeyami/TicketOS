@@ -93,7 +93,7 @@ export default async function ReportsPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Governance" }, { label: "Reports" }]}
@@ -103,15 +103,15 @@ export default async function ReportsPage() {
             <form action={exportReport}>
               <input type="hidden" name="organizationId" value={organization.id} />
               <input type="hidden" name="reportName" value="Operations briefing" />
-              <PendingButton pendingText="Exporting..." className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
-                <Download size={16} />
+              <PendingButton pendingText="Exporting..." className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]">
+                <Download size={15} />
                 Export
               </PendingButton>
             </form>
           }
         />
 
-        <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {highlights.map((item) => (
             <MetricCard key={item.title} {...item} />
           ))}
@@ -150,15 +150,15 @@ export default async function ReportsPage() {
 
 function MetricCard({ title, value, detail, icon: Icon }: { title: string; value: string; detail: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-white p-3">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-1 text-xs text-black/45">{detail}</p>
+          <p className="text-xs font-medium text-slate-500">{title}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-1 text-xs text-slate-400">{detail}</p>
         </div>
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={16} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -168,11 +168,11 @@ function MetricCard({ title, value, detail, icon: Icon }: { title: string; value
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={16} />
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
