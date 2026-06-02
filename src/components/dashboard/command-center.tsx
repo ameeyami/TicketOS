@@ -38,14 +38,14 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
       )}
       <section className="rounded-lg border border-black/10 bg-white shadow-sm">
         <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
-          <div className="p-5 md:p-6">
+          <div className="p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#0b5f91]">Service workspace</p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#07111f] md:text-4xl">
+                <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-[#07111f] md:text-2xl">
                   IT requests ready for action
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                   Review live requests, route approvals, and inspect agent execution from one clean operations view.
                 </p>
               </div>
@@ -61,7 +61,7 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
               {primaryMetrics.map((metric, index) => (
                 <motion.div
                   key={metric.label}
@@ -71,7 +71,7 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
                   className="rounded-md border border-black/10 bg-[#f8fbfe] p-4"
                 >
                   <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">{metric.label}</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-[#07111f]">{metric.value}</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-tight text-[#07111f]">{metric.value}</p>
                   <p className="mt-1 text-xs font-semibold text-[#0f7a5f]">{metric.delta}</p>
                 </motion.div>
               ))}
