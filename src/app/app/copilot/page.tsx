@@ -45,7 +45,7 @@ export default async function CopilotPage({
   const messageList = messages ?? [];
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Other" }, { label: "Copilot" }]}
@@ -74,7 +74,7 @@ export default async function CopilotPage({
                     href={`/app/copilot?thread=${thread.id}`}
                     className={cn(
                       "block rounded-md px-3 py-2 transition",
-                      thread.id === activeThreadId ? "bg-[#eef5ea] text-[#1c3b32]" : "hover:bg-[#f3f6f0]",
+                      thread.id === activeThreadId ? "bg-[#e7f0ff] text-[#1c3b32]" : "hover:bg-[#f3f6f0]",
                     )}
                   >
                     <p className="flex items-center gap-1.5 truncate text-sm font-medium">
@@ -99,17 +99,17 @@ export default async function CopilotPage({
                     key={message.id}
                     className={
                       message.role === "user"
-                        ? "ml-auto max-w-2xl whitespace-pre-wrap rounded-xl bg-[#17211c] p-4 text-sm leading-6 text-white"
-                        : "max-w-2xl whitespace-pre-wrap rounded-xl border border-black/10 bg-[#f8faf5] p-4 text-sm leading-6 text-black/72"
+                        ? "ml-auto max-w-2xl whitespace-pre-wrap rounded-xl bg-[#0b2a4a] p-4 text-sm leading-6 text-white"
+                        : "max-w-2xl whitespace-pre-wrap rounded-xl border border-black/10 bg-[#f5f8fc] p-4 text-sm leading-6 text-black/72"
                     }
                   >
                     {message.content}
                   </div>
                 ))
               ) : (
-                <div className="rounded-xl border border-dashed border-black/15 bg-[#f8faf5] p-5">
+                <div className="rounded-xl border border-dashed border-black/15 bg-[#f5f8fc] p-5">
                   <div className="flex items-center gap-2 font-semibold">
-                    <Sparkles size={17} className="text-[#2f6f60]" />
+                    <Sparkles size={17} className="text-[#0b2a4a]" />
                     {activeThreadId ? "This chat is empty" : "New chat — try asking"}
                   </div>
                   <div className="mt-4 grid gap-2 text-sm text-black/58 md:grid-cols-3">
@@ -128,12 +128,12 @@ export default async function CopilotPage({
                 name="question"
                 required
                 autoComplete="off"
-                className="h-12 min-w-0 flex-1 rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                className="h-12 min-w-0 flex-1 rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                 placeholder={activeThreadId ? "Reply in this chat..." : "Start a new chat with Copilot..."}
               />
               <PendingButton
                 pendingText="Asking..."
-                className="h-12 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white"
+                className="h-12 rounded-lg bg-[#0b2a4a] px-4 text-sm font-semibold text-white"
               >
                 <Send size={17} />
                 Ask

@@ -18,7 +18,7 @@ export default async function NewWorkflowPage() {
   const organization = await ensureWorkspace(supabase, userData.user);
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "IT" }, { label: "Workflows", href: "/app/workflows" }, { label: "New" }]}
@@ -32,7 +32,7 @@ export default async function NewWorkflowPage() {
               <input type="hidden" name="organizationId" value={organization.id} />
               <input type="hidden" name="templateKey" value={key} />
               <div className="flex gap-4">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                   <Workflow size={20} />
                 </span>
                 <div>
@@ -47,7 +47,7 @@ export default async function NewWorkflowPage() {
                   <input
                     name="name"
                     defaultValue={template.name}
-                    className="mt-2 h-11 w-full rounded-lg border border-black/10 bg-[#f8faf5] px-3 text-sm font-medium outline-none focus:border-[#2f6f60]"
+                    className="mt-2 h-11 w-full rounded-lg border border-black/10 bg-[#f5f8fc] px-3 text-sm font-medium outline-none focus:border-[#0b2a4a]"
                   />
                 </label>
                 <label className="text-sm font-semibold">
@@ -56,7 +56,7 @@ export default async function NewWorkflowPage() {
                     name="description"
                     defaultValue={template.description}
                     rows={3}
-                    className="mt-2 w-full resize-none rounded-lg border border-black/10 bg-[#f8faf5] px-3 py-2 text-sm font-medium leading-6 outline-none focus:border-[#2f6f60]"
+                    className="mt-2 w-full resize-none rounded-lg border border-black/10 bg-[#f5f8fc] px-3 py-2 text-sm font-medium leading-6 outline-none focus:border-[#0b2a4a]"
                   />
                 </label>
               </div>
@@ -68,13 +68,13 @@ export default async function NewWorkflowPage() {
               </div>
 
               <label className="mt-5 flex items-center gap-2 text-sm font-semibold text-black/62">
-                <input name="isActive" type="checkbox" defaultChecked className="size-4 accent-[#2f6f60]" />
+                <input name="isActive" type="checkbox" defaultChecked className="size-4 accent-[#0b2a4a]" />
                 Activate after creation
               </label>
 
               <PendingButton
                 pendingText="Creating..."
-                className="mt-5 h-10 w-full rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                className="mt-5 h-10 w-full rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
               >
                 Create workflow
               </PendingButton>
@@ -96,7 +96,7 @@ function Fact({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-3">
+    <div className="rounded-lg border border-black/10 bg-[#f5f8fc] p-3">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-black/38">
         <Icon size={14} />
         {label}

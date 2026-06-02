@@ -102,7 +102,7 @@ export default async function WorkflowsPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="rounded-lg border border-dashed border-black/15 bg-[#f8faf5] p-4 text-sm text-black/48">
+                  <p className="rounded-lg border border-dashed border-black/15 bg-[#f5f8fc] p-4 text-sm text-black/48">
                     No custom policy rules yet.
                   </p>
                 )}

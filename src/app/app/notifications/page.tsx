@@ -108,7 +108,7 @@ export default async function NotificationsPage() {
   const executionCount = attentionItems.filter((item) => item.type === "Execution").length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           crumbs={[{ label: "Notifications" }]}
@@ -129,7 +129,7 @@ export default async function NotificationsPage() {
               <article key={item.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex min-w-0 gap-4">
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                       <item.icon size={20} />
                     </span>
                     <div className="min-w-0">
@@ -155,7 +155,7 @@ export default async function NotificationsPage() {
                   </Link>
                 </div>
 
-                <form action={reviewAttentionItem} className="mt-5 rounded-lg border border-black/10 bg-[#f8faf5] p-4">
+                <form action={reviewAttentionItem} className="mt-5 rounded-lg border border-black/10 bg-[#f5f8fc] p-4">
                   <input type="hidden" name="organizationId" value={organization.id} />
                   <input type="hidden" name="ticketId" value={item.ticketId ?? ""} />
                   <input type="hidden" name="itemId" value={item.id} />
@@ -164,10 +164,10 @@ export default async function NotificationsPage() {
                   <textarea
                     name="note"
                     rows={3}
-                    className="w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none placeholder:text-black/38 focus:border-[#2f6f60]"
+                    className="w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none placeholder:text-black/38 focus:border-[#0b2a4a]"
                     placeholder="Optional review note, owner, or follow-up reference..."
                   />
-                  <PendingButton pendingText="Marking..." className="mt-3 h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                  <PendingButton pendingText="Marking..." className="mt-3 h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
                     <CheckCircle2 size={16} />
                     Mark reviewed
                   </PendingButton>
@@ -177,7 +177,7 @@ export default async function NotificationsPage() {
 
             {attentionItems.length === 0 && (
               <div className="rounded-xl border border-dashed border-black/15 bg-white p-8 text-center">
-                <CheckCircle2 size={28} className="mx-auto text-[#2f6f60]" />
+                <CheckCircle2 size={28} className="mx-auto text-[#0b2a4a]" />
                 <p className="mt-3 font-semibold">No urgent attention items.</p>
                 <p className="mt-2 text-sm text-black/52">Approvals, failures, and blocked workflows will appear here.</p>
               </div>
@@ -344,7 +344,7 @@ function MetricCard({
           <p className="text-sm font-medium text-black/52">{label}</p>
           <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={20} />
         </span>
       </div>
@@ -364,7 +364,7 @@ function Panel({
   return (
     <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={18} />
         </span>
         <h2 className="text-lg font-semibold">{title}</h2>
@@ -376,7 +376,7 @@ function Panel({
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
+    <div className="rounded-lg border border-black/10 bg-[#f5f8fc] p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
       <p className="mt-2 text-2xl font-semibold">{value}</p>
     </div>

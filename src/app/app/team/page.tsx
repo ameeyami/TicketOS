@@ -21,7 +21,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 const roleStyles: Record<string, string> = {
-  owner: "border-[#2f6f60]/20 bg-[#eef5ea] text-[#2f6f60]",
+  owner: "border-[#0b2a4a]/20 bg-[#e7f0ff] text-[#0b2a4a]",
   admin: "border-sky-200 bg-sky-50 text-sky-700",
   operator: "border-amber-200 bg-amber-50 text-amber-800",
   viewer: "border-zinc-200 bg-zinc-50 text-zinc-700",
@@ -102,7 +102,7 @@ export default async function TeamPage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           crumbs={[{ label: "Settings" }, { label: "Team" }]}
@@ -144,7 +144,7 @@ export default async function TeamPage() {
                   <article key={member.id} className="rounded-lg border border-black/10 bg-[#fbfcf8] p-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex min-w-0 gap-3">
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#17211c] text-sm font-semibold text-white">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#0b2a4a] text-sm font-semibold text-white">
                           {initials(isCurrentUser ? userData.user.email : member.user_id)}
                         </span>
                         <div className="min-w-0">
@@ -189,7 +189,7 @@ export default async function TeamPage() {
                           <PendingButton
                             pendingText="Saving..."
                             disabled={!canManage}
-                            className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white disabled:opacity-50"
+                            className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white disabled:opacity-50"
                           >
                             Save
                           </PendingButton>
@@ -247,7 +247,7 @@ export default async function TeamPage() {
                   <PendingButton
                     pendingText="Inviting..."
                     disabled={!canManage}
-                    className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white disabled:opacity-50"
+                    className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white disabled:opacity-50"
                   >
                     Invite
                   </PendingButton>
@@ -295,7 +295,7 @@ export default async function TeamPage() {
                 {roleCards.map((role) => (
                   <div key={role.role} className="flex items-center justify-between rounded-lg border border-black/10 p-3">
                     <div className="flex items-center gap-2">
-                      <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                      <span className="flex size-8 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                         <role.icon size={16} />
                       </span>
                       <div>
@@ -346,7 +346,7 @@ function MetricCard({
           <p className="text-sm font-medium text-black/52">{label}</p>
           <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={20} />
         </span>
       </div>
@@ -366,7 +366,7 @@ function Panel({
   return (
     <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={18} />
         </span>
         <h2 className="text-lg font-semibold">{title}</h2>

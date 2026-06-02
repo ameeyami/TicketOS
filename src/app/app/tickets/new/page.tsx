@@ -14,7 +14,7 @@ export default async function NewTicketPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-3xl">
         <PageHeader
           crumbs={[
@@ -33,7 +33,7 @@ export default async function NewTicketPage() {
               <input
                 required
                 name="title"
-                className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                 placeholder="Reset Okta password for employee"
               />
             </label>
@@ -44,7 +44,7 @@ export default async function NewTicketPage() {
                 required
                 name="description"
                 rows={5}
-                className="mt-2 w-full rounded-lg border border-black/10 px-3 py-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                className="mt-2 w-full rounded-lg border border-black/10 px-3 py-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                 placeholder="Describe the issue, requester, system, and desired outcome."
               />
             </label>
@@ -54,7 +54,7 @@ export default async function NewTicketPage() {
                 <span className="text-sm font-semibold">Requester name</span>
                 <input
                   name="requesterName"
-                  className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                  className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                   placeholder="Priya Shah"
                 />
               </label>
@@ -63,7 +63,7 @@ export default async function NewTicketPage() {
                 <input
                   name="requesterEmail"
                   type="email"
-                  className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                  className="mt-2 h-12 w-full rounded-lg border border-black/10 px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                   placeholder="priya@company.com"
                 />
               </label>
@@ -74,7 +74,7 @@ export default async function NewTicketPage() {
                 <span className="text-sm font-semibold">Category</span>
                 <select
                   name="category"
-                  className="mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                  className="mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                 >
                   <option>Identity</option>
                   <option>Onboarding</option>
@@ -86,7 +86,7 @@ export default async function NewTicketPage() {
                 <span className="text-sm font-semibold">Priority</span>
                 <select
                   name="priority"
-                  className="mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10"
+                  className="mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -98,7 +98,7 @@ export default async function NewTicketPage() {
 
             <PendingButton
               pendingText="Creating..."
-              className="h-12 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white"
+              className="h-12 rounded-lg bg-[#0b2a4a] px-4 text-sm font-semibold text-white"
             >
               <Plus size={17} />
               Create ticket

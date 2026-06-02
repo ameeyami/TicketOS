@@ -165,7 +165,7 @@ export default async function AutonomyPage() {
   const riskTickets = ticketRows.filter((ticket) => ["critical", "high"].includes(ticket.priority)).length;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           crumbs={[{ label: "Other" }, { label: "Autonomy" }]}
@@ -193,7 +193,7 @@ export default async function AutonomyPage() {
                 <article key={agent.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex gap-4">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                         <SlidersHorizontal size={20} />
                       </span>
                       <div>
@@ -210,12 +210,12 @@ export default async function AutonomyPage() {
                     <Fact label="Policies" value={String(agentPolicies.length)} />
                   </div>
 
-                  <div className="mt-5 rounded-lg border border-black/10 bg-[#111713] p-4 text-white">
-                    <p className="text-sm font-semibold">Current boundary</p>
-                    <p className="mt-2 text-sm leading-6 text-white/62">{modeDescription(mode)}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-4 rounded-lg border border-[#d8e4ee] bg-[#f1f6fb] p-4">
+                    <p className="text-sm font-semibold text-[#0b1a2e]">Current boundary</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{modeDescription(mode)}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {(agent.capabilities ?? []).map((capability: string) => (
-                        <span key={capability} className="rounded-md border border-white/10 bg-white/8 px-2 py-1 text-xs text-white/68">
+                        <span key={capability} className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-medium text-slate-600">
                           {capability}
                         </span>
                       ))}
@@ -235,7 +235,7 @@ export default async function AutonomyPage() {
                             className={cn(
                               "h-9 w-full rounded-md border px-2 text-xs font-semibold",
                               mode === item.mode
-                                ? "border-[#17211c] bg-[#17211c] text-white"
+                                ? "border-[#0b2a4a] bg-[#0b2a4a] text-white"
                                 : "border-black/10 bg-white text-[#151914]",
                             )}
                           >
@@ -256,7 +256,7 @@ export default async function AutonomyPage() {
                 {autonomyModes.map((mode) => (
                   <div key={mode.mode} className="rounded-lg border border-black/10 p-4">
                     <div className="flex items-center gap-2">
-                      <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                      <span className="flex size-8 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                         <mode.icon size={16} />
                       </span>
                       <p className="font-semibold">{mode.label}</p>
@@ -373,7 +373,7 @@ function WorkflowAutonomyCard({
         <Fact label="Rollbacks" value={String(track.rollbacks)} />
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-[#f8faf5] p-3">
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-[#f5f8fc] p-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-black/38">Current level</p>
           <p className="mt-1 font-semibold">{autonomyLevelMeta[current].label}</p>
@@ -430,7 +430,7 @@ function WorkflowAutonomyCard({
               className={cn(
                 "h-9 w-full rounded-md border px-2 text-xs font-semibold",
                 current === level
-                  ? "border-[#17211c] bg-[#17211c] text-white"
+                  ? "border-[#0b2a4a] bg-[#0b2a4a] text-white"
                   : "border-black/10 bg-white text-[#151914]",
               )}
             >
@@ -453,14 +453,14 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -477,12 +477,12 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
@@ -491,9 +491,9 @@ function Panel({
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-black/70">{value}</p>
+    <div className="rounded-lg border border-black/10 bg-[#f5f8fc] p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-slate-700">{value}</p>
     </div>
   );
 }

@@ -87,7 +87,7 @@ export default async function PeoplePage() {
   const people = buildPeople(ticketRows, logs);
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Other" }, { label: "People" }]}
@@ -96,7 +96,7 @@ export default async function PeoplePage() {
           actions={
             <Link
               href="/app/team"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
             >
               Team
               <UsersRound size={16} />
@@ -110,7 +110,7 @@ export default async function PeoplePage() {
               <article key={person.email} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex gap-3">
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#e7f0e4] text-base font-semibold text-[#2e6658]">
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#e7f0ff] text-base font-semibold text-[#0b5f91]">
                       {initials(person.name || person.email)}
                     </span>
                     <div>
@@ -146,13 +146,13 @@ export default async function PeoplePage() {
                     ))}
                   </div>
 
-                  <details className="group rounded-lg border border-black/10 bg-[#f8faf5]">
+                  <details className="group rounded-lg border border-black/10 bg-[#f5f8fc]">
                     <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-3 text-sm font-semibold">
                       Review actions
                       <ChevronDown size={15} className="text-black/38 transition group-open:rotate-180" />
                     </summary>
                     <div className="space-y-3 border-t border-black/10 p-3">
-                    <form action={recordPeopleReview} className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
+                    <form action={recordPeopleReview} className="rounded-lg border border-black/10 bg-[#f5f8fc] p-4">
                       <input type="hidden" name="organizationId" value={organization.id} />
                       <input type="hidden" name="personEmail" value={person.email} />
                       <input type="hidden" name="personName" value={person.name} />
@@ -162,7 +162,7 @@ export default async function PeoplePage() {
                         placeholder="Optional review note..."
                         className="w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none"
                       />
-                      <PendingButton pendingText="Logging..." className="mt-3 h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
+                      <PendingButton pendingText="Logging..." className="mt-3 h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
                         <ShieldCheck size={16} />
                         Log review
                       </PendingButton>
@@ -185,7 +185,7 @@ export default async function PeoplePage() {
                           className="h-10 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none"
                         />
                       </div>
-                      <PendingButton pendingText="Requesting..." className="mt-3 h-10 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#17211c]">
+                      <PendingButton pendingText="Requesting..." className="mt-3 h-10 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#0b2a4a]">
                         Request access review
                       </PendingButton>
                     </form>
@@ -197,7 +197,7 @@ export default async function PeoplePage() {
 
             {people.length === 0 && (
               <div className="rounded-xl border border-dashed border-black/15 bg-white p-8 text-center">
-                <MessageSquareText size={28} className="mx-auto text-[#2f6f60]" />
+                <MessageSquareText size={28} className="mx-auto text-[#0b2a4a]" />
                 <p className="mt-3 font-semibold">No requesters yet.</p>
                 <p className="mt-2 text-sm text-black/52">People will appear here after tickets are created.</p>
               </div>

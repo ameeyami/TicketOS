@@ -49,7 +49,7 @@ export default async function DiagnosticsPage({
         <section className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                 <KeyRound size={18} />
               </span>
               <h2 className="text-lg font-semibold">Anthropic API key</h2>
@@ -77,7 +77,7 @@ export default async function DiagnosticsPage({
                   required
                   autoComplete="off"
                   placeholder="sk-ant-..."
-                  className="mt-2 h-11 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60]"
+                  className="mt-2 h-11 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]"
                 />
               </label>
               <PendingButton
@@ -102,7 +102,7 @@ export default async function DiagnosticsPage({
         {/* Test */}
         <section className="mt-4 rounded-xl border border-black/10 bg-white p-5 shadow-sm">
           <div className="mb-2 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
               <Cpu size={18} />
             </span>
             <h2 className="text-lg font-semibold">Test the connection</h2>

@@ -316,7 +316,7 @@ function TextField({ name, label, placeholder }: { name: string; label: string; 
       <input
         required
         name={name}
-        className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-[#fbfaf8] px-3 text-sm outline-none focus:border-black/25"
+        className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-black/25"
         placeholder={placeholder}
       />
     </label>

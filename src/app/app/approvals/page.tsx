@@ -46,7 +46,7 @@ export default async function ApprovalsPage() {
   const rejectedCount = approvalRows.filter((approval) => approval.status === "rejected").length;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-5 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Operations" }, { label: "Approvals" }]}
@@ -134,7 +134,7 @@ export default async function ApprovalsPage() {
                       <StatusPill status={approval.status} />
                     </div>
                     {approval.decision_note && (
-                      <p className="mt-3 rounded-lg bg-[#f8faf5] p-3 text-sm leading-6 text-black/58">
+                      <p className="mt-3 rounded-lg bg-[#f5f8fc] p-3 text-sm leading-6 text-black/58">
                         {approval.decision_note}
                       </p>
                     )}
@@ -219,7 +219,7 @@ function MetricCard({
           <p className="text-sm font-medium text-black/52">{label}</p>
           <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={20} />
         </span>
       </div>
@@ -239,7 +239,7 @@ function Panel({
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={16} />
         </span>
         <h2 className="font-semibold">{title}</h2>

@@ -91,7 +91,7 @@ export default async function IntegrationDetailPage({
   const missingActions = Math.max(0, catalog.length - actionRows.length);
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <Link
           href="/app/integrations"
@@ -104,7 +104,7 @@ export default async function IntegrationDetailPage({
         <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#47685d]">Integration action scope</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">{integration.display_name}</h1>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">{integration.display_name}</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-black/56">
               Review the actions TicketOS agents can execute, their risk level, and which ones require human approval.
             </p>
@@ -115,7 +115,7 @@ export default async function IntegrationDetailPage({
               <input type="hidden" name="integrationId" value={integration.id} />
               <PendingButton
                 pendingText="Syncing..."
-                className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+                className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
               >
                 <RefreshCw size={16} />
                 Sync actions
@@ -178,7 +178,7 @@ export default async function IntegrationDetailPage({
                         </PendingButton>
                       </form>
                     </div>
-                    <div className="mt-4 rounded-lg border border-black/10 bg-[#f8faf5] p-3">
+                    <div className="mt-4 rounded-lg border border-black/10 bg-[#f5f8fc] p-3">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-black/38">
                         <FileJson size={14} />
                         Action contract
@@ -190,7 +190,7 @@ export default async function IntegrationDetailPage({
                   </article>
                 ))}
                 {actionRows.length === 0 && (
-                  <div className="rounded-lg border border-dashed border-black/15 bg-[#f8faf5] p-5">
+                  <div className="rounded-lg border border-dashed border-black/15 bg-[#f5f8fc] p-5">
                     <p className="font-semibold">No actions synced yet.</p>
                     <p className="mt-2 text-sm leading-6 text-black/52">
                       Sync the provider catalog to define the actions agents can execute through this integration.
@@ -203,7 +203,7 @@ export default async function IntegrationDetailPage({
 
           <div className="space-y-6">
             <Panel title="Scope readiness" icon={ShieldCheck}>
-              <div className="rounded-lg border border-black/10 bg-[#111713] p-5 text-white">
+              <div className="rounded-lg border border-black/10 bg-[#0b2a4a] p-5 text-white">
                 <p className="text-sm text-white/48">Provider key</p>
                 <p className="mt-2 text-2xl font-semibold">{integration.provider_key}</p>
                 <p className="mt-3 text-sm leading-6 text-white/58">
@@ -216,7 +216,7 @@ export default async function IntegrationDetailPage({
                 {(integration.scopes ?? []).map((scope: string) => (
                   <div key={scope} className="flex items-center justify-between rounded-lg border border-black/10 p-3">
                     <span className="text-sm font-semibold">{scope}</span>
-                    <CheckCircle2 size={16} className="text-[#2f6f60]" />
+                    <CheckCircle2 size={16} className="text-[#0b2a4a]" />
                   </div>
                 ))}
               </div>
@@ -340,7 +340,7 @@ function ConnectionSetupForm({
             required
             defaultValue={config?.connection_id ?? ""}
             placeholder={connectionPlaceholder(providerKey)}
-            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#2f6f60]"
+            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#0b2a4a]"
           />
         </label>
         <label className="text-xs font-semibold uppercase tracking-[0.12em] text-black/42">
@@ -350,7 +350,7 @@ function ConnectionSetupForm({
             type="email"
             defaultValue={config?.admin_email ?? ""}
             placeholder="admin@company.com"
-            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#2f6f60]"
+            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#0b2a4a]"
           />
         </label>
         <label className="text-xs font-semibold uppercase tracking-[0.12em] text-black/42 md:col-span-2">
@@ -359,13 +359,13 @@ function ConnectionSetupForm({
             name="note"
             defaultValue={config?.connection_note ?? ""}
             placeholder="Optional ticket reference, scope note, or approval context"
-            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#2f6f60]"
+            className="mt-2 h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm normal-case tracking-normal outline-none focus:border-[#0b2a4a]"
           />
         </label>
         <div className="md:col-span-2">
           <PendingButton
             pendingText={isConnected ? "Updating..." : "Connecting..."}
-            className="h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+            className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
           >
             <CheckCircle2 size={15} />
             {isConnected ? "Update connection" : "Validate and connect"}
@@ -392,7 +392,7 @@ function MetricCard({
           <p className="text-sm font-medium text-black/52">{label}</p>
           <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={20} />
         </span>
       </div>
@@ -412,7 +412,7 @@ function Panel({
   return (
     <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
           <Icon size={18} />
         </span>
         <h2 className="text-lg font-semibold">{title}</h2>

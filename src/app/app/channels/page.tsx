@@ -52,7 +52,7 @@ export default async function ChannelsPage() {
   const conversations = tickets ?? [];
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           crumbs={[{ label: "IT" }, { label: "Channels" }]}
@@ -67,7 +67,7 @@ export default async function ChannelsPage() {
             return (
               <div key={provider} className="flex items-center justify-between rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                     <MessagesSquare size={20} />
                   </span>
                   <div>
@@ -94,7 +94,7 @@ export default async function ChannelsPage() {
         <section className="mt-6 grid gap-6 xl:grid-cols-[.85fr_1.15fr]">
           <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                 <Send size={18} />
               </span>
               <h2 className="text-lg font-semibold">Simulate an inbound message</h2>
@@ -148,7 +148,7 @@ export default async function ChannelsPage() {
 
           <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
                 <MessagesSquare size={18} />
               </span>
               <h2 className="text-lg font-semibold">Conversations</h2>
@@ -173,7 +173,7 @@ export default async function ChannelsPage() {
                         </div>
                         <p className="mt-1 truncate text-sm text-black/70">{ticket.description ?? ticket.title}</p>
                       </div>
-                      <span className="shrink-0 rounded-md bg-[#edf5e9] px-2 py-0.5 text-xs font-semibold text-[#315f4f]">
+                      <span className="shrink-0 rounded-md bg-[#e7f0ff] px-2 py-0.5 text-xs font-semibold text-[#0b5f91]">
                         {statusLabels[ticket.status] ?? ticket.status}
                       </span>
                     </Link>
@@ -193,7 +193,7 @@ export default async function ChannelsPage() {
 }
 
 const inputClass =
-  "mt-2 h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60]";
+  "mt-2 h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
