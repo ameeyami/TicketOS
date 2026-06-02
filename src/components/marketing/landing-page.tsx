@@ -77,13 +77,13 @@ const integrations = [
 ] satisfies Array<[string, LucideIcon]>;
 
 const controls = [
-  ["Role-scoped access", LockKeyhole],
-  ["Approval stops", BadgeCheck],
-  ["Reversible actions", Undo2],
-  ["Audit history", FileCheck2],
-  ["Policy checks", ShieldCheck],
-  ["Cost budgets", Coins],
-] satisfies Array<[string, LucideIcon]>;
+  ["Role-scoped access", "Owners, admins, operators, and viewers each do exactly what their role allows — nothing more.", LockKeyhole],
+  ["Approval stops", "Sensitive actions pause for a manager. Nothing risky runs unattended.", BadgeCheck],
+  ["Reversible actions", "Every action an agent takes on a real system can be undone with one click.", Undo2],
+  ["Replayable audit", "A complete, replayable record of every decision, approval, and action.", FileCheck2],
+  ["Policy checks", "Rules decide allow, require-approval, or block before any system is touched.", ShieldCheck],
+  ["Cost budgets", "A hard monthly AI budget with live spend tracked per resolution.", Coins],
+] satisfies Array<[string, string, LucideIcon]>;
 
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
@@ -258,13 +258,34 @@ export function LandingPage() {
       </section>
 
       {/* Governance */}
-      <section id="security" className="mx-auto max-w-7xl px-5 pb-16 md:px-8">
-        <FeatureGrid
-          eyebrow="Governance"
-          title="Guardrails before agents touch sensitive tools"
-          body="Approval stops, role boundaries, policy checks, cost budgets, and a replayable audit trail — on every workflow."
-          items={controls}
-        />
+      <section id="security" className="mx-auto max-w-7xl px-5 pb-20 md:px-8">
+        <motion.div {...fadeUp} className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">Governance</p>
+          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+            Guardrails before agents touch sensitive tools
+          </h2>
+          <p className="mt-5 text-lg leading-8 text-slate-600">
+            Approval stops, role boundaries, policy checks, cost budgets, and a replayable audit trail — enforced on
+            every workflow.
+          </p>
+        </motion.div>
+
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {controls.map(([title, detail, Icon], index) => (
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: (index % 3) * 0.05 }}
+              key={title}
+              className="group rounded-2xl border border-[#d8e4ee] bg-white p-6 transition hover:-translate-y-1 hover:border-[#b7d8f2] hover:shadow-xl hover:shadow-[#0b2a4a]/5"
+            >
+              <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#e7f3ff] to-[#e8f8ef] text-[#0b5f91] transition group-hover:from-[#22c55e] group-hover:to-[#0b5f91] group-hover:text-white">
+                <Icon size={21} />
+              </span>
+              <h3 className="mt-5 text-lg font-semibold tracking-tight">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
       {/* Final CTA */}
