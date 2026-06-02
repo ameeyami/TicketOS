@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
-import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Download, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, FileText, Sheet, ShieldCheck, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { exportReport } from "@/app/app/reports/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -100,14 +98,24 @@ export default async function ReportsPage() {
           title="Reports"
           description={reportDate}
           actions={
-            <form action={exportReport}>
-              <input type="hidden" name="organizationId" value={organization.id} />
-              <input type="hidden" name="reportName" value="Operations briefing" />
-              <PendingButton pendingText="Exporting..." className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]">
-                <Download size={15} />
-                Export
-              </PendingButton>
-            </form>
+            <div className="flex items-center gap-2">
+              <a
+                href="/app/reports/export?format=csv"
+                download
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#0b2a4a] transition hover:bg-black/[0.04]"
+              >
+                <Sheet size={15} />
+                CSV
+              </a>
+              <a
+                href="/app/reports/export?format=pdf"
+                download
+                className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
+              >
+                <FileText size={15} />
+                PDF
+              </a>
+            </div>
           }
         />
 
