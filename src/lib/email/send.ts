@@ -1,16 +1,17 @@
+import nodemailer from "nodemailer";
+
 /**
- * Minimal transactional email sender built on Resend's HTTP API.
+ * Transactional email sender with two interchangeable backends:
  *
- * No SDK dependency — we just POST to the REST endpoint with `fetch`.
- * Email is best-effort: if it isn't configured (no RESEND_API_KEY / EMAIL_FROM),
- * sendEmail() returns { sent: false, reason: "not_configured" } instead of
- * throwing, so the surrounding workflow (create the ticket, log the audit
- * trail) always completes.
+ *  1. Gmail SMTP  — set GMAIL_USER + GMAIL_APP_PASSWORD. Sends real email from
+ *     your Gmail address (no custom domain needed). Create the app password at
+ *     https://myaccount.google.com/apppasswords (requires 2-Step Verification).
  *
- * To enable real delivery, set two env vars (Vercel → Project → Settings →
- * Environment Variables):
- *   RESEND_API_KEY = re_********************
- *   EMAIL_FROM     = TicketOS <notifications@your-verified-domain.com>
+ *  2. Resend      — set RESEND_API_KEY + EMAIL_FROM. Requires a verified domain.
+ *
+ * Gmail is preferred when both are present. Email is best-effort: when nothing
+ * is configured, sendEmail() returns { sent: false, reason: "not_configured" }
+ * rather than throwing, so the ticket + audit trail always complete.
  */
 
 export type SendEmailInput = {
@@ -25,20 +26,22 @@ export type SendEmailResult = {
   id?: string;
   reason?: "not_configured" | "error";
   error?: string;
+  via?: "gmail" | "resend";
 };
 
-export function isEmailConfigured(): boolean {
+function gmailConfigured(): boolean {
+  return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+}
+
+function resendConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
+export function isEmailConfigured(): boolean {
+  return gmailConfigured() || resendConfigured();
+}
+
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-
-  if (!apiKey || !from) {
-    return { sent: false, reason: "not_configured" };
-  }
-
   const recipients = (Array.isArray(input.to) ? input.to : [input.to])
     .map((address) => address.trim())
     .filter(Boolean);
@@ -46,6 +49,53 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   if (recipients.length === 0) {
     return { sent: false, reason: "error", error: "No recipient address." };
   }
+
+  if (gmailConfigured()) {
+    return sendViaGmail(recipients, input);
+  }
+
+  if (resendConfigured()) {
+    return sendViaResend(recipients, input);
+  }
+
+  return { sent: false, reason: "not_configured" };
+}
+
+async function sendViaGmail(recipients: string[], input: SendEmailInput): Promise<SendEmailResult> {
+  const user = process.env.GMAIL_USER!;
+  // Google generates app passwords with spaces (e.g. "abcd efgh ijkl mnop");
+  // strip them so a copy-paste with spaces still works.
+  const pass = process.env.GMAIL_APP_PASSWORD!.replace(/\s+/g, "");
+  const fromName = process.env.EMAIL_FROM_NAME?.trim() || "TicketOS";
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+    });
+
+    const info = await transporter.sendMail({
+      from: `${fromName} <${user}>`,
+      to: recipients.join(", "),
+      subject: input.subject,
+      html: input.html,
+      ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+    });
+
+    return { sent: true, id: info.messageId, via: "gmail" };
+  } catch (error) {
+    return {
+      sent: false,
+      reason: "error",
+      via: "gmail",
+      error: error instanceof Error ? error.message : "Unknown Gmail SMTP error.",
+    };
+  }
+}
+
+async function sendViaResend(recipients: string[], input: SendEmailInput): Promise<SendEmailResult> {
+  const apiKey = process.env.RESEND_API_KEY!;
+  const from = process.env.EMAIL_FROM!;
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -65,15 +115,16 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 
     if (!response.ok) {
       const text = await response.text();
-      return { sent: false, reason: "error", error: text.slice(0, 300) };
+      return { sent: false, reason: "error", via: "resend", error: text.slice(0, 300) };
     }
 
     const data = (await response.json()) as { id?: string };
-    return { sent: true, id: data.id };
+    return { sent: true, id: data.id, via: "resend" };
   } catch (error) {
     return {
       sent: false,
       reason: "error",
+      via: "resend",
       error: error instanceof Error ? error.message : "Unknown email error.",
     };
   }
