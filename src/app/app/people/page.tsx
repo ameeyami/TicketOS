@@ -227,7 +227,7 @@ function buildPeople(tickets: TicketRow[], logs: AuditRow[]) {
         return acc;
       }, {});
       const avgConfidence = Math.round(
-        rows.reduce((sum, ticket) => sum + Math.round((ticket.ai_confidence ?? 0) * 100), 0) / Math.max(rows.length, 1),
+        rows.reduce((sum, ticket) => sum + Number(ticket.ai_confidence ?? 0), 0) / Math.max(rows.length, 1),
       );
       const accessReviews = logs.filter((log) => {
         const personEmail = typeof log.metadata?.person_email === "string" ? log.metadata.person_email.toLowerCase() : "";

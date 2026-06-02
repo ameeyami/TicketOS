@@ -158,9 +158,7 @@ export default async function SecurityPage() {
 
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
                   <Meta label="Requester" value={ticket.requester_name ?? ticket.requester_email ?? "Unknown"} />
-                  <Meta label="Confidence" value={`${Math.round((ticket.ai_confidence ?? 0) * 100)}%`} />
-                  <Meta label="Risk" value={riskLabel(ticket)} />
-                  <Meta label="Next" value={ticket.status === "blocked" ? "Human review" : "Monitor"} />
+                  <Meta label="Confidence" value={`${Math.round(ticket.ai_confidence ?? 0)}%`} />
                 </div>
 
                 <div className="mt-3 flex flex-col gap-2 border-t border-black/[0.06] pt-3 sm:flex-row sm:items-center">
@@ -301,12 +299,6 @@ function Pill({ children, className }: { children: React.ReactNode; className?: 
       {children}
     </span>
   );
-}
-
-function riskLabel(ticket: TicketRow) {
-  if (ticket.priority === "critical") return "Critical";
-  if (ticket.status === "blocked" || ticket.status === "failed" || ticket.priority === "high") return "High";
-  return "Medium";
 }
 
 function one<T>(value: Relation<T>) {
