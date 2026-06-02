@@ -90,7 +90,7 @@ export default async function AuditPage({
   const replayableRuns = runs.filter((run) => Boolean(run.replay_snapshot && Object.keys(run.replay_snapshot).length)).length;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Governance" }, { label: "Audit" }]}
@@ -98,42 +98,42 @@ export default async function AuditPage({
           description="Replay workflow runs and review agent decisions."
         />
 
-        <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Workflow runs" value={String(runs.length)} icon={Workflow} />
           <MetricCard label="Replay snapshots" value={String(replayableRuns)} icon={ListRestart} />
           <MetricCard label="Approvals logged" value={String(approvalEvents)} icon={ShieldCheck} />
           <MetricCard label="Blocked actions" value={String(blockedEvents)} icon={CircleAlert} />
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[340px_1fr]">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[300px_1fr]">
           <div>
             <Panel title="Run history" icon={FileClock}>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {runs.map((run) => (
                   <Link
                     key={run.id}
                     href={`/app/audit?run=${run.id}`}
                     className={cn(
-                      "block rounded-lg border p-4 transition hover:bg-[#f8faf5]",
-                      selectedRun?.id === run.id ? "border-[#2f6f60] bg-[#f8faf5]" : "border-black/10 bg-white",
+                      "block rounded-lg border p-3 transition",
+                      selectedRun?.id === run.id
+                        ? "border-[#0b2a4a] bg-[#f1f6fb]"
+                        : "border-black/10 bg-white hover:bg-[#f5f8fc]",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{run.workflows?.name ?? "Workflow run"}</p>
-                        <p className="mt-1 text-sm text-black/52">
-                          {run.tickets?.external_id ?? "Ticket"} · {run.tickets?.title ?? "No ticket title"}
-                        </p>
-                      </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold">{run.workflows?.name ?? "Workflow run"}</p>
                       <StatusPill status={run.status} />
                     </div>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
+                    <p className="mt-1 line-clamp-1 text-xs text-slate-500">
+                      {run.tickets?.external_id ?? "Ticket"} · {run.tickets?.title ?? "No ticket title"}
+                    </p>
+                    <p className="mt-2 text-xs font-medium text-slate-400">
                       {formatDate(run.created_at)} · {Number(run.confidence ?? 0)}% confidence
                     </p>
                   </Link>
                 ))}
                 {runs.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-black/15 bg-[#f8faf5] p-4 text-sm text-black/48">
+                  <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">
                     Workflow runs will appear here after a workflow is started.
                   </p>
                 )}
@@ -145,66 +145,66 @@ export default async function AuditPage({
             <Panel title="Workflow replay" icon={ListRestart}>
               {selectedRun ? (
                 <div>
-                  <div className="rounded-lg border border-black/10 bg-[#111713] p-5 text-white">
+                  <div className="rounded-lg border border-[#d8e4ee] bg-[#f1f6fb] p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
-                        <p className="text-sm text-white/48">Selected run</p>
-                        <h2 className="mt-1 text-xl font-semibold">{selectedRun.workflows?.name ?? "Workflow run"}</h2>
-                        <p className="mt-2 text-sm leading-6 text-white/62">
+                        <p className="text-xs font-medium text-slate-400">Selected run</p>
+                        <h2 className="mt-0.5 text-base font-semibold text-[#0b1a2e]">{selectedRun.workflows?.name ?? "Workflow run"}</h2>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">
                           {selectedRun.tickets?.external_id ?? "Ticket"} · {selectedRun.tickets?.title ?? "No ticket title"}
                         </p>
                       </div>
-                      <StatusPill status={selectedRun.status} dark />
+                      <StatusPill status={selectedRun.status} />
                     </div>
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                      <DarkFact label="Confidence" value={`${Number(selectedRun.confidence ?? 0)}%`} />
-                      <DarkFact label="Started" value={formatDate(selectedRun.started_at ?? selectedRun.created_at)} />
-                      <DarkFact label="Snapshot" value={selectedRun.replay_snapshot?.replayable ? "Replayable" : "Recorded"} />
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      <Fact label="Confidence" value={`${Number(selectedRun.confidence ?? 0)}%`} />
+                      <Fact label="Started" value={formatDate(selectedRun.started_at ?? selectedRun.created_at)} />
+                      <Fact label="Snapshot" value={selectedRun.replay_snapshot?.replayable ? "Replayable" : "Recorded"} />
                     </div>
                   </div>
 
-                  <div className="mt-5 space-y-4">
+                  <div className="mt-4 space-y-3">
                     {(steps ?? []).map((step, index) => (
-                      <div key={step.id} className="grid grid-cols-[40px_1fr] gap-4">
+                      <div key={step.id} className="grid grid-cols-[36px_1fr] gap-3">
                         <div className="flex flex-col items-center">
                           <span
                             className={cn(
-                              "flex size-10 items-center justify-center rounded-lg border bg-white",
+                              "flex size-9 items-center justify-center rounded-lg border bg-white",
                               stepStyles[step.status] ?? "border-zinc-200 text-zinc-700",
                             )}
                           >
                             {step.status === "succeeded" ? (
-                              <CheckCircle2 size={18} />
+                              <CheckCircle2 size={16} />
                             ) : step.status === "failed" || step.status === "blocked" ? (
-                              <XCircle size={18} />
+                              <XCircle size={16} />
                             ) : (
-                              <Clock3 size={18} />
+                              <Clock3 size={16} />
                             )}
                           </span>
-                          {index !== (steps ?? []).length - 1 && <span className="mt-2 h-12 w-px bg-black/10" />}
+                          {index !== (steps ?? []).length - 1 && <span className="mt-1 h-10 w-px bg-black/10" />}
                         </div>
-                        <div className="rounded-lg border border-black/10 bg-white p-4">
-                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                            <p className="font-semibold">{step.name}</p>
-                            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-black/38">
+                        <div className="rounded-lg border border-black/10 bg-white p-3">
+                          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                            <p className="text-sm font-semibold">{step.name}</p>
+                            <span className="text-xs font-medium text-slate-400">
                               {step.actor_type} · {step.status}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm leading-6 text-black/55">
+                          <p className="mt-1 text-sm leading-6 text-slate-500">
                             {step.output?.detail ?? step.error_message ?? "Execution step recorded."}
                           </p>
                         </div>
                       </div>
                     ))}
                     {(steps ?? []).length === 0 && (
-                      <p className="rounded-lg border border-dashed border-black/15 bg-[#f8faf5] p-4 text-sm text-black/48">
+                      <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">
                         No replay steps are attached to this workflow run.
                       </p>
                     )}
                   </div>
                 </div>
               ) : (
-                <p className="rounded-lg border border-dashed border-black/15 bg-[#f8faf5] p-4 text-sm text-black/48">
+                <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">
                   Start a workflow to generate replay history.
                 </p>
               )}
@@ -212,15 +212,15 @@ export default async function AuditPage({
 
             <section className="grid gap-5 lg:grid-cols-2">
               <Panel title="Run policies" icon={ShieldCheck}>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {(runPolicies ?? []).map((policy) => (
-                    <div key={policy.id} className="rounded-lg border border-black/10 p-4">
-                      <p className="font-semibold">{titleCase(policy.decision.replaceAll("_", " "))}</p>
-                      <p className="mt-1 text-sm leading-6 text-black/55">{policy.reason}</p>
+                    <div key={policy.id} className="rounded-lg border border-black/10 p-3">
+                      <p className="text-sm font-semibold">{titleCase(policy.decision.replaceAll("_", " "))}</p>
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{policy.reason}</p>
                     </div>
                   ))}
                   {(runPolicies ?? []).length === 0 && (
-                    <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
+                    <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">
                       No policy decisions tied to this run.
                     </p>
                   )}
@@ -228,18 +228,16 @@ export default async function AuditPage({
               </Panel>
 
               <Panel title="Execution actions" icon={GitBranch}>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {(actions ?? []).map((action) => (
-                    <div key={action.id} className="rounded-lg border border-black/10 p-4">
-                      <p className="font-semibold">{action.integration_key}</p>
-                      <p className="mt-1 text-sm text-black/52">{action.action_key}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-black/38">
-                        {action.status}
-                      </p>
+                    <div key={action.id} className="rounded-lg border border-black/10 p-3">
+                      <p className="text-sm font-semibold">{action.integration_key}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{action.action_key}</p>
+                      <p className="mt-1.5 text-xs font-medium text-slate-400">{action.status}</p>
                     </div>
                   ))}
                   {(actions ?? []).length === 0 && (
-                    <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">
+                    <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">
                       Provider-level actions will appear when integrations return execution output.
                     </p>
                   )}
@@ -248,13 +246,13 @@ export default async function AuditPage({
             </section>
 
             <Panel title="Audit stream" icon={Bot}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
+              <div className="divide-y divide-black/[0.06] rounded-lg border border-black/10">
                 {([...((runAudits ?? []).length ? runAudits ?? [] : auditRows)]).map((log) => (
-                  <div key={log.id} className="grid gap-3 p-3 md:grid-cols-[100px_1fr]">
-                    <span className="text-xs font-semibold text-black/42">{formatDate(log.created_at)}</span>
+                  <div key={log.id} className="grid gap-2 p-3 md:grid-cols-[96px_1fr]">
+                    <span className="text-xs font-medium text-slate-400">{formatDate(log.created_at)}</span>
                     <div>
-                      <p className="font-semibold">{log.event_summary}</p>
-                      <p className="mt-1 text-sm text-black/50">
+                      <p className="text-sm font-semibold">{log.event_summary}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">
                         {log.agents?.name ?? "TicketOS"} · {titleCase(log.event_type.replaceAll("_", " "))} ·{" "}
                         {log.tickets?.external_id ?? "workspace"}
                       </p>
@@ -262,7 +260,7 @@ export default async function AuditPage({
                   </div>
                 ))}
                 {auditRows.length === 0 && (
-                  <p className="p-4 text-sm text-black/48">Audit events will appear as operators and agents act.</p>
+                  <p className="p-3 text-sm text-slate-500">Audit events will appear as operators and agents act.</p>
                 )}
               </div>
             </Panel>
@@ -284,13 +282,13 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={16} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -308,43 +306,35 @@ function Panel({
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={16} />
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
   );
 }
 
-function StatusPill({ status, dark = false }: { status: string; dark?: boolean }) {
+function StatusPill({ status }: { status: string }) {
   const className =
     status === "running"
-      ? dark
-        ? "border-sky-300/30 bg-sky-300/12 text-sky-100"
-        : "border-sky-200 bg-sky-50 text-sky-700"
+      ? "border-sky-200 bg-sky-50 text-sky-700"
       : status === "succeeded"
-        ? dark
-          ? "border-emerald-300/30 bg-emerald-300/12 text-emerald-100"
-          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
         : status === "blocked" || status === "failed"
-          ? dark
-            ? "border-rose-300/30 bg-rose-300/12 text-rose-100"
-            : "border-rose-200 bg-rose-50 text-rose-700"
-          : dark
-            ? "border-white/15 bg-white/8 text-white/72"
-            : "border-zinc-200 bg-zinc-50 text-zinc-700";
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : "border-zinc-200 bg-zinc-50 text-zinc-700";
 
-  return <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", className)}>{status}</span>;
+  return <span className={cn("shrink-0 rounded-md border px-2 py-0.5 text-xs font-semibold", className)}>{status}</span>;
 }
 
-function DarkFact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[.06] p-3">
-      <p className="text-xs text-white/38">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-white">{value}</p>
+    <div className="rounded-lg border border-black/10 bg-white p-3">
+      <p className="text-xs text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-700">{value}</p>
     </div>
   );
 }

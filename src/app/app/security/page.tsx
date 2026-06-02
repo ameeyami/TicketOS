@@ -114,7 +114,7 @@ export default async function SecurityPage() {
   const highRiskActions = actions.filter((action) => action.risk_level === "high").length;
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-5 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Governance" }, { label: "Security" }]}
@@ -123,84 +123,83 @@ export default async function SecurityPage() {
           actions={
             <Link
               href="/app/policies"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
             >
+              <ShieldAlert size={15} />
               Policies
-              <ShieldAlert size={16} />
             </Link>
           }
         />
 
-        <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Risk tickets" value={String(securityTickets.length)} icon={LockKeyhole} />
           <MetricCard label="Blocked" value={String(blockedTickets)} icon={XCircle} />
           <MetricCard label="High-risk actions" value={String(highRiskActions)} icon={CircleAlert} />
           <MetricCard label="Reviews" value={String(pendingSecurityReviews)} icon={BadgeCheck} />
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
-          <div className="space-y-4">
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
+          <div className="space-y-3">
             {securityTickets.map((ticket) => (
-              <article key={ticket.id} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Pill className={priorityStyles[ticket.priority] ?? priorityStyles.medium}>{ticket.priority}</Pill>
-                      <Pill>{ticket.status.replaceAll("_", " ")}</Pill>
-                      <Pill>{ticket.category ?? "Security"}</Pill>
-                    </div>
-                    <h2 className="mt-3 text-xl font-semibold tracking-tight">{ticket.title}</h2>
-                    <p className="mt-2 max-w-3xl text-sm leading-6 text-black/55">
-                      {ticket.ai_summary ?? "Security signal captured from ticket, policy, or workflow context."}
-                    </p>
-                  </div>
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-black/38">
+              <article key={ticket.id} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Pill className={priorityStyles[ticket.priority] ?? priorityStyles.medium}>{ticket.priority}</Pill>
+                  <Pill>{ticket.status.replaceAll("_", " ")}</Pill>
+                  <Pill>{ticket.category ?? "Security"}</Pill>
+                  <span className="ml-auto text-xs font-medium text-slate-400">
                     {ticket.external_id ?? "Ticket"} · {formatDate(ticket.created_at)}
                   </span>
                 </div>
 
-                <div className="mt-5 grid gap-3 md:grid-cols-4">
-                  <Fact label="Requester" value={ticket.requester_name ?? ticket.requester_email ?? "Unknown"} />
-                  <Fact label="Confidence" value={`${Math.round((ticket.ai_confidence ?? 0) * 100)}%`} />
-                  <Fact label="Risk" value={riskLabel(ticket)} />
-                  <Fact label="Next step" value={ticket.status === "blocked" ? "Human review" : "Monitor"} />
+                <h2 className="mt-2.5 text-base font-semibold tracking-tight">{ticket.title}</h2>
+                <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">
+                  {ticket.ai_summary ?? "Security signal captured from ticket, policy, or workflow context."}
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+                  <Meta label="Requester" value={ticket.requester_name ?? ticket.requester_email ?? "Unknown"} />
+                  <Meta label="Confidence" value={`${Math.round((ticket.ai_confidence ?? 0) * 100)}%`} />
+                  <Meta label="Risk" value={riskLabel(ticket)} />
+                  <Meta label="Next" value={ticket.status === "blocked" ? "Human review" : "Monitor"} />
                 </div>
 
-                <div className="mt-5 grid gap-3 lg:grid-cols-2">
-                  <form action={acknowledgeSecurityRisk} className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
+                <div className="mt-3 flex flex-col gap-2 border-t border-black/[0.06] pt-3 sm:flex-row sm:items-center">
+                  <form action={acknowledgeSecurityRisk} className="flex flex-1 items-center gap-2">
                     <input type="hidden" name="organizationId" value={organization.id} />
                     <input type="hidden" name="ticketId" value={ticket.id} />
                     <input type="hidden" name="title" value={ticket.external_id ?? ticket.title} />
-                    <textarea
+                    <input
                       name="note"
-                      rows={3}
-                      placeholder="Optional acknowledgement note..."
-                      className="w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none"
+                      placeholder="Acknowledgement note (optional)"
+                      className="h-9 min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none placeholder:text-black/30 focus:border-[#0b2a4a]"
                     />
-                    <PendingButton pendingText="Logging..." className="mt-3 h-10 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white">
-                      <ShieldCheck size={16} />
+                    <PendingButton
+                      pendingText="..."
+                      className="h-9 shrink-0 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+                    >
+                      <ShieldCheck size={15} />
                       Acknowledge
                     </PendingButton>
                   </form>
 
-                  <form action={requestSecurityReview} className="rounded-lg border border-black/10 bg-white p-4">
+                  <form action={requestSecurityReview} className="flex items-center gap-2">
                     <input type="hidden" name="organizationId" value={organization.id} />
                     <input type="hidden" name="ticketId" value={ticket.id} />
                     <input type="hidden" name="title" value={ticket.external_id ?? ticket.title} />
-                    <div className="grid gap-3 sm:grid-cols-[.55fr_1fr]">
-                      <select name="severity" defaultValue={ticket.priority === "critical" ? "critical" : "high"} className="h-10 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold outline-none">
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                      </select>
-                      <input
-                        name="note"
-                        placeholder="Optional review note"
-                        className="h-10 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none"
-                      />
-                    </div>
-                    <PendingButton pendingText="Requesting..." className="mt-3 h-10 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#17211c]">
-                      Request security review
+                    <select
+                      name="severity"
+                      defaultValue={ticket.priority === "critical" ? "critical" : "high"}
+                      className="h-9 rounded-lg border border-black/10 bg-white px-2 text-sm font-semibold outline-none"
+                    >
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                    <PendingButton
+                      pendingText="..."
+                      className="h-9 shrink-0 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#0b2a4a]"
+                    >
+                      Request review
                     </PendingButton>
                   </form>
                 </div>
@@ -209,46 +208,46 @@ export default async function SecurityPage() {
 
             {securityTickets.length === 0 && (
               <div className="rounded-xl border border-dashed border-black/15 bg-white p-8 text-center">
-                <ShieldCheck size={28} className="mx-auto text-[#2f6f60]" />
+                <ShieldCheck size={26} className="mx-auto text-[#0b5f91]" />
                 <p className="mt-3 font-semibold">No active security risks.</p>
-                <p className="mt-2 text-sm text-black/52">Blocked tickets, critical requests, and security policy hits will appear here.</p>
+                <p className="mt-1 text-sm text-slate-500">Blocked tickets, critical requests, and policy hits will appear here.</p>
               </div>
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             <Panel title="High-risk actions" icon={Workflow}>
-              <div className="divide-y divide-black/8 rounded-lg border border-black/10">
+              <div className="space-y-2">
                 {actions.map((action) => (
-                  <div key={action.id} className="p-4">
-                    <p className="font-semibold">{action.display_name}</p>
-                    <p className="mt-1 text-sm text-black/48">
-                      {one(action.integrations)?.display_name ?? "Integration"} · {action.action_key}
-                    </p>
-                    <div className="mt-3 flex gap-2">
+                  <div key={action.id} className="rounded-lg border border-black/10 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">{action.display_name}</p>
                       <Pill className={priorityStyles[action.risk_level] ?? priorityStyles.medium}>{action.risk_level}</Pill>
-                      {action.requires_approval && <Pill>approval</Pill>}
                     </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {one(action.integrations)?.display_name ?? "Integration"} · {action.action_key}
+                      {action.requires_approval && " · approval"}
+                    </p>
                   </div>
                 ))}
-                {actions.length === 0 && <p className="p-4 text-sm text-black/48">No high-risk integration actions configured.</p>}
+                {actions.length === 0 && <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">No high-risk integration actions configured.</p>}
               </div>
             </Panel>
 
             <Panel title="Policy decisions" icon={ShieldAlert}>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {evaluations.slice(0, 6).map((evaluation) => (
-                  <div key={evaluation.id} className="rounded-lg border border-black/10 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="font-semibold">{one(evaluation.policy_rules)?.name ?? "Runtime policy"}</p>
+                  <div key={evaluation.id} className="rounded-lg border border-black/10 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold">{one(evaluation.policy_rules)?.name ?? "Runtime policy"}</p>
                       <Pill className={decisionStyles[evaluation.decision] ?? "border-zinc-200 bg-zinc-50 text-zinc-700"}>
                         {evaluation.decision.replaceAll("_", " ")}
                       </Pill>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-black/52">{evaluation.reason ?? "Policy decision recorded."}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{evaluation.reason ?? "Policy decision recorded."}</p>
                   </div>
                 ))}
-                {evaluations.length === 0 && <p className="rounded-lg border border-dashed border-black/15 p-4 text-sm text-black/48">Policy stops will appear here.</p>}
+                {evaluations.length === 0 && <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">Policy stops will appear here.</p>}
               </div>
             </Panel>
           </div>
@@ -261,13 +260,13 @@ export default async function SecurityPage() {
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -277,29 +276,28 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={16} />
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-black/70">{value}</p>
-    </div>
+    <span>
+      <span className="text-slate-400">{label}:</span> <span className="font-semibold text-slate-600">{value}</span>
+    </span>
   );
 }
 
 function Pill({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <span className={cn("rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/52", className)}>
+    <span className={cn("rounded-md border border-black/10 bg-white px-2 py-0.5 text-xs font-semibold text-black/52", className)}>
       {children}
     </span>
   );
