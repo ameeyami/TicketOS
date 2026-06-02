@@ -12,6 +12,12 @@ import { cn } from "@/lib/utils";
 
 export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; aiKeyConnected: boolean }) {
   const primaryMetrics = data.metrics.slice(0, 3);
+  const hasFilter = Boolean(data.filters.query) || data.filters.view === "approvals";
+  // The full ticket list lives on the inbox. On the dashboard, show only the
+  // requests actually waiting on a person (skip ones already resolving).
+  const attentionTickets = hasFilter
+    ? data.tickets
+    : data.tickets.filter((ticket) => ticket.status !== "Resolving").slice(0, 5);
 
   return (
     <div className="ticketos-dashboard-content">
@@ -79,7 +85,7 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
             </div>
             <div className="mt-4 space-y-3">
               {data.agents.slice(0, 3).map((agent) => (
-                <Link key={agent.name} href="/app/agents" className="block rounded-md border border-white/10 bg-white/[0.06] p-3">
+                <Link key={agent.name} href="/app/autonomy" className="block rounded-md border border-white/10 bg-white/[0.06] p-3">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-semibold">{agent.name}</p>
                     <span className="text-xs text-white/58">{agent.state}</span>
@@ -96,13 +102,15 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
         <div className="rounded-lg border border-black/10 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
             <div>
-              <h2 className="font-semibold">Service queue</h2>
+              <h2 className="font-semibold">{hasFilter ? "Service queue" : "Needs your attention"}</h2>
               <p className="mt-1 text-sm text-slate-500">
                 {data.filters.query
                   ? `Search results for "${data.filters.query}"`
                   : data.filters.view === "approvals"
                     ? "Requests waiting on approval"
-                    : `${data.tickets.length} active requests`}
+                    : attentionTickets.length
+                      ? `${attentionTickets.length} request${attentionTickets.length === 1 ? "" : "s"} waiting on a person`
+                      : "Queue is clear"}
               </p>
             </div>
             <Link href="/app/tickets" className="inline-flex h-9 items-center gap-2 rounded-md border border-black/10 px-3 text-sm font-semibold">
@@ -112,7 +120,7 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
           </div>
 
           <div className="divide-y divide-black/8">
-            {data.tickets.map((ticket) => {
+            {attentionTickets.map((ticket) => {
               const TicketIcon = ticketIcons[ticket.category as keyof typeof ticketIcons] ?? ticketIcons.Default;
 
               return (
@@ -144,6 +152,13 @@ export function CommandCenter({ data, aiKeyConnected }: { data: DashboardData; a
                 </div>
               );
             })}
+
+            {attentionTickets.length === 0 && (
+              <div className="px-4 py-10 text-center">
+                <p className="text-sm font-semibold text-[#07111f]">Queue is clear</p>
+                <p className="mt-1 text-sm text-slate-500">Nothing is waiting on a person right now.</p>
+              </div>
+            )}
           </div>
         </div>
 

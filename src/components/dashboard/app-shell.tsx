@@ -4,7 +4,6 @@ import {
   Activity,
   BadgeCheck,
   Bell,
-  Bot,
   Building2,
   Cable,
   ChartNoAxesColumn,
@@ -12,7 +11,6 @@ import {
   FileText,
   GitBranch,
   KeyRound,
-  LockKeyhole,
   MessageSquareText,
   MessagesSquare,
   Search,
@@ -63,7 +61,6 @@ const teams = [
     initial: "G",
     tone: "bg-[#efeaff] text-[#5b4bc4]",
     links: [
-      { label: "Security", href: "/app/security", icon: LockKeyhole },
       { label: "Policies", href: "/app/policies", icon: ShieldCheck },
       { label: "Costs", href: "/app/costs", icon: Wallet },
       { label: "Reports", href: "/app/reports", icon: FileText },
@@ -77,7 +74,6 @@ const utilityTeam = {
   initial: "•",
   tone: "bg-[#eef1f5] text-[#5b6b7e]",
   links: [
-    { label: "Agents", href: "/app/agents", icon: Bot },
     { label: "Copilot", href: "/app/copilot", icon: Sparkles },
     { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
     { label: "People", href: "/app/people", icon: UserRound },

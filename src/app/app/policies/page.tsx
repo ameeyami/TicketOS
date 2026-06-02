@@ -26,6 +26,23 @@ const decisionStyles: Record<string, string> = {
   block: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
+const riskStyles: Record<string, string> = {
+  high: "border-rose-200 bg-rose-50 text-rose-700",
+  medium: "border-sky-200 bg-sky-50 text-sky-700",
+  low: "border-zinc-200 bg-zinc-50 text-zinc-700",
+};
+
+type Relation<T> = T | T[] | null;
+
+type IntegrationActionRow = {
+  id: string;
+  display_name: string;
+  action_key: string;
+  risk_level: string;
+  requires_approval: boolean;
+  integrations?: Relation<{ display_name: string | null }>;
+};
+
 export default async function PoliciesPage() {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -35,7 +52,7 @@ export default async function PoliciesPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: policies }, { data: evaluations }] = await Promise.all([
+  const [{ data: policies }, { data: evaluations }, { data: highRiskActions }] = await Promise.all([
     supabase
       .from("policy_rules")
       .select("*")
@@ -47,10 +64,18 @@ export default async function PoliciesPage() {
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("integration_actions")
+      .select("id, display_name, action_key, risk_level, requires_approval, integrations(display_name)")
+      .eq("organization_id", organization.id)
+      .or("risk_level.eq.high,requires_approval.eq.true")
+      .order("risk_level", { ascending: false })
+      .limit(12),
   ]);
 
   const policyRows = policies ?? [];
   const evaluationRows = evaluations ?? [];
+  const highRiskActionRows = (highRiskActions ?? []) as unknown as IntegrationActionRow[];
   const activePolicies = policyRows.filter((policy) => policy.is_active).length;
   const approvalPolicies = policyRows.filter((policy) => policy.decision === "approval_required").length;
   const blockPolicies = policyRows.filter((policy) => policy.decision === "block").length;
@@ -208,9 +233,46 @@ export default async function PoliciesPage() {
             )}
           </div>
         </ActionDrawer>
+
+        <ActionDrawer title="High-risk actions" icon={<ShieldAlert size={17} />} className="mt-5">
+          <div className="divide-y divide-black/8 rounded-lg border border-black/10 bg-white">
+            {highRiskActionRows.map((action) => (
+              <div key={action.id} className="grid gap-2 p-4 md:grid-cols-[1fr_auto] md:items-center">
+                <div>
+                  <p className="font-semibold">{action.display_name}</p>
+                  <p className="mt-1 text-sm text-black/52">
+                    {one(action.integrations)?.display_name ?? "Integration"} · {action.action_key}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "rounded-md border px-2 py-1 text-xs font-semibold",
+                      riskStyles[action.risk_level] ?? riskStyles.medium,
+                    )}
+                  >
+                    {action.risk_level}
+                  </span>
+                  {action.requires_approval && (
+                    <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-black/52">
+                      approval
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {highRiskActionRows.length === 0 && (
+              <p className="p-4 text-sm text-black/48">No high-risk integration actions configured.</p>
+            )}
+          </div>
+        </ActionDrawer>
       </div>
     </main>
   );
+}
+
+function one<T>(value: Relation<T>) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function PolicyStat({ label, value }: { label: string; value: string }) {
