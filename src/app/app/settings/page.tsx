@@ -66,7 +66,7 @@ export default async function SettingsPage() {
   const approvalRequired = latestControls.approval_required !== false;
 
   return (
-    <main className="min-h-screen bg-[#f6f7f2] px-4 py-6 text-[#151914] md:px-8">
+    <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
       <div className="mx-auto max-w-6xl">
         <PageHeader
           crumbs={[{ label: "Settings" }]}
@@ -75,15 +75,15 @@ export default async function SettingsPage() {
           actions={
             <Link
               href="/app/audit"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17211c] px-3 text-sm font-semibold text-white"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
             >
               Audit
-              <FileText size={16} />
+              <FileText size={15} />
             </Link>
           }
         />
 
-        <section className="mt-6 grid gap-3 md:grid-cols-4">
+        <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Role" value={membership?.role ?? "operator"} icon={ShieldCheck} />
           <MetricCard label="Mode" value={modeLabels[autonomyMode] ?? "Approval first"} icon={SlidersHorizontal} />
           <MetricCard label="Min confidence" value={`${confidenceThreshold}%`} icon={Gauge} />
@@ -102,7 +102,7 @@ export default async function SettingsPage() {
                     defaultValue={organization.name}
                     required
                     disabled={!canManage}
-                    className="mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#2f6f60] focus:ring-4 focus:ring-[#2f6f60]/10 disabled:bg-black/5"
+                    className="mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10 disabled:bg-black/5"
                   />
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -112,7 +112,7 @@ export default async function SettingsPage() {
                 <PendingButton
                   pendingText="Saving..."
                   disabled={!canManage}
-                  className="h-10 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                  className="h-10 rounded-lg bg-[#0b2a4a] px-4 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:opacity-50"
                 >
                   Save workspace
                 </PendingButton>
@@ -183,7 +183,7 @@ export default async function SettingsPage() {
                       name="approvalRequired"
                       defaultChecked={approvalRequired}
                       disabled={!canManage}
-                      className="size-4 accent-[#2f6f60]"
+                      className="size-4 accent-[#0b2a4a]"
                     />
                     Require approval for risky actions
                   </label>
@@ -198,7 +198,7 @@ export default async function SettingsPage() {
                 <PendingButton
                   pendingText="Updating..."
                   disabled={!canManage}
-                  className="h-10 rounded-lg bg-[#17211c] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                  className="h-10 rounded-lg bg-[#0b2a4a] px-4 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:opacity-50"
                 >
                   Update controls
                 </PendingButton>
@@ -210,12 +210,12 @@ export default async function SettingsPage() {
                 {logs.map((log) => (
                   <div key={log.id} className="p-4">
                     <p className="font-semibold">{log.event_summary}</p>
-                    <p className="mt-1 text-sm text-black/48">
+                    <p className="mt-1 text-sm text-slate-500">
                       {log.event_type.replaceAll("_", " ")} · {formatDate(log.created_at)}
                     </p>
                   </div>
                 ))}
-                {logs.length === 0 && <p className="p-4 text-sm text-black/48">Settings changes will appear here.</p>}
+                {logs.length === 0 && <p className="p-4 text-sm text-slate-500">Settings changes will appear here.</p>}
               </div>
             </Panel>
           </div>
@@ -227,14 +227,14 @@ export default async function SettingsPage() {
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-black/52">{label}</p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-11 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={20} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={17} />
         </span>
       </div>
     </div>
@@ -243,12 +243,12 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
 
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef5ea] text-[#2e6658]">
-          <Icon size={18} />
+    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+          <Icon size={15} />
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
       </div>
       {children}
     </div>
@@ -257,9 +257,9 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIco
 
 function ReadOnlyFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-black/10 bg-[#f8faf5] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/38">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-black/70">{value}</p>
+    <div className="rounded-lg border border-black/10 bg-[#f5f8fc] p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-slate-700">{value}</p>
     </div>
   );
 }

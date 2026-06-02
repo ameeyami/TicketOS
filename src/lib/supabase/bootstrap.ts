@@ -324,6 +324,13 @@ function filterTickets<T extends { title: string; ai_summary: string | null; des
   return filtered;
 }
 
+// Older workspaces were created with this hardcoded name before the default
+// was fixed. Self-heal it to the product brand on next load so emails and the
+// app header stop showing the stale value. Safe + one-time: it only triggers
+// on this exact legacy string, so any later rename in Settings sticks.
+const LEGACY_DEFAULT_WORKSPACE_NAME = "Amee Labs";
+const DEFAULT_WORKSPACE_BRAND = "TicketOS";
+
 export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
   const { data: existingMembership } = await supabase
     .from("organization_members")
@@ -334,7 +341,19 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
 
   const existingOrganization = existingMembership?.organizations;
   if (existingOrganization) {
-    return Array.isArray(existingOrganization) ? existingOrganization[0] : existingOrganization;
+    const org = Array.isArray(existingOrganization) ? existingOrganization[0] : existingOrganization;
+
+    if (org?.name === LEGACY_DEFAULT_WORKSPACE_NAME) {
+      const { error } = await supabase
+        .from("organizations")
+        .update({ name: DEFAULT_WORKSPACE_BRAND })
+        .eq("id", org.id);
+      if (!error) {
+        return { ...org, name: DEFAULT_WORKSPACE_BRAND };
+      }
+    }
+
+    return org;
   }
 
   const fullName = readFullName(user);
