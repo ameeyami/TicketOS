@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, FileText, Sheet, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Download, FileText, Sheet, ShieldCheck, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -15,6 +15,9 @@ const statusLabels: Record<string, string> = {
   failed: "Failed",
   blocked: "Blocked",
 };
+
+const selectClass =
+  "h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold outline-none focus:border-[#0b2a4a]";
 
 export default async function ReportsPage() {
   const supabase = await createSupabaseServerClient();
@@ -97,27 +100,69 @@ export default async function ReportsPage() {
           crumbs={[{ label: "Governance" }, { label: "Reports" }]}
           title="Reports"
           description={reportDate}
-          actions={
-            <div className="flex items-center gap-2">
-              <a
-                href="/app/reports/export?format=csv"
-                download
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#0b2a4a] transition hover:bg-black/[0.04]"
-              >
-                <Sheet size={15} />
-                CSV
-              </a>
-              <a
-                href="/app/reports/export?format=pdf"
-                download
-                className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
-              >
-                <FileText size={15} />
-                PDF
-              </a>
-            </div>
-          }
         />
+
+        <form method="get" action="/app/reports/export" className="mb-5 rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+              <Download size={15} />
+            </span>
+            <h2 className="text-sm font-semibold">Download a report</h2>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-slate-500">Report</span>
+              <select name="type" defaultValue="tickets" className={selectClass}>
+                <option value="tickets">Ticket detail</option>
+                <option value="summary">Summary only</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-slate-500">Status</span>
+              <select name="status" defaultValue="all" className={selectClass}>
+                <option value="all">All statuses</option>
+                <option value="open">Open</option>
+                <option value="resolved">Resolved</option>
+                <option value="blocked">Blocked or failed</option>
+                <option value="approval">Needs approval</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-slate-500">Time range</span>
+              <select name="range" defaultValue="0" className={selectClass}>
+                <option value="0">All time</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              name="format"
+              value="csv"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#0b2a4a] transition hover:bg-black/[0.04]"
+            >
+              <Sheet size={15} />
+              Download CSV
+            </button>
+            <button
+              type="submit"
+              name="format"
+              value="pdf"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f]"
+            >
+              <FileText size={15} />
+              Download PDF
+            </button>
+            <p className="ml-auto hidden text-xs text-slate-400 md:block">
+              Ticket detail includes date created, SLA, status, assignee &amp; more.
+            </p>
+          </div>
+        </form>
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {highlights.map((item) => (

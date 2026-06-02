@@ -1,5 +1,5 @@
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
-import { reportToCsv, reportToPdf, type Report } from "@/lib/reports/export";
+import { reportToCsv, reportToPdf, type Report, type ReportTable } from "@/lib/reports/export";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const statusLabels: Record<string, string> = {
@@ -10,6 +10,24 @@ const statusLabels: Record<string, string> = {
   resolved: "Resolved",
   failed: "Failed",
   blocked: "Blocked",
+};
+
+const slaHours: Record<string, number> = { critical: 2, high: 8, medium: 24, low: 72 };
+
+type TicketRow = {
+  id: string;
+  external_id: string | null;
+  title: string;
+  status: string;
+  priority: string;
+  category: string | null;
+  requester_name: string | null;
+  requester_email: string | null;
+  ai_confidence: number | null;
+  assigned_agent_id: string | null;
+  created_at: string;
+  resolved_at: string | null;
+  agents?: { name: string | null } | { name: string | null }[] | null;
 };
 
 function percent(part: number, total: number) {
@@ -23,8 +41,31 @@ function titleCase(value: string) {
     .join(" ");
 }
 
+function formatDate(value: string | null | undefined) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString([], { month: "short", day: "numeric", year: "numeric" });
+}
+
+function agentName(row: TicketRow): string {
+  const rel = Array.isArray(row.agents) ? row.agents[0] : row.agents;
+  return rel?.name ?? (row.assigned_agent_id ? "Assigned" : "Unassigned");
+}
+
+function slaLabel(row: TicketRow): string {
+  if (row.status === "resolved") return "Met (resolved)";
+  const targetMs = (slaHours[row.priority] ?? 24) * 60 * 60 * 1000;
+  const ageMs = Date.now() - new Date(row.created_at).getTime();
+  const remainingMs = targetMs - ageMs;
+  const hours = Math.round(Math.abs(remainingMs) / (60 * 60 * 1000));
+  return remainingMs <= 0 ? `Breached (${hours}h over)` : `On track (${hours}h left)`;
+}
+
 export async function GET(request: Request) {
-  const format = new URL(request.url).searchParams.get("format") === "pdf" ? "pdf" : "csv";
+  const params = new URL(request.url).searchParams;
+  const format = params.get("format") === "pdf" ? "pdf" : "csv";
+  const type = params.get("type") === "tickets" ? "tickets" : "summary";
+  const statusFilter = params.get("status") ?? "all";
+  const rangeDays = Number(params.get("range") ?? "0");
 
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -36,68 +77,127 @@ export async function GET(request: Request) {
   const [{ data: tickets }, { data: workflowRuns }, { data: approvals }, { data: integrations }] = await Promise.all([
     supabase
       .from("tickets")
-      .select("id, status, category, ai_confidence, assigned_agent_id")
-      .eq("organization_id", organization.id),
+      .select(
+        "id, external_id, title, status, priority, category, requester_name, requester_email, ai_confidence, assigned_agent_id, created_at, resolved_at, agents(name)",
+      )
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false }),
     supabase.from("workflow_runs").select("id, status, ticket_id").eq("organization_id", organization.id),
     supabase.from("approval_requests").select("id, status").eq("organization_id", organization.id),
     supabase.from("integrations").select("id, status").eq("organization_id", organization.id),
   ]);
 
-  const ticketRows = tickets ?? [];
+  const allTickets = (tickets ?? []) as TicketRow[];
   const runRows = workflowRuns ?? [];
   const approvalRows = approvals ?? [];
   const integrationRows = integrations ?? [];
 
-  const blockedTickets = ticketRows.filter((t) => t.status === "blocked" || t.status === "failed").length;
+  // --- summary metrics (always included for context) ---
+  const blockedTickets = allTickets.filter((t) => t.status === "blocked" || t.status === "failed").length;
   const pendingApprovals = approvalRows.filter((a) => a.status === "pending").length;
-  const automatedTickets = ticketRows.filter(
+  const automatedTickets = allTickets.filter(
     (t) => t.assigned_agent_id || runRows.some((r) => r.ticket_id === t.id),
   ).length;
   const completedRuns = runRows.filter((r) => ["succeeded", "failed", "blocked", "cancelled"].includes(r.status));
   const successfulRuns = runRows.filter((r) => r.status === "succeeded").length;
   const connectedIntegrations = integrationRows.filter((i) => i.status === "connected").length;
-  const confidences = ticketRows.map((t) => Number(t.ai_confidence ?? 0)).filter((n) => Number.isFinite(n));
+  const confidences = allTickets.map((t) => Number(t.ai_confidence ?? 0)).filter((n) => Number.isFinite(n));
   const avgConfidence = confidences.length
     ? Math.round(confidences.reduce((sum, n) => sum + n, 0) / confidences.length)
     : 0;
 
-  const statusCounts = ticketRows.reduce<Record<string, number>>((acc, t) => {
-    const key = String(t.status ?? "unknown");
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {});
+  const summarySection = {
+    title: "Summary",
+    rows: [
+      { label: "Total tickets", value: String(allTickets.length) },
+      { label: "Automation coverage", value: `${percent(automatedTickets, allTickets.length)}% (${automatedTickets}/${allTickets.length})` },
+      { label: "Workflow success", value: `${percent(successfulRuns, completedRuns.length || runRows.length)}% (${successfulRuns} runs)` },
+      { label: "Avg AI confidence", value: `${avgConfidence}%` },
+      { label: "Connected apps", value: `${connectedIntegrations}/${integrationRows.length}` },
+      { label: "Pending approvals", value: String(pendingApprovals) },
+      { label: "Blocked or failed", value: String(blockedTickets) },
+    ],
+  };
+
+  // --- apply filters for the detailed table ---
+  const sinceMs = rangeDays > 0 ? Date.now() - rangeDays * 24 * 60 * 60 * 1000 : 0;
+  const matchesStatus = (t: TicketRow) => {
+    switch (statusFilter) {
+      case "open":
+        return t.status !== "resolved";
+      case "resolved":
+        return t.status === "resolved";
+      case "blocked":
+        return t.status === "blocked" || t.status === "failed";
+      case "approval":
+        return t.status === "approval_required";
+      default:
+        return true;
+    }
+  };
+  const filtered = allTickets.filter(
+    (t) => matchesStatus(t) && (sinceMs === 0 || new Date(t.created_at).getTime() >= sinceMs),
+  );
+
+  const rangeLabel = rangeDays > 0 ? `last ${rangeDays} days` : "all time";
+  const statusFilterLabel =
+    { open: "open", resolved: "resolved", blocked: "blocked/failed", approval: "needs approval" }[statusFilter] ??
+    "all statuses";
+
+  const sections = [summarySection];
+  let table: ReportTable | undefined;
+  let reportTitle = "TicketOS Operations Report";
+
+  if (type === "tickets") {
+    reportTitle = "TicketOS Ticket Report";
+    sections.push({
+      title: "Filters",
+      rows: [
+        { label: "Status", value: statusFilterLabel },
+        { label: "Time range", value: rangeLabel },
+        { label: "Tickets in report", value: String(filtered.length) },
+      ],
+    });
+    table = {
+      title: `Tickets (${filtered.length})`,
+      columns: ["Ticket ID", "Title", "Status", "Priority", "Category", "Assignee", "Requester", "Created", "SLA", "AI confidence"],
+      rows: filtered.map((t) => [
+        t.external_id ?? t.id.slice(0, 8),
+        t.title,
+        statusLabels[t.status] ?? titleCase(t.status.replaceAll("_", " ")),
+        t.priority,
+        t.category ?? "—",
+        agentName(t),
+        t.requester_name ?? t.requester_email ?? "—",
+        formatDate(t.created_at),
+        slaLabel(t),
+        `${Math.round(Number(t.ai_confidence ?? 0))}%`,
+      ]),
+    };
+  } else {
+    const statusCounts = allTickets.reduce<Record<string, number>>((acc, t) => {
+      const key = String(t.status ?? "unknown");
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+    sections.push({
+      title: "Ticket mix",
+      rows:
+        Object.keys(statusCounts).length > 0
+          ? Object.entries(statusCounts).map(([status, count]) => ({
+              label: statusLabels[status] ?? titleCase(status.replaceAll("_", " ")),
+              value: String(count),
+            }))
+          : [{ label: "No tickets yet", value: "0" }],
+    });
+  }
 
   const report: Report = {
     workspace: organization.name,
+    title: reportTitle,
     generatedAt: new Date().toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }),
-    sections: [
-      {
-        title: "Summary",
-        rows: [
-          { label: "Automation coverage", value: `${percent(automatedTickets, ticketRows.length)}% (${automatedTickets}/${ticketRows.length})` },
-          { label: "Workflow success", value: `${percent(successfulRuns, completedRuns.length || runRows.length)}% (${successfulRuns} runs)` },
-          { label: "Avg AI confidence", value: `${avgConfidence}%` },
-          { label: "Connected apps", value: `${connectedIntegrations}/${integrationRows.length}` },
-        ],
-      },
-      {
-        title: "Ticket mix",
-        rows:
-          Object.keys(statusCounts).length > 0
-            ? Object.entries(statusCounts).map(([status, count]) => ({
-                label: statusLabels[status] ?? titleCase(status.replaceAll("_", " ")),
-                value: String(count),
-              }))
-            : [{ label: "No tickets yet", value: "0" }],
-      },
-      {
-        title: "Needs attention",
-        rows: [
-          { label: "Pending approvals", value: String(pendingApprovals) },
-          { label: "Blocked or failed", value: String(blockedTickets) },
-        ],
-      },
-    ],
+    sections,
+    table,
   };
 
   // Best-effort audit trail; never block the download on it.
@@ -107,8 +207,8 @@ export async function GET(request: Request) {
       organization_id: organization.id,
       actor_user_id: userData.user.id,
       event_type: "report_exported",
-      event_summary: `Operations report exported (${format.toUpperCase()})`,
-      metadata: { source: "reports", format },
+      event_summary: `${type === "tickets" ? "Ticket" : "Summary"} report exported (${format.toUpperCase()})`,
+      metadata: { source: "reports", format, type, status: statusFilter, range: rangeLabel },
     })
     .then(
       () => undefined,
@@ -116,7 +216,7 @@ export async function GET(request: Request) {
     );
 
   const datestamp = new Date().toISOString().slice(0, 10);
-  const filename = `ticketos-report-${datestamp}`;
+  const filename = `ticketos-${type}-report-${datestamp}`;
 
   if (format === "pdf") {
     const pdf = new Uint8Array(reportToPdf(report));
