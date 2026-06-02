@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isEmailConfigured, sendEmail } from "@/lib/email/send";
+import { onboardingWelcomeEmail } from "@/lib/email/templates";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -17,6 +19,7 @@ export async function createOnboardingPlan(formData: FormData) {
   const deviceType = String(formData.get("deviceType") ?? "MacBook");
   const note = String(formData.get("note") ?? "").trim();
   const apps = formData.getAll("apps").map(String).filter(Boolean);
+  const notifyEmployee = formData.get("notifyEmployee") === "on";
 
   if (!employeeName || !employeeEmail || !managerEmail || !startDate) {
     throw new Error("Employee, manager, and start date are required.");
@@ -119,6 +122,47 @@ export async function createOnboardingPlan(formData: FormData) {
       description: `Review requested access before TicketOS provisions ${selectedApps}.`,
       status: "pending",
       due_at: startDate,
+    });
+  }
+
+  if (notifyEmployee && employeeEmail) {
+    let emailNote: string;
+    if (!isEmailConfigured()) {
+      emailNote = `Welcome email skipped — email delivery is not configured.`;
+    } else {
+      const template = onboardingWelcomeEmail({
+        employeeName,
+        workspace: organization.name,
+        startDate,
+        managerEmail,
+        apps: selectedApps,
+      });
+      const result = await sendEmail({
+        to: employeeEmail,
+        subject: template.subject,
+        html: template.html,
+        replyTo: managerEmail || undefined,
+      });
+      emailNote = result.sent
+        ? `Welcome email sent to ${employeeEmail}.`
+        : `Welcome email could not be sent (${result.error ?? result.reason}).`;
+    }
+
+    await supabase.from("audit_logs").insert({
+      organization_id: organization.id,
+      actor_user_id: userData.user.id,
+      actor_agent_id: agent?.id,
+      ticket_id: ticket.id,
+      event_type: "onboarding_email",
+      event_summary: emailNote,
+      metadata: { employee_email: employeeEmail },
+    });
+    await supabase.from("ticket_comments").insert({
+      organization_id: organization.id,
+      ticket_id: ticket.id,
+      author_user_id: userData.user.id,
+      body: emailNote,
+      metadata: { source: "onboarding_email" },
     });
   }
 

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isEmailConfigured, sendEmail } from "@/lib/email/send";
+import { passwordResetEmail } from "@/lib/email/templates";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -17,6 +19,7 @@ export async function createPasswordResetRun(formData: FormData) {
   const note = String(formData.get("note") ?? "").trim();
   const rotateSessions = formData.get("rotateSessions") === "on";
   const suspicious = formData.get("suspicious") === "on";
+  const notifyEmployee = formData.get("notifyEmployee") === "on";
 
   if (!employeeName || !employeeEmail || !requesterEmail) {
     throw new Error("Employee and requester details are required.");
@@ -120,6 +123,46 @@ export async function createPasswordResetRun(formData: FormData) {
       description: `Review identity and risk signals before TicketOS resets ${system}.`,
       status: "pending",
       due_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  if (notifyEmployee && employeeEmail) {
+    let emailNote: string;
+    if (!isEmailConfigured()) {
+      emailNote = `Reset email skipped — email delivery is not configured.`;
+    } else {
+      const template = passwordResetEmail({
+        employeeName,
+        workspace: organization.name,
+        system,
+        requiresApproval,
+      });
+      const result = await sendEmail({
+        to: employeeEmail,
+        subject: template.subject,
+        html: template.html,
+        replyTo: requesterEmail || undefined,
+      });
+      emailNote = result.sent
+        ? `Reset email sent to ${employeeEmail}.`
+        : `Reset email could not be sent (${result.error ?? result.reason}).`;
+    }
+
+    await supabase.from("audit_logs").insert({
+      organization_id: organization.id,
+      actor_user_id: userData.user.id,
+      actor_agent_id: agent?.id,
+      ticket_id: ticket.id,
+      event_type: "password_reset_email",
+      event_summary: emailNote,
+      metadata: { employee_email: employeeEmail, system },
+    });
+    await supabase.from("ticket_comments").insert({
+      organization_id: organization.id,
+      ticket_id: ticket.id,
+      author_user_id: userData.user.id,
+      body: emailNote,
+      metadata: { source: "password_reset_email" },
     });
   }
 

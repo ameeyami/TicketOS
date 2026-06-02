@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isEmailConfigured, sendEmail } from "@/lib/email/send";
+import { offboardingNoticeEmail } from "@/lib/email/templates";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -18,6 +20,7 @@ export async function createOffboardingRun(formData: FormData) {
   const note = String(formData.get("note") ?? "").trim();
   const apps = formData.getAll("apps").map(String).filter(Boolean);
   const legalHold = formData.get("legalHold") === "on";
+  const notifyEmployee = formData.get("notifyEmployee") === "on";
 
   if (!employeeName || !employeeEmail || !managerEmail || !lastDay) {
     throw new Error("Employee, manager, and last working day are required.");
@@ -126,6 +129,47 @@ export async function createOffboardingRun(formData: FormData) {
       description: `Approve revocation and data-preservation steps for ${selectedApps}.`,
       status: "pending",
       due_at: isEmergency ? new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() : lastDay,
+    });
+  }
+
+  if (notifyEmployee && employeeEmail) {
+    let emailNote: string;
+    if (!isEmailConfigured()) {
+      emailNote = `Offboarding email skipped — email delivery is not configured.`;
+    } else {
+      const template = offboardingNoticeEmail({
+        employeeName,
+        workspace: organization.name,
+        lastDay,
+        managerEmail,
+        apps: selectedApps,
+      });
+      const result = await sendEmail({
+        to: employeeEmail,
+        subject: template.subject,
+        html: template.html,
+        replyTo: managerEmail || undefined,
+      });
+      emailNote = result.sent
+        ? `Offboarding email sent to ${employeeEmail}.`
+        : `Offboarding email could not be sent (${result.error ?? result.reason}).`;
+    }
+
+    await supabase.from("audit_logs").insert({
+      organization_id: organization.id,
+      actor_user_id: userData.user.id,
+      actor_agent_id: agent?.id,
+      ticket_id: ticket.id,
+      event_type: "offboarding_email",
+      event_summary: emailNote,
+      metadata: { employee_email: employeeEmail },
+    });
+    await supabase.from("ticket_comments").insert({
+      organization_id: organization.id,
+      ticket_id: ticket.id,
+      author_user_id: userData.user.id,
+      body: emailNote,
+      metadata: { source: "offboarding_email" },
     });
   }
 
