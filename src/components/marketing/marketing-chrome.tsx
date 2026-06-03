@@ -5,7 +5,7 @@ import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 const navLinks = [
   ["Product", "/#features"],
   ["Integrations", "/#integrations"],
-  ["Governance", "/#security"],
+  ["Trust", "/trust"],
   ["Pricing", "/pricing"],
 ] as const;
 
@@ -40,6 +40,7 @@ export function MarketingFooter() {
         <TicketOSLogo markSize="sm" />
         <div className="flex items-center gap-6">
           <Link href="/pricing" className="transition hover:text-[#07111f]">Pricing</Link>
+          <Link href="/trust" className="transition hover:text-[#07111f]">Trust</Link>
           <Link href="/#features" className="transition hover:text-[#07111f]">Product</Link>
           <Link href="/auth/sign-in" className="transition hover:text-[#07111f]">Log in</Link>
         </div>

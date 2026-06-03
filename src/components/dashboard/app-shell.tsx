@@ -14,6 +14,7 @@ import {
   GitBranch,
   KeyRound,
   LifeBuoy,
+  Lock,
   MessageSquareText,
   MessagesSquare,
   Search,
@@ -74,6 +75,7 @@ const teams = [
       { label: "Reports", href: "/app/reports", icon: FileText },
       { label: "Executions", href: "/app/executions", icon: Undo2 },
       { label: "Audit", href: "/app/audit", icon: ChartNoAxesColumn },
+      { label: "Trust", href: "/trust", icon: Lock },
     ],
   },
 ];
