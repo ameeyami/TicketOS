@@ -2,6 +2,7 @@
 
 import {
   Activity,
+  AlertTriangle,
   BadgeCheck,
   Bell,
   BookOpen,
@@ -43,6 +44,7 @@ const teams = [
     tone: "bg-[#e7f0ff] text-[#0b5f91]",
     links: [
       { label: "Tickets", href: "/app/tickets", icon: MessageSquareText },
+      { label: "Incidents", href: "/app/incidents", icon: AlertTriangle },
       { label: "Ask", href: "/app/ask", icon: LifeBuoy },
       { label: "Knowledge", href: "/app/knowledge", icon: BookOpen },
       { label: "Channels", href: "/app/channels", icon: MessagesSquare },
