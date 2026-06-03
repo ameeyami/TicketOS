@@ -104,6 +104,41 @@ export async function saveWebhook(formData: FormData) {
   revalidatePath("/app/api-keys");
 }
 
+export async function enableWidget() {
+  if (!hasServiceRole()) return;
+  const { organization, userId } = await requireAdminOrg();
+  const admin = createSupabaseAdminClient();
+  const { data: org } = await admin.from("organizations").select("widget_key").eq("id", organization.id).maybeSingle();
+  const update: Record<string, unknown> = { widget_enabled: true };
+  if (!org?.widget_key) {
+    update.widget_key = `wgt_${randomBytes(18).toString("base64url")}`;
+  }
+  await admin.from("organizations").update(update).eq("id", organization.id);
+  await admin.from("audit_logs").insert({
+    organization_id: organization.id,
+    actor_user_id: userId,
+    event_type: "widget_enabled",
+    event_summary: "Self-service widget enabled",
+    metadata: { source: "api_keys" },
+  });
+  revalidatePath("/app/api-keys");
+}
+
+export async function disableWidget() {
+  if (!hasServiceRole()) return;
+  const { organization, userId } = await requireAdminOrg();
+  const admin = createSupabaseAdminClient();
+  await admin.from("organizations").update({ widget_enabled: false }).eq("id", organization.id);
+  await admin.from("audit_logs").insert({
+    organization_id: organization.id,
+    actor_user_id: userId,
+    event_type: "widget_disabled",
+    event_summary: "Self-service widget disabled",
+    metadata: { source: "api_keys" },
+  });
+  revalidatePath("/app/api-keys");
+}
+
 async function hasSecret(admin: ReturnType<typeof createSupabaseAdminClient>, orgId: string): Promise<boolean> {
   const { data } = await admin.from("organizations").select("webhook_secret").eq("id", orgId).maybeSingle();
   return Boolean(data?.webhook_secret);

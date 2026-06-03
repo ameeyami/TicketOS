@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { CheckCircle2, Code2, KeyRound, TriangleAlert, Webhook } from "lucide-react";
+import { CheckCircle2, Code2, KeyRound, MessageCircle, TriangleAlert, Webhook } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ApiKeyManager, type ApiKeyRow } from "@/app/app/api-keys/api-key-manager";
-import { saveWebhook } from "@/app/app/api-keys/actions";
+import { disableWidget, enableWidget, saveWebhook } from "@/app/app/api-keys/actions";
 import { createSupabaseAdminClient, hasServiceRole } from "@/lib/supabase/admin";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -35,6 +35,8 @@ export default async function ApiKeysPage() {
   let keys: ApiKeyRow[] = [];
   let webhookUrl = "";
   let hasWebhookSecret = false;
+  let widgetEnabled = false;
+  let widgetKey = "";
   if (enabled) {
     const admin = createSupabaseAdminClient();
     const [{ data: keyRows }, { data: org }] = await Promise.all([
@@ -43,12 +45,20 @@ export default async function ApiKeysPage() {
         .select("id, name, last_four, created_at, last_used_at, revoked_at")
         .eq("organization_id", organization.id)
         .order("created_at", { ascending: false }),
-      admin.from("organizations").select("webhook_url, webhook_secret").eq("id", organization.id).maybeSingle(),
+      admin
+        .from("organizations")
+        .select("webhook_url, webhook_secret, widget_enabled, widget_key")
+        .eq("id", organization.id)
+        .maybeSingle(),
     ]);
     keys = (keyRows ?? []) as ApiKeyRow[];
     webhookUrl = org?.webhook_url ?? "";
     hasWebhookSecret = Boolean(org?.webhook_secret);
+    widgetEnabled = Boolean(org?.widget_enabled);
+    widgetKey = org?.widget_key ?? "";
   }
+
+  const embedSnippet = `<script src="${origin}/api/widget/loader?key=${widgetKey}" async></script>`;
 
   const curl = `curl -X POST ${origin}/api/v1/tickets \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -155,6 +165,62 @@ export default async function ApiKeysPage() {
                 <code className="rounded bg-black/[0.04] px-1">GET {origin}/api/v1/tickets</code> lists recent tickets.
                 Tickets created via the API are AI-triaged on your workspace key, just like the in-app form.
               </p>
+            </section>
+
+            {/* Self-service widget */}
+            <section className="mt-4 rounded-xl border border-black/10 bg-white p-5 shadow-sm">
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+                    <MessageCircle size={15} />
+                  </span>
+                  <h2 className="text-sm font-semibold">Self-service widget</h2>
+                </div>
+                {enabled && widgetEnabled ? (
+                  <form action={disableWidget}>
+                    <PendingButton
+                      pendingText="..."
+                      className="h-8 rounded-md border border-rose-200 bg-white px-2.5 text-xs font-semibold text-rose-700"
+                    >
+                      Turn off
+                    </PendingButton>
+                  </form>
+                ) : (
+                  <form action={enableWidget}>
+                    <PendingButton
+                      pendingText="..."
+                      className="h-8 rounded-md bg-[#0b2a4a] px-2.5 text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      Enable widget
+                    </PendingButton>
+                  </form>
+                )}
+              </div>
+              <p className="mb-3 text-xs text-slate-500">
+                A floating help bubble for any intranet or portal page. It answers from your published knowledge base
+                and escalates to a ticket when it can&apos;t — deflection, anywhere.
+              </p>
+
+              {enabled && widgetEnabled ? (
+                <>
+                  <p className="mb-1 text-xs font-semibold text-slate-500">Paste before &lt;/body&gt; on any page:</p>
+                  <pre className="overflow-x-auto rounded-lg bg-[#07111f] p-4 text-xs leading-6 text-[#d7e3f0]">
+                    <code>{embedSnippet}</code>
+                  </pre>
+                  <a
+                    href={`/widget/${widgetKey}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block text-xs font-semibold text-[#0b5f91] hover:underline"
+                  >
+                    Open a live preview →
+                  </a>
+                </>
+              ) : (
+                <p className="rounded-lg border border-dashed border-black/15 p-3 text-sm text-slate-500">
+                  {enabled ? "Turn the widget on to get your embed snippet." : "Enable the API first (service-role key) to use the widget."}
+                </p>
+              )}
             </section>
           </>
         )}
