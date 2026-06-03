@@ -2,11 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { generateWorkflow, type GeneratedWorkflow } from "@/lib/ai/workflow-gen";
+import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import {
   autonomyLevelMeta,
   normalizeAutonomyLevel,
   planExecution,
 } from "@/lib/autonomy";
+import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getWorkflowActionPlan } from "@/lib/workflow-action-plan";
 import { workflowTemplates, type WorkflowTemplateKey } from "@/lib/workflow-templates";
@@ -262,6 +265,113 @@ export async function createWorkflowFromTemplate(formData: FormData) {
   revalidatePath("/app/workflows");
   revalidatePath("/app/audit");
   revalidatePath("/app/intelligence");
+  redirect(`/app/workflows/${workflow.id}`);
+}
+
+export async function generateWorkflowDraft(
+  description: string,
+): Promise<{ ok: boolean; draft?: GeneratedWorkflow; error?: string }> {
+  const desc = description.trim();
+  if (!desc) {
+    return { ok: false, error: "Describe the workflow you want first." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    return { ok: false, error: "You must be signed in to generate workflows." };
+  }
+
+  const organization = await ensureWorkspace(supabase, userData.user);
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  if ((membership?.role ?? "operator") === "viewer") {
+    return { ok: false, error: "Viewers can't create workflows." };
+  }
+
+  const apiKey = await getOrgAnthropicKey(supabase, organization.id);
+  if (!apiKey) {
+    return {
+      ok: false,
+      error: "Connect your Claude API key (Claude API page) to generate workflows from text — or pick a template below.",
+    };
+  }
+
+  const draft = await generateWorkflow(desc, apiKey);
+  if (!draft) {
+    return { ok: false, error: "Couldn't draft a workflow from that. Try rephrasing, or start from a template." };
+  }
+  return { ok: true, draft };
+}
+
+export async function createWorkflowFromDraft(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const triggerType = String(formData.get("triggerType") ?? "ticket_intent");
+
+  let nodes: string[] = [];
+  let edges: string[] = [];
+  try {
+    nodes = JSON.parse(String(formData.get("nodes") ?? "[]"));
+    edges = JSON.parse(String(formData.get("edges") ?? "[]"));
+  } catch {
+    throw new Error("The generated workflow was malformed — try generating again.");
+  }
+
+  if (!organizationId || !name || !Array.isArray(nodes) || nodes.length < 2) {
+    throw new Error("A workflow needs a name and at least two steps.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to create workflows.");
+  }
+
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .insert({
+      organization_id: organizationId,
+      name,
+      description: description || "AI-generated workflow.",
+      trigger_type: triggerType,
+      is_active: true,
+    })
+    .select("id, name")
+    .single();
+
+  if (workflowError) {
+    throw workflowError;
+  }
+
+  const { error: versionError } = await supabase.from("workflow_versions").insert({
+    organization_id: organizationId,
+    workflow_id: workflow.id,
+    version: 1,
+    created_by: userData.user.id,
+    graph: { nodes, edges, created_from: "ai_generated" },
+  });
+
+  if (versionError) {
+    throw versionError;
+  }
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    event_type: "workflow_created",
+    event_summary: `${workflow.name} workflow created (AI-generated)`,
+    metadata: { source: "workflow_generator", trigger_type: triggerType, steps: nodes.length },
+  });
+
+  revalidatePath("/app");
+  revalidatePath("/app/workflows");
+  revalidatePath("/app/audit");
   redirect(`/app/workflows/${workflow.id}`);
 }
 

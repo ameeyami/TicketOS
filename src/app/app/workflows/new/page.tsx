@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { CheckCircle2, GitBranch, ShieldCheck, Workflow } from "lucide-react";
 import { createWorkflowFromTemplate } from "@/app/app/workflows/actions";
+import { WorkflowGenerator } from "@/app/app/workflows/new/workflow-generator";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -23,10 +24,19 @@ export default async function NewWorkflowPage() {
         <PageHeader
           crumbs={[{ label: "IT" }, { label: "Workflows", href: "/app/workflows" }, { label: "New" }]}
           title="New workflow"
-          description="Start from an IT operations template, then inspect the graph and guardrails."
+          description="Describe it in plain English and let AI draft it — or start from a template."
         />
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6">
+          <WorkflowGenerator organizationId={organization.id} />
+        </div>
+
+        <div className="mt-8 mb-3 flex items-center gap-3">
+          <span className="text-sm font-semibold text-slate-500">Or start from a template</span>
+          <span className="h-px flex-1 bg-black/[0.08]" />
+        </div>
+
+        <section className="grid gap-4 md:grid-cols-2">
           {Object.entries(workflowTemplates).map(([key, template]) => (
             <form key={key} action={createWorkflowFromTemplate} className="rounded-xl border border-black/10 bg-white p-5 shadow-sm">
               <input type="hidden" name="organizationId" value={organization.id} />
