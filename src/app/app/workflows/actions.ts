@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { generateWorkflow, type GeneratedWorkflow } from "@/lib/ai/workflow-gen";
+import { generateWorkflow, heuristicWorkflow, type GeneratedWorkflow } from "@/lib/ai/workflow-gen";
 import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import {
   autonomyLevelMeta,
@@ -270,7 +270,7 @@ export async function createWorkflowFromTemplate(formData: FormData) {
 
 export async function generateWorkflowDraft(
   description: string,
-): Promise<{ ok: boolean; draft?: GeneratedWorkflow; error?: string }> {
+): Promise<{ ok: boolean; draft?: GeneratedWorkflow; error?: string; note?: string }> {
   const desc = description.trim();
   if (!desc) {
     return { ok: false, error: "Describe the workflow you want first." };
@@ -294,18 +294,24 @@ export async function generateWorkflowDraft(
   }
 
   const apiKey = await getOrgAnthropicKey(supabase, organization.id);
-  if (!apiKey) {
+  if (apiKey) {
+    const { draft, error: genError } = await generateWorkflow(desc, apiKey);
+    if (draft) {
+      return { ok: true, draft };
+    }
+    // AI couldn't draft it — fall back to a keyword draft so we never dead-end.
     return {
-      ok: false,
-      error: "Connect your Claude API key (Claude API page) to generate workflows from text — or pick a template below.",
+      ok: true,
+      draft: heuristicWorkflow(desc),
+      note: `Drafted from your description${genError ? ` — AI generation was unavailable (${genError})` : ""}. Review or edit the steps, then save.`,
     };
   }
 
-  const draft = await generateWorkflow(desc, apiKey);
-  if (!draft) {
-    return { ok: false, error: "Couldn't draft a workflow from that. Try rephrasing, or start from a template." };
-  }
-  return { ok: true, draft };
+  return {
+    ok: true,
+    draft: heuristicWorkflow(desc),
+    note: "Drafted from your description. Connect your Claude API key (Claude API page) for smarter, more tailored drafts.",
+  };
 }
 
 export async function createWorkflowFromDraft(formData: FormData) {

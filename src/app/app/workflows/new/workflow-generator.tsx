@@ -16,6 +16,7 @@ export function WorkflowGenerator({ organizationId }: { organizationId: string }
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [draft, setDraft] = useState<GeneratedWorkflow | null>(null);
   const [name, setName] = useState("");
 
@@ -24,12 +25,14 @@ export function WorkflowGenerator({ organizationId }: { organizationId: string }
     if (!description.trim() || loading) return;
     setLoading(true);
     setError(null);
+    setNote(null);
     setDraft(null);
     try {
       const result = await generateWorkflowDraft(description);
       if (result.ok && result.draft) {
         setDraft(result.draft);
         setName(result.draft.name);
+        setNote(result.note ?? null);
       } else {
         setError(result.error ?? "Couldn't generate a workflow.");
       }
@@ -93,6 +96,8 @@ export function WorkflowGenerator({ organizationId }: { organizationId: string }
       {draft && (
         <div className="mt-5 rounded-xl border border-[#d8e4ee] bg-[#f8fbfe] p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0b5f91]">Draft workflow</p>
+
+          {note && <p className="mt-2 text-xs text-slate-500">{note}</p>}
 
           {/* step flow */}
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
