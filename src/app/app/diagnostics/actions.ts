@@ -59,6 +59,42 @@ export async function saveAnthropicKey(formData: FormData) {
   redirect("/app/diagnostics?status=saved");
 }
 
+export async function deleteAnthropicKey() {
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    redirect("/auth/sign-in?message=Sign in to manage Claude.");
+  }
+
+  const organization = await ensureWorkspace(supabase, userData.user);
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+
+  if (membership?.role !== "owner" && membership?.role !== "admin") {
+    redirect("/app/diagnostics?status=forbidden");
+  }
+
+  await supabase
+    .from("integrations")
+    .update({ status: "not_connected", config: {}, connected_by: null, connected_at: null })
+    .eq("organization_id", organization.id)
+    .eq("provider_key", "anthropic");
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organization.id,
+    actor_user_id: userData.user.id,
+    event_type: "anthropic_key_removed",
+    event_summary: "Claude API key removed",
+    metadata: { source: "diagnostics" },
+  });
+
+  redirect("/app/diagnostics?status=removed");
+}
+
 export async function testAiConnection() {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();

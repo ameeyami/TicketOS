@@ -152,6 +152,9 @@ export function AppShell({ children, orgName }: { children: React.ReactNode; org
                 <Sparkles size={14} />
                 <span className="hidden sm:inline">Copilot</span>
               </Link>
+              <Link href="/app/diagnostics" className="app-icon-button" title="Claude API key">
+                <KeyRound size={15} />
+              </Link>
               <Link href="/app/notifications" className="app-icon-button" title="Notifications">
                 <Bell size={15} />
               </Link>
