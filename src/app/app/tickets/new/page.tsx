@@ -11,13 +11,19 @@ import { PendingButton } from "@/components/ui/pending-button";
 const fieldClass =
   "mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10";
 
-export default async function NewTicketPage() {
+export default async function NewTicketPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ title?: string }>;
+}) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
     redirect("/auth/sign-in?message=Sign in to create tickets.");
   }
+
+  const prefillTitle = (await searchParams).title?.slice(0, 200) ?? "";
 
   const organization = await ensureWorkspace(supabase, data.user);
   const ctx = await loadTeamContext(supabase, organization.id, data.user);
@@ -61,7 +67,7 @@ export default async function NewTicketPage() {
           <form action={createTicket} className="grid gap-5">
             <label className="block">
               <span className="text-sm font-semibold">Request title</span>
-              <input required name="title" className={fieldClass} placeholder="Reset Okta password for employee" />
+              <input required name="title" defaultValue={prefillTitle} className={fieldClass} placeholder="Reset Okta password for employee" />
             </label>
 
             <label className="block">

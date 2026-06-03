@@ -356,6 +356,7 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
     }
 
     await ensureTeams(supabase, resolved, user);
+    await ensureKnowledge(supabase, resolved, user);
     return resolved;
   }
 
@@ -391,7 +392,53 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
   }
 
   await ensureTeams(supabase, organization, user);
+  await ensureKnowledge(supabase, organization, user);
   return organization;
+}
+
+const STARTER_ARTICLES = [
+  {
+    title: "Reset your Okta password",
+    category: "Identity",
+    body: "1. Go to your company Okta sign-in page and choose 'Need help signing in?' then 'Forgot password'.\n2. Enter your work email and complete the verification (SMS, email, or authenticator).\n3. Set a new password that meets the policy (12+ chars, upper/lower, number, symbol).\nIf you're locked out or don't get the reset prompt, create a ticket and the Access Agent will verify your identity and reset it.",
+  },
+  {
+    title: "Request access to an app",
+    category: "Access",
+    body: "Tell us which app (e.g. Slack, GitHub, Figma, Jira) and why you need it. Standard apps are provisioned automatically after manager approval; sensitive or admin access pauses for a security review. Most requests complete the same day. You can also raise this via your manager in the onboarding flow.",
+  },
+  {
+    title: "Set up the company VPN",
+    category: "Network",
+    body: "1. Install the VPN client from the company software portal.\n2. Sign in with your SSO credentials.\n3. Choose the closest region and connect.\nIf the client won't connect, check you're on the latest version and your device is enrolled in MDM. Still stuck? Create a ticket and the Network Agent will investigate.",
+  },
+  {
+    title: "Get a new laptop or device",
+    category: "Hardware",
+    body: "New hires get a device provisioned as part of onboarding. For replacements or upgrades, create a ticket with your role and preference (MacBook / Windows). Standard devices ship in 3-5 business days; your manager approves non-standard hardware.",
+  },
+];
+
+// Seed a few starter knowledge articles so the self-service assistant works out
+// of the box. Resilient: no-ops if the knowledge migration isn't applied yet.
+async function ensureKnowledge(supabase: SupabaseClient, organization: { id: string }, user: User) {
+  const { count, error } = await supabase
+    .from("knowledge_articles")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organization.id);
+  if (error || (count ?? 0) > 0) {
+    return;
+  }
+
+  await supabase.from("knowledge_articles").insert(
+    STARTER_ARTICLES.map((article) => ({
+      organization_id: organization.id,
+      title: article.title,
+      body: article.body,
+      category: article.category,
+      created_by: user.id,
+    })),
+  );
 }
 
 // Seed default teams + add the current user as their owner. Resilient: if the
