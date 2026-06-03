@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
-  CheckCircle2,
   ClipboardCheck,
   Cloud,
   Coins,
@@ -18,7 +17,6 @@ import {
   Network,
   ScanSearch,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
   Undo2,
   Workflow,
@@ -29,13 +27,6 @@ import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { AuroraField, GridOverlay } from "@/components/brand/backgrounds";
 import { MarketingFooter, MarketingNav } from "@/components/marketing/marketing-chrome";
 import { cn } from "@/lib/utils";
-
-const heroSteps = [
-  ["Request captured", "Slack", CheckCircle2],
-  ["Identity verified", "HRIS", CheckCircle2],
-  ["Policy checked", "reset.v2", CheckCircle2],
-  ["Access restored", "Okta", Sparkles],
-] satisfies Array<[string, string, LucideIcon]>;
 
 const flow = [
   ["Capture", "Requests land from Slack, Teams, or the portal and get auto-classified.", MessagesSquare],
@@ -163,7 +154,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <HeroConsole />
+          <HeroNetwork />
         </div>
       </section>
 
@@ -316,96 +307,97 @@ export function LandingPage() {
   );
 }
 
-/** Animated "agent console": a command resolving into governed, reversible steps. */
-function HeroConsole() {
+/** Designed "automation network": the AI agent at the center, wired to the real systems it acts on. */
+function HeroNetwork() {
+  const nodes: Array<{ label: string; Icon: LucideIcon; x: number; y: number }> = [
+    { label: "Slack", Icon: MessagesSquare, x: 14, y: 18 },
+    { label: "Okta", Icon: Fingerprint, x: 80, y: 14 },
+    { label: "Google", Icon: Cloud, x: 84, y: 58 },
+    { label: "Jira", Icon: ClipboardCheck, x: 52, y: 86 },
+    { label: "Teams", Icon: MessagesSquare, x: 12, y: 64 },
+  ];
+
   return (
-    <div className="relative">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, delay: 0.1 }}
+      className="relative mx-auto aspect-square w-full max-w-[460px]"
+    >
       <div
-        className="pointer-events-none absolute -inset-6 rounded-[2.25rem] blur-2xl"
-        style={{ background: "radial-gradient(60% 60% at 70% 20%, rgba(34,197,94,0.22), transparent 70%)" }}
+        className="pointer-events-none absolute inset-[22%] rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(34,197,94,0.32), transparent 70%)" }}
         aria-hidden="true"
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: 28, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ delay: 0.14, duration: 0.6 }}
-        className="tos-glass relative overflow-hidden rounded-2xl shadow-2xl shadow-black/40"
-      >
-        <div className="flex h-12 items-center justify-between border-b border-white/10 px-4">
-          <div className="flex items-center gap-2">
-            <TicketOSLogo markSize="sm" showWordmark={false} />
-            <span className="text-sm font-semibold text-white/90">Resolution</span>
-          </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#22c55e]/15 px-2.5 py-1 text-xs font-semibold text-[#7ef0a8]">
-            <span className="size-1.5 animate-pulse rounded-full bg-[#22c55e]" />
-            Live
-          </span>
+      {/* connector lines + node pulses */}
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
+        <defs>
+          <linearGradient id="tos-net" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.2" />
+          </linearGradient>
+        </defs>
+        {nodes.map((n) => (
+          <line key={n.label} x1="50" y1="50" x2={n.x} y2={n.y} stroke="url(#tos-net)" strokeWidth="0.5" />
+        ))}
+        {nodes.map((n) => (
+          <circle key={`${n.label}-dot`} cx={n.x} cy={n.y} r="0.9" fill="#7ef0a8" />
+        ))}
+      </svg>
+
+      {/* rotating dashed ring */}
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
+        <circle
+          className="tos-anim-spin"
+          style={{ transformOrigin: "50px 50px" }}
+          cx="50"
+          cy="50"
+          r="32"
+          fill="none"
+          stroke="rgba(56,189,248,0.3)"
+          strokeWidth="0.35"
+          strokeDasharray="1.6 4.5"
+        />
+      </svg>
+
+      {/* central agent core */}
+      <div className="absolute left-1/2 top-1/2 flex size-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl border border-white/15 bg-[#0b1a2e]/85 shadow-2xl backdrop-blur">
+        <span className="pointer-events-none absolute inset-0 -z-10 animate-ping rounded-2xl bg-[#22c55e]/10" aria-hidden="true" />
+        <TicketOSLogo markSize="sm" showWordmark={false} />
+        <span className="mt-1.5 text-[11px] font-semibold tracking-wide text-white/80">AI agent</span>
+      </div>
+
+      {/* provider nodes */}
+      {nodes.map(({ label, Icon, x, y }) => (
+        <div
+          key={label}
+          className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl border border-white/12 bg-white/[0.07] px-2.5 py-1.5 text-xs font-semibold text-white/85 shadow-lg backdrop-blur"
+          style={{ left: `${x}%`, top: `${y}%` }}
+        >
+          <Icon size={14} className="text-[#7ef0a8]" />
+          {label}
         </div>
+      ))}
 
-        <div className="space-y-4 p-5">
-          {/* command bar */}
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5">
-            <Sparkles size={15} className="shrink-0 text-[#7ef0a8]" />
-            <p className="text-sm text-white/85">
-              Reset Okta access for <span className="font-semibold text-white">Priya Shah</span>
-              <span className="ml-0.5 inline-block h-3.5 w-px animate-pulse bg-[#7ef0a8] align-middle" />
-            </p>
-          </div>
-
-          {/* governed steps */}
-          <div className="space-y-2">
-            {heroSteps.map(([label, detail, Icon], index) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, x: 14 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.12 }}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon size={16} className={index === heroSteps.length - 1 ? "text-[#38bdf8]" : "text-[#22c55e]"} />
-                  <span className="text-sm font-medium text-white/90">{label}</span>
-                </div>
-                <span className="text-xs text-white/45">{detail}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-xs font-semibold">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-white/75">
-              <Coins size={12} className="text-[#7ef0a8]" /> $0.21 to resolve
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-white/75">
-              <Undo2 size={12} className="text-[#7ef0a8]" /> Reversible
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-white/75">
-              <ShieldCheck size={12} className="text-[#7ef0a8]" /> Policy passed
-            </span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* floating accent chips */}
+      {/* floating outcome chips */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-        className="tos-anim-float absolute -left-5 top-24 hidden items-center gap-2 rounded-xl border border-white/15 bg-[#0b1a2e]/80 px-3 py-2 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.85 }}
+        className="tos-anim-float absolute -left-3 top-[46%] hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
       >
-        <Undo2 size={14} className="text-[#7ef0a8]" />
-        1-click undo
+        <Undo2 size={13} className="text-[#7ef0a8]" /> Reversible
       </motion.div>
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.05 }}
-        className="tos-anim-float-slow absolute -right-4 bottom-16 hidden items-center gap-2 rounded-xl border border-white/15 bg-[#0b1a2e]/80 px-3 py-2 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="tos-anim-float-slow absolute -right-2 bottom-4 hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
       >
-        <GitBranch size={14} className="text-[#7ef0a8]" />
-        Replayable audit
+        <GitBranch size={13} className="text-[#7ef0a8]" /> Audited
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
