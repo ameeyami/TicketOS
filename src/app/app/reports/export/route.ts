@@ -1,3 +1,4 @@
+import { csatStats, deflectionStats, mttrStats } from "@/lib/analytics";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { reportToCsv, reportToPdf, type Report, type ReportTable } from "@/lib/reports/export";
 import { computeSla } from "@/lib/sla";
@@ -64,18 +65,20 @@ export async function GET(request: Request) {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: tickets }, { data: workflowRuns }, { data: approvals }, { data: integrations }] = await Promise.all([
-    supabase
-      .from("tickets")
-      .select(
-        "id, external_id, title, status, priority, category, requester_name, requester_email, ai_confidence, assigned_agent_id, created_at, resolved_at, agents(name)",
-      )
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase.from("workflow_runs").select("id, status, ticket_id").eq("organization_id", organization.id),
-    supabase.from("approval_requests").select("id, status").eq("organization_id", organization.id),
-    supabase.from("integrations").select("id, status").eq("organization_id", organization.id),
-  ]);
+  const [{ data: tickets }, { data: workflowRuns }, { data: approvals }, { data: integrations }, { data: kbQueries }] =
+    await Promise.all([
+      supabase
+        .from("tickets")
+        .select(
+          "id, external_id, title, status, priority, category, requester_name, requester_email, ai_confidence, assigned_agent_id, created_at, resolved_at, agents(name)",
+        )
+        .eq("organization_id", organization.id)
+        .order("created_at", { ascending: false }),
+      supabase.from("workflow_runs").select("id, status, ticket_id").eq("organization_id", organization.id),
+      supabase.from("approval_requests").select("id, status").eq("organization_id", organization.id),
+      supabase.from("integrations").select("id, status").eq("organization_id", organization.id),
+      supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
+    ]);
 
   const allTickets = (tickets ?? []) as TicketRow[];
   const runRows = workflowRuns ?? [];
@@ -96,6 +99,10 @@ export async function GET(request: Request) {
     ? Math.round(confidences.reduce((sum, n) => sum + n, 0) / confidences.length)
     : 0;
 
+  const deflection = deflectionStats(kbQueries ?? []);
+  const csat = csatStats(kbQueries ?? []);
+  const mttr = mttrStats(allTickets);
+
   const summarySection = {
     title: "Summary",
     rows: [
@@ -106,6 +113,9 @@ export async function GET(request: Request) {
       { label: "Connected apps", value: `${connectedIntegrations}/${integrationRows.length}` },
       { label: "Pending approvals", value: String(pendingApprovals) },
       { label: "Blocked or failed", value: String(blockedTickets) },
+      { label: "Deflection rate", value: deflection.total ? `${deflection.rate}% (${deflection.resolved}/${deflection.resolved + deflection.escalated})` : "n/a" },
+      { label: "CSAT", value: csat.up + csat.down ? `${csat.score}% (${csat.up} up / ${csat.down} down)` : "n/a" },
+      { label: "Mean time to resolve", value: mttr.label },
     ],
   };
 

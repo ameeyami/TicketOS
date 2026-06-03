@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Download, FileText, Sheet, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Clock3, Download, FileText, LifeBuoy, Sheet, ShieldCheck, Sparkles, ThumbsUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { csatStats, deflectionStats, mttrStats } from "@/lib/analytics";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -28,24 +29,26 @@ export default async function ReportsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: tickets }, { data: workflowRuns }, { data: approvals }, { data: integrations }] = await Promise.all([
-    supabase
-      .from("tickets")
-      .select("id, status, category, ai_confidence, assigned_agent_id")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("workflow_runs")
-      .select("id, status, ticket_id")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("approval_requests")
-      .select("id, status")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false }),
-    supabase.from("integrations").select("id, status").eq("organization_id", organization.id).order("display_name"),
-  ]);
+  const [{ data: tickets }, { data: workflowRuns }, { data: approvals }, { data: integrations }, { data: kbQueries }] =
+    await Promise.all([
+      supabase
+        .from("tickets")
+        .select("id, status, category, ai_confidence, assigned_agent_id, created_at, resolved_at")
+        .eq("organization_id", organization.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("workflow_runs")
+        .select("id, status, ticket_id")
+        .eq("organization_id", organization.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("approval_requests")
+        .select("id, status")
+        .eq("organization_id", organization.id)
+        .order("created_at", { ascending: false }),
+      supabase.from("integrations").select("id, status").eq("organization_id", organization.id).order("display_name"),
+      supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
+    ]);
 
   const ticketRows = tickets ?? [];
   const runRows = workflowRuns ?? [];
@@ -61,7 +64,29 @@ export default async function ReportsPage() {
   const reportDate = new Date().toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
   const statusCounts = countBy(ticketRows, "status");
 
+  const deflection = deflectionStats(kbQueries ?? []);
+  const csat = csatStats(kbQueries ?? []);
+  const mttr = mttrStats(ticketRows);
+
   const highlights = [
+    {
+      title: "Deflection rate",
+      value: deflection.total ? `${deflection.rate}%` : "—",
+      detail: `${deflection.resolved} resolved by self-service`,
+      icon: LifeBuoy,
+    },
+    {
+      title: "CSAT",
+      value: csat.up + csat.down ? `${csat.score}%` : "—",
+      detail: `${csat.up} 👍 / ${csat.down} 👎`,
+      icon: ThumbsUp,
+    },
+    {
+      title: "Mean time to resolve",
+      value: mttr.label,
+      detail: `${mttr.count} resolved tickets`,
+      icon: Clock3,
+    },
     {
       title: "Automation coverage",
       value: `${percent(automatedTickets, ticketRows.length)}%`,
