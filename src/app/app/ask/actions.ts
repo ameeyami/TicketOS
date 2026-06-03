@@ -25,13 +25,19 @@ export async function askKnowledge(question: string): Promise<AskResult> {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const { data: articles } = await supabase
+  const { data: rawArticles } = await supabase
     .from("knowledge_articles")
-    .select("id, title, body, category, source_url")
+    .select("*")
     .eq("organization_id", organization.id);
 
+  // Only published articles are answerable — AI-suggested drafts stay out until
+  // an operator reviews them. (status is absent before the migration → treat as published.)
+  const articles = (rawArticles ?? []).filter(
+    (a: { status?: string | null }) => !a.status || a.status === "published",
+  );
+
   const apiKey = await getOrgAnthropicKey(supabase, organization.id);
-  const result = await answerFromKnowledge(q, (articles ?? []) as KbArticle[], apiKey);
+  const result = await answerFromKnowledge(q, articles as KbArticle[], apiKey);
 
   const { data: row } = await supabase
     .from("kb_queries")
@@ -46,7 +52,7 @@ export async function askKnowledge(question: string): Promise<AskResult> {
     .select("id")
     .single();
 
-  const byId = new Map((articles ?? []).map((a) => [a.id, a.title]));
+  const byId = new Map(articles.map((a: { id: string; title: string }) => [a.id, a.title]));
   const sources = result.sourceIds.map((id) => ({ id, title: byId.get(id) ?? "Article" }));
 
   return { answer: result.answer, sources, queryId: row?.id ?? null, grounded: result.grounded };

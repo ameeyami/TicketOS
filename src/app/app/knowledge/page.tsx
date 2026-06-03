@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BookOpen, MessageCircleQuestion, ThumbsUp, Trash2, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Check, MessageCircleQuestion, Sparkles, ThumbsUp, Trash2, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { createArticle, deleteArticle } from "@/app/app/knowledge/actions";
+import { approveArticle, createArticle, deleteArticle } from "@/app/app/knowledge/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -14,6 +14,7 @@ type ArticleRow = {
   body: string;
   category: string | null;
   updated_at: string;
+  status?: string | null;
 };
 
 type QueryRow = { status: string; csat: string | null };
@@ -32,7 +33,7 @@ export default async function KnowledgePage() {
   const [{ data: articles }, { data: queries }, { data: membership }] = await Promise.all([
     supabase
       .from("knowledge_articles")
-      .select("id, title, body, category, updated_at")
+      .select("*")
       .eq("organization_id", organization.id)
       .order("updated_at", { ascending: false }),
     supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
@@ -44,7 +45,9 @@ export default async function KnowledgePage() {
       .maybeSingle(),
   ]);
 
-  const articleRows = (articles ?? []) as ArticleRow[];
+  const allArticles = (articles ?? []) as ArticleRow[];
+  const suggestedRows = allArticles.filter((a) => a.status === "suggested");
+  const articleRows = allArticles.filter((a) => a.status !== "suggested");
   const queryRows = (queries ?? []) as QueryRow[];
   const canEdit = (membership?.role ?? "operator") !== "viewer";
 
@@ -80,6 +83,63 @@ export default async function KnowledgePage() {
           <MetricCard label="Deflection rate" value={`${deflectionRate}%`} icon={TrendingUp} />
           <MetricCard label="CSAT" value={csatUp + csatDown ? `${csat}%` : "—"} icon={ThumbsUp} />
         </section>
+
+        {canEdit && suggestedRows.length > 0 && (
+          <section className="mt-5 rounded-xl border border-[#c9defb] bg-[#f1f7ff] p-4 shadow-sm">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-lg bg-[#dbeafe] text-[#0b5f91]">
+                <Sparkles size={15} />
+              </span>
+              <h2 className="text-sm font-semibold">
+                AI-suggested from resolved tickets
+                <span className="ml-2 rounded-full bg-[#0b5f91] px-1.5 py-0.5 text-[11px] font-bold text-white">
+                  {suggestedRows.length}
+                </span>
+              </h2>
+            </div>
+            <p className="mb-3 text-xs leading-5 text-slate-500">
+              Drafted automatically when a ticket is resolved. Review, then publish so the Ask assistant can answer
+              from it — or dismiss.
+            </p>
+            <div className="space-y-2.5">
+              {suggestedRows.map((article) => (
+                <article key={article.id} className="rounded-lg border border-[#c9defb] bg-white p-3.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-semibold tracking-tight">{article.title}</h3>
+                    {article.category && (
+                      <span className="rounded-md border border-black/10 bg-[#f5f8fc] px-2 py-0.5 text-xs font-semibold text-slate-600">
+                        {article.category}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-slate-600">{article.body}</p>
+                  <div className="mt-3 flex gap-2">
+                    <form action={approveArticle}>
+                      <input type="hidden" name="id" value={article.id} />
+                      <PendingButton
+                        pendingText="Publishing..."
+                        className="h-8 rounded-md bg-[#0b2a4a] px-3 text-xs font-semibold text-white"
+                      >
+                        <Check size={14} />
+                        Publish
+                      </PendingButton>
+                    </form>
+                    <form action={deleteArticle}>
+                      <input type="hidden" name="id" value={article.id} />
+                      <PendingButton
+                        pendingText="..."
+                        className="h-8 rounded-md border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-700"
+                      >
+                        <Trash2 size={14} />
+                        Dismiss
+                      </PendingButton>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mt-5 grid gap-5 xl:grid-cols-[330px_1fr]">
           <div>

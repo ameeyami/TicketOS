@@ -49,6 +49,34 @@ export async function createArticle(formData: FormData) {
   revalidatePath("/app/ask");
 }
 
+export async function approveArticle(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    throw new Error("A valid article is required.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to edit the knowledge base.");
+  }
+
+  const organization = await ensureWorkspace(supabase, userData.user);
+  await requireEditor(supabase, organization.id, userData.user.id);
+
+  const { error } = await supabase
+    .from("knowledge_articles")
+    .update({ status: "published" })
+    .eq("id", id)
+    .eq("organization_id", organization.id);
+  if (error) {
+    throw error;
+  }
+
+  revalidatePath("/app/knowledge");
+  revalidatePath("/app/ask");
+}
+
 export async function deleteArticle(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) {

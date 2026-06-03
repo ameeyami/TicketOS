@@ -1,8 +1,79 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { draftArticleFromTicket } from "@/lib/ai/knowledge";
+import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import { cancelPendingApproval, fulfillPendingApproval } from "@/lib/integrations/execute";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+/**
+ * Auto-knowledge: after a ticket is resolved, draft a reusable KB article from
+ * it (status 'suggested' — an operator reviews before it goes live). Best-effort
+ * and fully guarded so it never blocks or fails the resolution itself.
+ */
+async function maybeDraftKnowledge(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  organizationId: string,
+  userId: string,
+  ticketId: string,
+  resolutionNote: string,
+) {
+  try {
+    // Skip if we already drafted something from this ticket.
+    const { data: existing } = await supabase
+      .from("knowledge_articles")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("source_ticket_id", ticketId)
+      .limit(1);
+    if (existing && existing.length > 0) return;
+
+    const apiKey = await getOrgAnthropicKey(supabase, organizationId);
+    if (!apiKey) return;
+
+    const { data: ticket } = await supabase
+      .from("tickets")
+      .select("title, description, ai_summary")
+      .eq("id", ticketId)
+      .maybeSingle();
+    if (!ticket) return;
+
+    const draft = await draftArticleFromTicket(
+      {
+        title: ticket.title,
+        description: ticket.description,
+        summary: ticket.ai_summary,
+        resolutionNote: resolutionNote || null,
+      },
+      apiKey,
+    );
+    if (!draft) return;
+
+    const { error } = await supabase.from("knowledge_articles").insert({
+      organization_id: organizationId,
+      title: draft.title,
+      body: draft.body,
+      category: draft.category,
+      status: "suggested",
+      source_ticket_id: ticketId,
+      created_by: userId,
+    });
+    if (error) return;
+
+    await supabase.from("audit_logs").insert({
+      organization_id: organizationId,
+      actor_user_id: userId,
+      ticket_id: ticketId,
+      event_type: "knowledge_suggested",
+      event_summary: `AI drafted a knowledge article: "${draft.title}"`,
+      metadata: { source: "auto_knowledge" },
+    });
+
+    revalidatePath("/app/knowledge");
+  } catch {
+    // Auto-knowledge is best-effort — never surface to the resolving operator.
+  }
+}
 
 export async function decideApproval(formData: FormData) {
   const approvalId = String(formData.get("approvalId") ?? "");
@@ -232,6 +303,10 @@ export async function updateTicketStatus(formData: FormData) {
       body: note,
       metadata: { source: "ticket_status_action", status },
     });
+  }
+
+  if (status === "resolved") {
+    await maybeDraftKnowledge(supabase, organizationId, userData.user.id, ticketId, note);
   }
 
   revalidatePath(`/app/tickets/${ticketId}`);

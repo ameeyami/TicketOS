@@ -43,6 +43,80 @@ export function rankArticles(question: string, articles: KbArticle[], limit = 4)
     .map((s) => s.article);
 }
 
+export type DraftedArticle = { title: string; body: string; category: string | null };
+
+/**
+ * Auto-knowledge: turn a just-resolved ticket into a reusable KB article draft.
+ * The model decides whether it's worth an article at all (returns null for
+ * one-offs / chit-chat / no real resolution) and strips names + PII so the
+ * result is reusable. Returns null when there's no key or nothing worth saving.
+ */
+export async function draftArticleFromTicket(
+  input: { title: string; description?: string | null; summary?: string | null; resolutionNote?: string | null },
+  apiKey: string | null,
+): Promise<DraftedArticle | null> {
+  if (!apiKey) return null;
+
+  const context = [
+    `Ticket title: ${input.title}`,
+    input.description ? `Original request: ${input.description}` : "",
+    input.summary ? `AI summary: ${input.summary}` : "",
+    input.resolutionNote ? `How it was resolved: ${input.resolutionNote}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    const client = createAnthropicClient(apiKey);
+    const response = await client.messages.create({
+      model: KB_MODEL,
+      max_tokens: 800,
+      tool_choice: { type: "tool", name: "draft_article" },
+      tools: [
+        {
+          name: "draft_article",
+          description: "Turn a resolved IT support ticket into a reusable knowledge-base article.",
+          input_schema: {
+            type: "object",
+            properties: {
+              worth_article: {
+                type: "boolean",
+                description:
+                  "True ONLY if the resolution is a repeatable how-to or answer that would help other employees self-serve. False for one-offs, social chatter, or tickets with no real resolution.",
+              },
+              title: { type: "string", description: "Clear, search-friendly article title." },
+              body: {
+                type: "string",
+                description:
+                  "Concise, reusable answer or numbered steps. Generalize fully — no employee names, emails, ticket IDs, or other PII.",
+              },
+              category: { type: "string", description: "Short category, e.g. Identity, Access, Network, Hardware, Software." },
+            },
+            required: ["worth_article", "title", "body", "category"],
+          },
+        },
+      ],
+      system:
+        "You convert a resolved IT support ticket into a reusable knowledge-base article so future employees can self-serve. Only mark worth_article=true when the resolution is a repeatable how-to or answer that helps others. Always remove specific names, emails, and PII, and keep the body concise and step-oriented.",
+      messages: [{ role: "user", content: context }],
+    });
+
+    const tool = response.content.find((block) => block.type === "tool_use");
+    if (!tool || tool.type !== "tool_use") return null;
+
+    const data = tool.input as { worth_article?: boolean; title?: string; body?: string; category?: string };
+    if (!data.worth_article || !data.title?.trim() || !data.body?.trim()) return null;
+
+    return {
+      title: data.title.trim().slice(0, 120),
+      body: data.body.trim().slice(0, 4000),
+      category: data.category?.trim() ? data.category.trim().slice(0, 40) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function answerFromKnowledge(
   question: string,
   articles: KbArticle[],
