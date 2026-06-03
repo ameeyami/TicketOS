@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { draftArticleFromTicket } from "@/lib/ai/knowledge";
+import { deliverWebhook } from "@/lib/api/webhooks";
 import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import { cancelPendingApproval, fulfillPendingApproval } from "@/lib/integrations/execute";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -307,9 +308,37 @@ export async function updateTicketStatus(formData: FormData) {
 
   if (status === "resolved") {
     await maybeDraftKnowledge(supabase, organizationId, userData.user.id, ticketId, note);
+    await fireTicketWebhook(supabase, organizationId, "ticket.resolved", ticketId);
   }
 
   revalidatePath(`/app/tickets/${ticketId}`);
   revalidatePath("/app");
   revalidatePath("/app/tickets");
+}
+
+/** Best-effort outbound webhook for a ticket event (skips when none configured). */
+async function fireTicketWebhook(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  organizationId: string,
+  event: string,
+  ticketId: string,
+) {
+  try {
+    const [{ data: org }, { data: ticket }] = await Promise.all([
+      supabase.from("organizations").select("webhook_url, webhook_secret, webhook_events").eq("id", organizationId).maybeSingle(),
+      supabase
+        .from("tickets")
+        .select("id, external_id, title, status, priority, category, created_at, resolved_at")
+        .eq("id", ticketId)
+        .maybeSingle(),
+    ]);
+    if (!org?.webhook_url || !ticket) return;
+    await deliverWebhook(
+      { url: org.webhook_url, secret: org.webhook_secret ?? null, events: org.webhook_events ?? null },
+      event,
+      ticket,
+    );
+  } catch {
+    // best-effort
+  }
 }

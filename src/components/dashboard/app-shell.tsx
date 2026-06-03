@@ -28,6 +28,7 @@ import {
   UsersRound,
   UserX,
   Wallet,
+  Webhook,
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -90,6 +91,7 @@ const utilityTeam = {
     { label: "Autonomy", href: "/app/autonomy", icon: SlidersHorizontal },
     { label: "People", href: "/app/people", icon: UserRound },
     { label: "Memory", href: "/app/memory", icon: GitBranch },
+    { label: "API & webhooks", href: "/app/api-keys", icon: Webhook },
     { label: "Claude API", href: "/app/diagnostics", icon: Activity },
   ],
 };
