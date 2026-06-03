@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
-import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Clock3, Download, FileText, LifeBuoy, Sheet, ShieldCheck, Sparkles, ThumbsUp } from "lucide-react";
+import { BadgeCheck, BarChart3, CheckCircle2, CircleAlert, Clock3, Download, FileText, LifeBuoy, Minus, Sheet, ShieldCheck, Sparkles, ThumbsUp, TrendingDown, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { csatStats, deflectionStats, mttrStats } from "@/lib/analytics";
+import { csatStats, deflectionStats, mttrStats, weeklyTrends, type TrendWeek } from "@/lib/analytics";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { TrendInsight } from "@/app/app/reports/trend-insight";
+import { formatSlaDuration } from "@/lib/sla";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -47,7 +49,7 @@ export default async function ReportsPage() {
         .eq("organization_id", organization.id)
         .order("created_at", { ascending: false }),
       supabase.from("integrations").select("id, status").eq("organization_id", organization.id).order("display_name"),
-      supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
+      supabase.from("kb_queries").select("status, csat, created_at").eq("organization_id", organization.id),
     ]);
 
   const ticketRows = tickets ?? [];
@@ -67,6 +69,7 @@ export default async function ReportsPage() {
   const deflection = deflectionStats(kbQueries ?? []);
   const csat = csatStats(kbQueries ?? []);
   const mttr = mttrStats(ticketRows);
+  const trends = weeklyTrends(ticketRows, kbQueries ?? []);
 
   const highlights = [
     {
@@ -195,6 +198,37 @@ export default async function ReportsPage() {
           ))}
         </section>
 
+        <section className="mt-5 grid gap-5 lg:grid-cols-[1fr_360px]">
+          <Panel title="Trends — last 6 weeks" icon={BarChart3}>
+            <VolumeSparkline trends={trends} />
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <DeltaCard
+                label="Deflection"
+                current={trends.at(-1)?.deflectionRate ?? 0}
+                previous={trends.at(-2)?.deflectionRate ?? 0}
+                suffix="%"
+                higherIsBetter
+              />
+              <DeltaCard
+                label="MTTR"
+                current={trends.at(-1)?.mttrMinutes ?? 0}
+                previous={trends.at(-2)?.mttrMinutes ?? 0}
+                higherIsBetter={false}
+                format={(v) => (v ? formatSlaDuration(v) : "—")}
+              />
+              <DeltaCard
+                label="CSAT"
+                current={trends.at(-1)?.csatScore ?? 0}
+                previous={trends.at(-2)?.csatScore ?? 0}
+                suffix="%"
+                higherIsBetter
+              />
+            </div>
+          </Panel>
+
+          <TrendInsight />
+        </section>
+
         <section className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
           <Panel title="Ticket mix" icon={BadgeCheck}>
             <div className="grid gap-3 md:grid-cols-2">
@@ -223,6 +257,60 @@ export default async function ReportsPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function VolumeSparkline({ trends }: { trends: TrendWeek[] }) {
+  const max = Math.max(1, ...trends.map((t) => t.created));
+  return (
+    <div>
+      <p className="text-xs font-medium text-slate-500">Tickets created per week</p>
+      <div className="mt-3 flex items-end gap-2" style={{ height: 96 }}>
+        {trends.map((t, i) => (
+          <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-600">{t.created}</span>
+            <div
+              className="w-full rounded-t-md bg-[#0b5f91]/85"
+              style={{ height: `${Math.max(4, Math.round((t.created / max) * 72))}px` }}
+              title={`${t.label}: ${t.created} created, ${t.resolved} resolved`}
+            />
+            <span className="text-[10px] text-slate-400">{t.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DeltaCard({
+  label,
+  current,
+  previous,
+  suffix = "",
+  higherIsBetter,
+  format,
+}: {
+  label: string;
+  current: number;
+  previous: number;
+  suffix?: string;
+  higherIsBetter: boolean;
+  format?: (v: number) => string;
+}) {
+  const delta = current - previous;
+  const display = format ? format(current) : `${current}${suffix}`;
+  const good = delta === 0 ? null : higherIsBetter ? delta > 0 : delta < 0;
+  const Icon = delta === 0 ? Minus : delta > 0 ? TrendingUp : TrendingDown;
+  const tone = good === null ? "text-slate-400" : good ? "text-emerald-600" : "text-rose-600";
+  return (
+    <div className="rounded-lg border border-black/10 p-3">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold tracking-tight">{display}</p>
+      <p className={cn("mt-1 flex items-center gap-1 text-xs font-medium", tone)}>
+        <Icon size={13} />
+        {delta === 0 ? "no change" : `${delta > 0 ? "+" : ""}${delta}${suffix} vs last week`}
+      </p>
+    </div>
   );
 }
 
