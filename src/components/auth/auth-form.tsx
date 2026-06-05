@@ -3,22 +3,18 @@
 import { FormEvent, type ReactNode, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Coins, Eye, EyeOff, FileText, Loader2, ShieldCheck, Sparkles, Undo2 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Search, Sparkles } from "lucide-react";
 import { signInWithProvider } from "@/app/auth/actions";
-import { AuroraField, GridOverlay, OrbitArt } from "@/components/brand/backgrounds";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { PendingButton } from "@/components/ui/pending-button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const authHighlights = [
-  ["Reverse any action an agent took", Undo2],
-  ["See the cost of every resolution", Coins],
-  ["Replayable audit on everything", ShieldCheck],
-] as const;
-
-const HILITE_COLORS = ["text-[#7ef0a8]", "text-[#7dd3fc]", "text-[#c4b5fd]"];
-
 type AuthMode = "sign-in" | "sign-up";
+
+const dots = (color: string): React.CSSProperties => ({
+  backgroundImage: `radial-gradient(${color} 1.1px, transparent 1.6px)`,
+  backgroundSize: "11px 11px",
+});
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -47,31 +43,21 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: { full_name: fullName },
-            emailRedirectTo: authRedirectUrl(),
-          },
+          options: { data: { full_name: fullName }, emailRedirectTo: authRedirectUrl() },
         });
-
         if (signUpError) {
           setError(signUpError.message);
           return;
         }
-
         setMessage("Account created. Check your email if Supabase asks you to confirm before signing in.");
         return;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         setError(signInError.message);
         return;
       }
-
       router.push("/app");
       router.refresh();
     });
@@ -79,131 +65,100 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   function handleOktaSSO() {
     const domain = oktaDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
-
     setError("");
     setMessage("");
-
     if (!domain) {
       setError("Enter your Okta company domain first, for example company.okta.com.");
       return;
     }
-
     startTransition(async () => {
       const supabase = createSupabaseBrowserClient();
-      const { error: ssoError } = await supabase.auth.signInWithSSO({
-        domain,
-        options: {
-          redirectTo: authRedirectUrl(),
-        },
-      });
-
+      const { error: ssoError } = await supabase.auth.signInWithSSO({ domain, options: { redirectTo: authRedirectUrl() } });
       if (ssoError) {
         setError("Okta SSO could not start. Check that Okta SSO is enabled in Supabase Auth settings for this domain.");
       }
     });
   }
 
+  const inputClass =
+    "h-12 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:ring-4 focus:ring-white/[0.06]";
+
   return (
-    <main className="relative min-h-screen bg-[#f4f8fb] text-[#07111f] lg:grid lg:grid-cols-[1.05fr_1fr]">
+    <main className="relative min-h-screen bg-[#0d0d12] text-white lg:grid lg:grid-cols-[1.05fr_1fr]">
       <span
         className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[#22c55e] via-[#38bdf8] to-[#a855f7]"
         aria-hidden
       />
-      <aside className="relative hidden overflow-hidden bg-[#07111f] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
-        <AuroraField />
-        <GridOverlay tone="dark" />
-        <OrbitArt className="bottom-[-180px] right-[-180px] h-[560px] w-[560px] opacity-70" />
 
-        <Link href="/" className="relative flex w-fit items-center gap-3">
-          <TicketOSLogo markSize="lg" tone="dark" />
-        </Link>
+      {/* Left — illustrative indigo panel */}
+      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#272451] to-[#191832] p-10 lg:flex lg:flex-col lg:justify-center xl:p-16">
+        <div
+          className="pointer-events-none absolute -left-12 -top-12 size-72 opacity-70"
+          style={{ ...dots("rgba(199,232,107,0.55)"), maskImage: "linear-gradient(135deg, #000, transparent 65%)", WebkitMaskImage: "linear-gradient(135deg, #000, transparent 65%)" }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-12 -right-12 size-80 opacity-60"
+          style={{ ...dots("rgba(165,180,252,0.5)"), maskImage: "linear-gradient(315deg, #000, transparent 65%)", WebkitMaskImage: "linear-gradient(315deg, #000, transparent 65%)" }}
+          aria-hidden
+        />
 
         <div className="relative max-w-md">
-          <h2 className="text-3xl font-semibold leading-[1.1] tracking-tight xl:text-4xl">
-            The autonomy you can{" "}
-            <span className="bg-gradient-to-r from-[#22c55e] to-[#38bdf8] bg-clip-text text-transparent">
-              audit, undo, and afford.
-            </span>
-          </h2>
-          <p className="mt-4 text-sm leading-7 text-white/64">
-            Sign in to triage tickets, approve workflows, and inspect — and reverse — every agent action.
+          <h2 className="font-serif text-4xl leading-[1.12] tracking-tight text-white xl:text-5xl">Resolve more, worry less.</h2>
+          <p className="mt-4 max-w-sm text-base leading-7 text-white/55">
+            TicketOS triages, routes, and resolves IT requests for you — and every action stays reversible and audited.
           </p>
-          <ul className="mt-7 space-y-3">
-            {authHighlights.map(([label, Icon], index) => (
-              <li key={label} className="flex items-center gap-3 text-sm font-medium text-white/82">
-                <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] ${HILITE_COLORS[index % HILITE_COLORS.length]}`}>
-                  <Icon size={16} />
-                </span>
-                {label}
-              </li>
-            ))}
-          </ul>
 
-          {/* Product peek — a glassy AI-activity card */}
-          <div className="relative mt-9 hidden max-w-sm rounded-2xl border border-white/12 bg-white/[0.05] p-4 backdrop-blur xl:block">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 text-xs font-semibold text-white">
-                <Sparkles size={14} className="text-[#7ef0a8]" /> AI activity
-              </p>
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#7ef0a8]">
-                <span className="size-1.5 animate-pulse rounded-full bg-[#22c55e]" /> live
-              </span>
+          {/* search + stacked result cards */}
+          <div className="relative mt-12 h-60">
+            <div className="flex w-full max-w-sm items-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.07] px-3.5 py-3 backdrop-blur">
+              <Search size={16} className="text-white/50" />
+              <span className="h-2 w-44 rounded-full bg-white/25" />
             </div>
-            <div className="mt-3 space-y-2">
-              {[
-                { Icon: CheckCircle2, tone: "text-[#7ef0a8]", title: "Triaged TOS-1923", sub: "Network · high" },
-                { Icon: FileText, tone: "text-[#7dd3fc]", title: "Drafted resolution", sub: "Password reset" },
-                { Icon: Undo2, tone: "text-[#c4b5fd]", title: "Action reversed", sub: "Slack message" },
-              ].map((row) => (
-                <div key={row.title} className="flex items-center gap-2.5 rounded-lg border border-white/8 bg-white/[0.04] px-2.5 py-2">
-                  <row.Icon size={15} className={`shrink-0 ${row.tone}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold text-white">{row.title}</p>
-                    <p className="truncate text-[10px] text-white/45">{row.sub}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="absolute left-2 top-16 h-16 w-72 -rotate-[3deg] rounded-2xl bg-[#f7c59f] shadow-2xl" />
+            <div className="absolute left-6 top-28 h-16 w-72 rotate-[1.5deg] rounded-2xl bg-[#c7e86b] shadow-2xl" />
+            <div className="absolute left-10 top-40 h-16 w-72 rotate-[4deg] rounded-2xl bg-[#a5b4fc] shadow-2xl">
+              <Sparkles size={16} className="absolute right-3 top-3 text-white/80" />
             </div>
           </div>
         </div>
-
-        <p className="relative text-xs text-white/40">© {new Date().getFullYear()} TicketOS</p>
       </aside>
 
-      <section className="flex min-h-screen flex-col px-5 py-8 md:px-10">
-        <Link href="/" className="flex w-fit items-center gap-3 lg:hidden">
-          <TicketOSLogo markSize="md" />
-        </Link>
-
+      {/* Right — near-black form */}
+      <section className="flex min-h-screen flex-col bg-[#101014] px-5 py-8 md:px-10">
         <div className="flex flex-1 items-center justify-center py-10">
-          <div className="w-full max-w-[420px]">
-            <div className="mb-7">
-              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {isSignUp ? "Create your workspace" : "Welcome back"}
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-black/52">
-                {isSignUp ? "Set up TicketOS in a couple of minutes." : "Continue to your TicketOS workspace."}
-              </p>
+          <div className="w-full max-w-[400px]">
+            <div className="mb-8 flex justify-center">
+              <Link href="/">
+                <TicketOSLogo markSize="lg" tone="dark" />
+              </Link>
             </div>
 
-            <div className="space-y-3">
+            <h1 className="text-center text-2xl font-semibold tracking-tight md:text-3xl">
+              {isSignUp ? "Create your workspace" : "Welcome back"}
+            </h1>
+            <p className="mt-2 text-center text-sm leading-6 text-white/50">
+              {isSignUp ? "Set up TicketOS in a couple of minutes." : "Sign in to your TicketOS workspace."}
+            </p>
+
+            <div className="mt-8 space-y-3">
               <ProviderLoginForm provider="google" label="Continue with Google" icon={<GoogleMark />} />
               <ProviderLoginForm provider="github" label="Continue with GitHub" icon={<GitHubMark />} />
               <ProviderLoginForm provider="azure" label="Continue with Microsoft / Teams" icon={<MicrosoftMark />} />
-              <div className="rounded-xl border border-black/10 bg-white p-3 shadow-sm">
-                <label className="block text-xs font-semibold text-black/56">Okta company domain</label>
+              <div className="rounded-xl border border-white/12 bg-white/[0.04] p-3">
+                <label className="block text-xs font-semibold text-white/60">Okta company domain</label>
                 <div className="mt-2 flex gap-2">
                   <input
                     value={oktaDomain}
-                    onChange={(event) => setOktaDomain(event.target.value)}
-                    className="min-w-0 flex-1 rounded-lg border border-black/10 px-3 text-sm outline-none transition focus:border-black/25 focus:ring-4 focus:ring-black/5"
+                    onChange={(e) => setOktaDomain(e.target.value)}
+                    className="min-w-0 flex-1 rounded-lg border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/30"
                     placeholder="company.okta.com"
                   />
                   <button
                     type="button"
                     disabled={isPending}
                     onClick={handleOktaSSO}
-                    className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="h-10 rounded-lg bg-white/[0.08] px-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     Okta SSO
                   </button>
@@ -212,51 +167,51 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </div>
 
             <div className="my-7 flex items-center gap-3">
-              <span className="h-px flex-1 bg-black/10" />
-              <span className="text-xs font-medium uppercase tracking-[0.12em] text-black/38">or</span>
-              <span className="h-px flex-1 bg-black/10" />
+              <span className="h-px flex-1 bg-white/10" />
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-white/35">or</span>
+              <span className="h-px flex-1 bg-white/10" />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSignUp && (
                 <label className="block">
-                  <span className="text-sm font-semibold">Full name</span>
+                  <span className="text-sm font-semibold text-white/85">Full name</span>
                   <input
                     required
                     value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    className="mt-2 h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-black/25 focus:ring-4 focus:ring-black/5"
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={`mt-2 ${inputClass}`}
                     placeholder="Amee Yami"
                   />
                 </label>
               )}
               <label className="block">
-                <span className="text-sm font-semibold">Login ID</span>
+                <span className="text-sm font-semibold text-white/85">Work email</span>
                 <input
                   required
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="mt-2 h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-black/25 focus:ring-4 focus:ring-black/5"
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`mt-2 ${inputClass}`}
                   placeholder="name@company.com"
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-semibold">Password</span>
-                <div className="mt-2 flex h-12 overflow-hidden rounded-xl border border-black/10 bg-white transition focus-within:border-black/25 focus-within:ring-4 focus-within:ring-black/5">
+                <span className="text-sm font-semibold text-white/85">Password</span>
+                <div className="mt-2 flex h-12 overflow-hidden rounded-xl border border-white/12 bg-white/[0.04] transition focus-within:border-white/30 focus-within:ring-4 focus-within:ring-white/[0.06]">
                   <input
                     required
                     type={showPassword ? "text" : "password"}
                     minLength={6}
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none"
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="min-w-0 flex-1 bg-transparent px-4 text-sm text-white outline-none placeholder:text-white/35"
                     placeholder="Enter password"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((current) => !current)}
-                    className="flex h-full items-center gap-2 px-4 text-sm font-semibold text-black/56 hover:text-black"
+                    onClick={() => setShowPassword((c) => !c)}
+                    className="flex h-full items-center gap-2 px-4 text-sm font-semibold text-white/55 hover:text-white"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -266,12 +221,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               </label>
 
               {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                  {error}
-                </div>
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</div>
               )}
               {message && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
                   {message}
                 </div>
               )}
@@ -279,7 +232,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               <button
                 type="submit"
                 disabled={isPending}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0b5f91] to-[#5b4bc4] px-4 text-sm font-semibold text-white shadow-lg shadow-[#5b4bc4]/25 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a5b4fc] px-4 text-sm font-semibold text-[#0b1020] shadow-lg shadow-[#a5b4fc]/20 transition hover:bg-[#b8c2ff] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isPending && <Loader2 size={17} className="animate-spin" />}
                 {isSignUp ? "Create account" : "Log in"}
@@ -287,12 +240,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               </button>
             </form>
 
-            <p className="mt-6 text-sm text-black/56">
+            <p className="mt-6 text-center text-sm text-white/50">
               {isSignUp ? "Already have an account?" : "New to TicketOS?"}{" "}
-              <Link
-                href={isSignUp ? "/auth/sign-in" : "/auth/sign-up"}
-                className="font-semibold text-[#0b5f91] hover:text-[#07111f]"
-              >
+              <Link href={isSignUp ? "/auth/sign-in" : "/auth/sign-up"} className="font-semibold text-[#a5b4fc] hover:text-white">
                 {isSignUp ? "Log in" : "Create account"}
               </Link>
             </p>
@@ -303,21 +253,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   );
 }
 
-function ProviderLoginForm({
-  provider,
-  label,
-  icon,
-}: {
-  provider: "google" | "github" | "azure";
-  label: string;
-  icon: ReactNode;
-}) {
+function ProviderLoginForm({ provider, label, icon }: { provider: "google" | "github" | "azure"; label: string; icon: ReactNode }) {
   return (
     <form action={signInWithProvider}>
       <input type="hidden" name="provider" value={provider} />
       <PendingButton
         pendingText="Checking..."
-        className="h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
+        className="h-12 w-full rounded-xl border border-white/12 bg-white/[0.05] px-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {icon}
         {label}
