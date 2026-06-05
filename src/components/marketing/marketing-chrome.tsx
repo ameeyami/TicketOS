@@ -190,6 +190,16 @@ export function MarketingFooter() {
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/45 md:flex-row">
           <p>© {new Date().getFullYear()} TicketOS · AI-native IT operations</p>
+          <Link
+            href="/status"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 font-medium text-white/70 transition hover:border-white/20 hover:text-white"
+          >
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+            </span>
+            Status
+          </Link>
           <p className="flex items-center gap-2 font-medium">
             <span className="text-[#7ef0a8]">Audit</span>
             <span className="text-white/25">·</span>

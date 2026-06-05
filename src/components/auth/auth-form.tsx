@@ -3,7 +3,7 @@
 import { FormEvent, type ReactNode, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Coins, Eye, EyeOff, Loader2, ShieldCheck, Undo2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Coins, Eye, EyeOff, FileText, Loader2, ShieldCheck, Sparkles, Undo2 } from "lucide-react";
 import { signInWithProvider } from "@/app/auth/actions";
 import { AuroraField, GridOverlay, OrbitArt } from "@/components/brand/backgrounds";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
@@ -138,6 +138,33 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               </li>
             ))}
           </ul>
+
+          {/* Product peek — a glassy AI-activity card */}
+          <div className="relative mt-9 hidden max-w-sm rounded-2xl border border-white/12 bg-white/[0.05] p-4 backdrop-blur xl:block">
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-2 text-xs font-semibold text-white">
+                <Sparkles size={14} className="text-[#7ef0a8]" /> AI activity
+              </p>
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#7ef0a8]">
+                <span className="size-1.5 animate-pulse rounded-full bg-[#22c55e]" /> live
+              </span>
+            </div>
+            <div className="mt-3 space-y-2">
+              {[
+                { Icon: CheckCircle2, tone: "text-[#7ef0a8]", title: "Triaged TOS-1923", sub: "Network · high" },
+                { Icon: FileText, tone: "text-[#7dd3fc]", title: "Drafted resolution", sub: "Password reset" },
+                { Icon: Undo2, tone: "text-[#c4b5fd]", title: "Action reversed", sub: "Slack message" },
+              ].map((row) => (
+                <div key={row.title} className="flex items-center gap-2.5 rounded-lg border border-white/8 bg-white/[0.04] px-2.5 py-2">
+                  <row.Icon size={15} className={`shrink-0 ${row.tone}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-white">{row.title}</p>
+                    <p className="truncate text-[10px] text-white/45">{row.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <p className="relative text-xs text-white/40">© {new Date().getFullYear()} TicketOS</p>
