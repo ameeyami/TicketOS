@@ -261,11 +261,18 @@ a {
 .tos-anim-drift { animation: tos-drift 12s ease-in-out infinite; }
 .tos-anim-spin { animation: tos-spin-slow 70s linear infinite; transform-origin: center; }
 
+@keyframes tos-sheen {
+  0% { transform: translateX(-130%) skewX(-12deg); }
+  55%, 100% { transform: translateX(360%) skewX(-12deg); }
+}
+.tos-anim-sheen { animation: tos-sheen 7.5s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .tos-anim-float,
   .tos-anim-float-slow,
   .tos-anim-drift,
-  .tos-anim-spin {
+  .tos-anim-spin,
+  .tos-anim-sheen {
     animation: none;
   }
 }

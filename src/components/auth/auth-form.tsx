@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, type ReactNode, useState, useTransition } from "react";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Coins, Eye, EyeOff, Loader2, ScrollText, Undo2 } from "lucide-react";
@@ -95,39 +96,86 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           aria-hidden
           style={{ background: "radial-gradient(58% 50% at 28% 18%, rgba(255,255,255,0.16), transparent 70%)" }}
         />
-        {/* diagonal sheen */}
-        <div className="pointer-events-none absolute -left-1/3 top-0 h-full w-1/2 rotate-12 bg-gradient-to-r from-white/0 via-white/10 to-white/0" aria-hidden />
-        {/* big circuit-T watermark */}
-        <svg viewBox="0 0 48 48" className="pointer-events-none absolute -bottom-16 -right-16 size-[460px] text-white opacity-[0.06]" fill="none" aria-hidden>
+        {/* drifting ambient glows */}
+        <div
+          className="tos-anim-float-slow pointer-events-none absolute -left-20 top-1/3 size-72 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(56,189,248,0.35), transparent 70%)" }}
+          aria-hidden
+        />
+        <div
+          className="tos-anim-drift pointer-events-none absolute -right-10 top-10 size-72 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.28), transparent 70%)" }}
+          aria-hidden
+        />
+        {/* sweeping sheen */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 overflow-hidden" aria-hidden>
+          <div className="tos-anim-sheen h-full w-full bg-gradient-to-r from-white/0 via-white/12 to-white/0" />
+        </div>
+        {/* big circuit-T watermark — slow rotate + draw-in */}
+        <svg viewBox="0 0 48 48" className="tos-anim-spin pointer-events-none absolute -bottom-16 -right-16 size-[460px] text-white opacity-[0.09]" fill="none" aria-hidden>
           <g stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 13 H41" />
-            <path d="M31 13 V34 L25 40" />
-            <path d="M10 13 H15" />
-            <path d="M8 22 H31" />
-            <path d="M13 31 H25" />
+            {["M15 13 H41", "M31 13 V34 L25 40", "M10 13 H15", "M8 22 H31", "M13 31 H25"].map((d, i) => (
+              <motion.path
+                key={d}
+                d={d}
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1.4, delay: 0.2 + i * 0.15, ease: "easeInOut" }}
+              />
+            ))}
           </g>
           <g fill="currentColor">
-            <circle cx="7" cy="13" r="2.7" />
-            <circle cx="5" cy="22" r="2.7" />
-            <circle cx="10" cy="31" r="2.7" />
+            {[[7, 13], [5, 22], [10, 31]].map(([cx, cy], i) => (
+              <motion.circle
+                key={i}
+                cx={cx}
+                cy={cy}
+                r="2.7"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.9 + i * 0.15, type: "spring", stiffness: 200 }}
+                style={{ transformOrigin: `${cx}px ${cy}px` }}
+              />
+            ))}
           </g>
         </svg>
 
-        <Link href="/" className="relative w-fit">
-          <TicketOSLogo markSize="md" tone="dark" />
-        </Link>
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="relative w-fit">
+          <Link href="/">
+            <TicketOSLogo markSize="md" tone="dark" />
+          </Link>
+        </motion.div>
 
         <div className="relative max-w-md">
-          <h2 className="text-4xl font-semibold leading-[1.1] tracking-tight xl:text-5xl">The control room for AI-run IT.</h2>
-          <p className="mt-4 max-w-sm text-base leading-7 text-white/70">
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="text-4xl font-semibold leading-[1.1] tracking-tight xl:text-5xl"
+          >
+            The control room for AI-run IT.
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="mt-4 max-w-sm text-base leading-7 text-white/70"
+          >
             Triage, approve, and execute on real systems — in a workspace built to audit, undo, and afford every action.
-          </p>
+          </motion.p>
           <div className="mt-8 grid max-w-sm grid-cols-3 gap-3">
-            {pillars.map(([label, Icon]) => (
-              <div key={label} className="rounded-xl border border-white/15 bg-white/[0.08] p-3 text-center backdrop-blur">
+            {pillars.map(([label, Icon], i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.08 }}
+                whileHover={{ y: -3 }}
+                className="rounded-xl border border-white/15 bg-white/[0.08] p-3 text-center backdrop-blur"
+              >
                 <Icon size={18} className="mx-auto" />
                 <p className="mt-1.5 text-xs font-semibold">{label}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -138,7 +186,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       {/* Right — clean white form */}
       <section className="flex min-h-screen flex-col px-5 py-8 md:px-10">
         <div className="flex flex-1 items-center justify-center py-10">
-          <div className="w-full max-w-[400px]">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-[400px]"
+          >
             <div className="mb-8 flex justify-center lg:justify-start">
               <Link href="/">
                 <TicketOSLogo markSize="lg" />
@@ -238,7 +291,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 {isSignUp ? "Log in" : "Create account"}
               </Link>
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
     </main>
