@@ -101,6 +101,16 @@ export function LandingPage() {
       <section className="relative overflow-hidden bg-[#07111f] text-white">
         <AuroraField className="opacity-90" />
         <GridOverlay tone="dark" />
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{ background: "radial-gradient(55% 45% at 82% 8%, rgba(56,189,248,0.16), transparent 70%)" }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{ background: "radial-gradient(45% 40% at 8% 88%, rgba(168,85,247,0.14), transparent 70%)" }}
+        />
 
         <div className="relative mx-auto grid min-h-[580px] max-w-7xl gap-12 px-5 py-16 md:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
           <div>
@@ -246,11 +256,11 @@ export function LandingPage() {
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">Why TicketOS</p>
           <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Most tools let agents act. We let you stay in control.
+            Automation that keeps you in control.
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            Every other platform asks you to trust the automation. TicketOS makes that trust visible, reversible, and
-            measurable — the things legacy ITSM and newer agents leave out.
+            TicketOS makes every automated action visible, reversible, and measurable — so you can let agents do the
+            work without giving up oversight.
           </p>
         </motion.div>
 
@@ -439,18 +449,26 @@ function HeroNetwork() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.85 }}
-        className="tos-anim-float absolute -left-3 top-[46%] hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
+        transition={{ delay: 0.8 }}
+        className="tos-anim-float absolute -left-3 top-[44%] hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
       >
         <Undo2 size={13} className="text-[#7ef0a8]" /> Reversible
       </motion.div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="tos-anim-float-slow absolute -right-2 bottom-4 hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
+        transition={{ delay: 0.95 }}
+        className="tos-anim-float-slow absolute -right-4 top-2 hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
       >
-        <GitBranch size={13} className="text-[#7ef0a8]" /> Audited
+        <TrendingUp size={13} className="text-[#7dd3fc]" /> 58% auto-resolved
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+        className="tos-anim-float absolute -right-2 bottom-4 hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
+      >
+        <GitBranch size={13} className="text-[#c4b5fd]" /> Audited
       </motion.div>
     </motion.div>
   );

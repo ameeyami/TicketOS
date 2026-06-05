@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Minus, X } from "lucide-react";
+import { ArrowRight, Check, Coins, ScrollText, Undo2, X } from "lucide-react";
 import Link from "next/link";
 import { AuroraField, GridOverlay } from "@/components/brand/backgrounds";
 import { MarketingFooter, MarketingNav } from "@/components/marketing/marketing-chrome";
@@ -69,18 +69,11 @@ const neverBilled = [
   "Certified-consultant lock-in",
 ];
 
-type Cell = boolean | "partial" | string;
-const comparison: Array<[string, Cell, Cell, Cell]> = [
-  ["Autonomous resolution", true, true, "Top tier only"],
-  ["Undo / reverse an action", true, false, false],
-  ["Cost per resolution + budget cap", true, false, false],
-  ["Dry-run blast-radius preview", true, false, "partial"],
-  ["Earned, self-adjusting autonomy", true, false, false],
-  ["Chat-native intake (Slack/Teams)", true, true, "partial"],
-  ["Replayable audit trail", true, true, true],
-  ["Transparent public pricing", true, false, false],
-  ["Fit for teams under 500", true, true, false],
-];
+const everyPlan = [
+  ["Audit", "A complete, replayable record of every decision, approval, and action.", ScrollText],
+  ["Undo", "One-click rollback on real changes an agent makes in your connected systems.", Undo2],
+  ["Afford", "AI usage included, with a hard monthly budget and live cost per resolution.", Coins],
+] satisfies Array<[string, string, typeof ScrollText]>;
 
 const faqs = [
   ["Will my AI bill be predictable?", "Yes. AI usage is included in your plan and capped by a hard monthly budget you set. No per-action credits, no overage packs, no surprise invoices."],
@@ -188,38 +181,34 @@ export function PricingPage() {
         </motion.div>
       </section>
 
-      {/* Comparison */}
+      {/* Every plan includes */}
       <section className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">How we compare</p>
-          <h2 className="mt-2.5 text-3xl font-semibold tracking-tight">The control others leave out.</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">In every plan</p>
+          <h2 className="mt-2.5 text-3xl font-semibold tracking-tight">Control is included, not an upsell.</h2>
         </motion.div>
 
-        <motion.div {...fadeUp} className="mt-8 overflow-hidden rounded-3xl border border-[#d8e4ee] bg-white">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-[#d8e4ee] bg-[#f8fbfe]">
-                <th className="px-5 py-4 font-semibold">Capability</th>
-                <th className="px-4 py-4 text-center font-semibold text-[#0b2a4a]">TicketOS</th>
-                <th className="px-4 py-4 text-center font-semibold text-slate-500">Modern</th>
-                <th className="px-4 py-4 text-center font-semibold text-slate-500">ServiceNow</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparison.map(([label, tos, modern, snow], index) => (
-                <tr key={label} className={index % 2 ? "bg-[#fbfdff]" : "bg-white"}>
-                  <td className="px-5 py-3.5 font-medium text-slate-700">{label}</td>
-                  <ComparisonCell value={tos} highlight />
-                  <ComparisonCell value={modern} />
-                  <ComparisonCell value={snow} />
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </motion.div>
-        <p className="mt-3 text-xs text-slate-400">
-          Competitor details are from public sources as of May 2026; Modern&apos;s are marketing-derived.
-        </p>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {everyPlan.map(([title, body, Icon], index) => (
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: index * 0.06 }}
+              whileHover={{ y: -4 }}
+              key={title}
+              className="rounded-2xl border border-[#d8e4ee] bg-white p-6 shadow-sm"
+            >
+              <span
+                className={`flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ${
+                  ["from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]", "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]", "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]"][index]
+                }`}
+              >
+                <Icon size={21} />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold tracking-tight">{title}</h3>
+              <p className="mt-1.5 text-sm leading-6 text-slate-600">{body}</p>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
       {/* FAQ */}
@@ -263,27 +252,4 @@ export function PricingPage() {
       <MarketingFooter />
     </main>
   );
-}
-
-function ComparisonCell({ value, highlight = false }: { value: Cell; highlight?: boolean }) {
-  let content;
-  if (value === true) {
-    content = <Check size={18} className={highlight ? "text-[#0f7a5f]" : "text-slate-500"} />;
-  } else if (value === false) {
-    content = <X size={18} className="text-rose-400" />;
-  } else if (value === "partial") {
-    content = <Minus size={18} className="text-amber-500" />;
-  } else {
-    content = <span className="text-xs font-medium text-slate-500">{value}</span>;
-  }
-
-  return (
-    <td className={cellClass(highlight)}>
-      <span className="flex items-center justify-center">{content}</span>
-    </td>
-  );
-}
-
-function cellClass(highlight: boolean) {
-  return highlight ? "bg-[#f3fbf6] px-4 py-3.5 text-center" : "px-4 py-3.5 text-center";
 }
