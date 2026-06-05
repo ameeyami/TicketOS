@@ -77,7 +77,7 @@ a {
   min-height: auto;
   background: transparent !important;
   color: #07111f;
-  padding: 24px !important;
+  padding: 20px !important;
 }
 
 .app-content-frame > main > div {
@@ -89,7 +89,23 @@ a {
 }
 
 .ticketos-dashboard-content {
-  padding: 24px;
+  padding: 20px;
+}
+
+/* Cards feel alive: a gentle lift + deeper shadow on hover. Scoped to actual
+   card surfaces (rounded-xl/2xl + shadow-sm) so buttons/inputs aren't affected. */
+.ticketos-app-shell .rounded-xl.shadow-sm,
+.ticketos-app-shell .rounded-2xl.shadow-sm {
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+.ticketos-app-shell .rounded-xl.shadow-sm:hover,
+.ticketos-app-shell .rounded-2xl.shadow-sm:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 4px rgba(7, 17, 31, 0.06),
+    0 18px 42px rgba(7, 17, 31, 0.13) !important;
 }
 
 .ticketos-app-shell .rounded-xl {
@@ -177,9 +193,35 @@ a {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--tos-border);
-  border-radius: 6px;
+  border-radius: 9px;
   background: #fff;
-  color: #334155;
+  color: #475569;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+.app-icon-button:hover {
+  background: #eef5ff;
+  border-color: #cfe0ef;
+  color: #0b5f91;
+  transform: translateY(-1px);
+}
+
+/* App header: translucent with a thin multi-colour accent line on top. */
+.tos-header {
+  position: relative;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.82));
+}
+.tos-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #38bdf8 0%, #6366f1 38%, #2dd4bf 72%, #a855f7 100%);
 }
 
 .ticketos-app-shell [class*="text-3xl"] {
@@ -193,7 +235,7 @@ a {
 @media (max-width: 768px) {
   .app-content-frame > main,
   .ticketos-dashboard-content {
-    padding: 16px !important;
+    padding: 14px !important;
   }
 }
 

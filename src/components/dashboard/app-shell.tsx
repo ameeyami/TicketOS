@@ -6,7 +6,6 @@ import {
   BadgeCheck,
   Bell,
   BookOpen,
-  Building2,
   Cable,
   ChartNoAxesColumn,
   ChevronDown,
@@ -45,6 +44,7 @@ const teams = [
     name: "IT",
     initial: "I",
     tone: "bg-[#e7f0ff] text-[#0b5f91]",
+    accent: "#0b5f91",
     links: [
       { label: "Tickets", href: "/app/tickets", icon: MessageSquareText },
       { label: "Incidents", href: "/app/incidents", icon: AlertTriangle },
@@ -60,6 +60,7 @@ const teams = [
     name: "Operations",
     initial: "O",
     tone: "bg-[#e8f8ef] text-[#0f7a5f]",
+    accent: "#0f7a5f",
     links: [
       { label: "Passwords", href: "/app/password-resets", icon: KeyRound },
       { label: "Onboarding", href: "/app/onboarding", icon: UserPlus },
@@ -71,6 +72,7 @@ const teams = [
     name: "Governance",
     initial: "G",
     tone: "bg-[#efeaff] text-[#5b4bc4]",
+    accent: "#5b4bc4",
     links: [
       { label: "Policies", href: "/app/policies", icon: ShieldCheck },
       { label: "Costs", href: "/app/costs", icon: Wallet },
@@ -87,6 +89,7 @@ const utilityTeam = {
   name: "Other",
   initial: "•",
   tone: "bg-[#eef1f5] text-[#5b6b7e]",
+  accent: "#475569",
   links: [
     { label: "Copilot", href: "/app/copilot", icon: Sparkles },
     { label: "Team", href: "/app/team", icon: UsersRound },
@@ -100,6 +103,7 @@ const utilityTeam = {
 
 export function AppShell({ children, orgName }: { children: React.ReactNode; orgName: string }) {
   const pathname = usePathname();
+  const orgInitial = (orgName ?? "T").trim().charAt(0).toUpperCase() || "T";
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const isSectionOpen = (name: string, active: boolean) => openSections[name] ?? active;
   const toggleSection = (name: string, active: boolean) => {
@@ -129,7 +133,7 @@ export function AppShell({ children, orgName }: { children: React.ReactNode; org
                 onToggle={() => toggleSection(team.name, team.links.some((item) => isActivePath(item.href, pathname)))}
               >
                 {team.links.map((item) => (
-                  <NavLink key={item.href} item={item} pathname={pathname} />
+                  <NavLink key={item.href} item={item} pathname={pathname} accent={team.accent} />
                 ))}
               </SidebarSection>
             ))}
@@ -137,13 +141,13 @@ export function AppShell({ children, orgName }: { children: React.ReactNode; org
         </aside>
 
         <section className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[#d8e4ee] bg-white/92 px-4 backdrop-blur md:px-6">
+          <header className="tos-header sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[#d8e4ee] px-4 backdrop-blur md:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <Link href="/app" className="flex items-center gap-2 text-sm font-semibold text-black/72 lg:hidden">
                 <TicketOSLogo markSize="sm" />
               </Link>
-              <form action="/app" className="hidden h-8 w-[320px] items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-2 md:flex">
-                <Search size={14} className="text-black/35" />
+              <form action="/app" className="hidden h-8 w-[300px] items-center gap-2 rounded-full border border-[#d8e4ee] bg-white/80 px-3 transition focus-within:border-[#0b5f91] focus-within:bg-white md:flex">
+                <Search size={14} className="text-[#0b5f91]" />
                 <input
                   name="q"
                   className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-black/30"
@@ -154,7 +158,7 @@ export function AppShell({ children, orgName }: { children: React.ReactNode; org
             <div className="flex items-center gap-2">
               <Link
                 href="/app/copilot"
-                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#0b2a4a] px-2.5 text-xs font-semibold text-white transition hover:bg-[#07111f]"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-gradient-to-r from-[#0b5f91] to-[#5b4bc4] px-3 text-xs font-semibold text-white shadow-[0_6px_16px_-7px_rgba(91,75,196,0.75)] transition hover:opacity-95"
                 title="Operations Copilot"
               >
                 <Sparkles size={14} />
@@ -163,16 +167,23 @@ export function AppShell({ children, orgName }: { children: React.ReactNode; org
               <Link href="/app/diagnostics" className="app-icon-button" title="Claude API key">
                 <KeyRound size={15} />
               </Link>
-              <Link href="/app/notifications" className="app-icon-button" title="Notifications">
+              <Link href="/app/notifications" className="app-icon-button relative" title="Notifications">
                 <Bell size={15} />
+                <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#22c55e] ring-2 ring-white" />
               </Link>
               <Link href="/app/settings" className="app-icon-button" title="Settings">
                 <Settings size={15} />
               </Link>
               <SignOutButton />
-              <Link href="/app/team" className="hidden h-8 items-center gap-2 rounded-md border border-[#d8e4ee] bg-white px-2 text-xs font-semibold md:inline-flex">
-                <Building2 size={14} />
-                {orgName}
+              <Link
+                href="/app/team"
+                className="hidden h-8 items-center gap-2 rounded-full border border-[#d8e4ee] bg-white py-0.5 pl-1 pr-2.5 text-xs font-semibold transition hover:border-[#cfe0ef] md:inline-flex"
+                title={orgName}
+              >
+                <span className="flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-[#0b5f91] to-[#5b4bc4] text-[11px] font-bold text-white">
+                  {orgInitial}
+                </span>
+                <span className="max-w-[120px] truncate">{orgName}</span>
               </Link>
             </div>
           </header>
@@ -221,26 +232,34 @@ function SidebarSection({
 function NavLink({
   item,
   pathname,
+  accent,
 }: {
   item: { label: string; href: string; icon: LucideIcon };
   pathname: string;
+  accent: string;
 }) {
   const active = item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
 
   return (
     <Link
       href={item.href}
+      style={active ? { backgroundColor: accent, color: "#fff", boxShadow: `0 6px 16px -7px ${accent}cc` } : undefined}
       className={cn(
         "flex h-8 items-center gap-2.5 rounded-md py-1 pl-[34px] pr-2 text-sm transition",
-        active
-          ? "bg-[#0b2a4a] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(11,42,74,0.55)]"
-          : "text-slate-500 hover:bg-[#eef2f7] hover:text-slate-800",
+        active ? "font-semibold" : "text-slate-500 hover:bg-[#eef2f7] hover:text-slate-800",
       )}
     >
-      <item.icon size={15} className={active ? "text-[#7ef0a8]" : "text-slate-400"} />
+      <item.icon size={15} style={active ? { color: "#fff" } : undefined} className={active ? "" : "text-slate-400"} />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.label === "Approvals" && (
-        <span className="rounded-full bg-[#22c55e] px-1.5 py-0.5 text-[10px] font-semibold text-[#03120a]">2</span>
+        <span
+          className={cn(
+            "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+            active ? "bg-white/25 text-white" : "bg-[#22c55e] text-[#03120a]",
+          )}
+        >
+          2
+        </span>
       )}
     </Link>
   );
