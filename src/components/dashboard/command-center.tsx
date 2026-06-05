@@ -55,9 +55,9 @@ export function CommandCenter({
           </span>
         </Link>
       )}
-      <section className="rounded-lg border border-black/10 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm">
         <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
-          <div className="p-5">
+          <div className="bg-gradient-to-br from-white via-white to-[#eef5ff] p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#0b5f91]">Service workspace</p>
@@ -102,10 +102,18 @@ export function CommandCenter({
             </div>
           </div>
 
-          <div className="border-t border-black/10 bg-[#07111f] p-5 text-white lg:border-l lg:border-t-0">
-            <div className="flex items-center justify-between">
+          <div className="relative overflow-hidden border-t border-black/10 bg-gradient-to-br from-[#0b1a2e] to-[#07111f] p-5 text-white lg:border-l lg:border-t-0">
+            <span
+              className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full blur-3xl"
+              style={{ background: "radial-gradient(circle, rgba(34,197,94,0.22), transparent 70%)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between">
               <p className="font-semibold">Agent status</p>
-              <span className="rounded-md bg-[#22c55e] px-2 py-1 text-xs font-semibold text-[#03120a]">Live</span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-[#22c55e] px-2 py-1 text-xs font-semibold text-[#03120a]">
+                <span className="size-1.5 animate-pulse rounded-full bg-[#03120a]/70" />
+                Live
+              </span>
             </div>
             <div className="mt-4 space-y-3">
               {data.agents.slice(0, 3).map((agent) => (
