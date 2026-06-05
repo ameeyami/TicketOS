@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { upsertTicketEmbedding } from "@/lib/ai/assist";
 import { draftArticleFromTicket } from "@/lib/ai/knowledge";
 import { deliverWebhook } from "@/lib/api/webhooks";
-import { getOrgAnthropicKey } from "@/lib/ai/org-key";
+import { getOrgAnthropicKey, getOrgVoyageKey } from "@/lib/ai/org-key";
 import { cancelPendingApproval, fulfillPendingApproval } from "@/lib/integrations/execute";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -309,6 +310,22 @@ export async function updateTicketStatus(formData: FormData) {
   if (status === "resolved") {
     await maybeDraftKnowledge(supabase, organizationId, userData.user.id, ticketId, note);
     await fireTicketWebhook(supabase, organizationId, "ticket.resolved", ticketId);
+    // Add this resolved ticket to the assisted-resolution corpus (best-effort).
+    const { data: resolvedTicket } = await supabase
+      .from("tickets")
+      .select("title, ai_summary, description")
+      .eq("id", ticketId)
+      .maybeSingle();
+    if (resolvedTicket) {
+      const voyageKey = await getOrgVoyageKey(supabase, organizationId);
+      await upsertTicketEmbedding(
+        supabase,
+        organizationId,
+        ticketId,
+        `${resolvedTicket.title}\n\n${resolvedTicket.ai_summary ?? resolvedTicket.description ?? ""}`,
+        voyageKey,
+      );
+    }
   }
 
   revalidatePath(`/app/tickets/${ticketId}`);

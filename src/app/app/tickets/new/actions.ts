@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getOrgAnthropicKey } from "@/lib/ai/org-key";
+import { upsertTicketEmbedding } from "@/lib/ai/assist";
+import { getOrgAnthropicKey, getOrgVoyageKey } from "@/lib/ai/org-key";
 import { triageTicket } from "@/lib/ai/triage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
@@ -107,6 +108,10 @@ export async function createTicket(formData: FormData) {
       status: "pending",
     });
   }
+
+  // Index for assisted resolution / semantic ticket search (best-effort).
+  const voyageKey = await getOrgVoyageKey(supabase, organization.id);
+  await upsertTicketEmbedding(supabase, organization.id, ticket.id, `${title}\n\n${summary}`, voyageKey);
 
   redirect(`/app/tickets/${ticket.id}`);
 }

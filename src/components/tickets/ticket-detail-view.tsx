@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AuroraField } from "@/components/brand/backgrounds";
-import { decideApproval } from "@/app/app/tickets/[ticketId]/actions";
-import { updateTicketStatus } from "@/app/app/actions";
+import { AssistedResolution, type AssistProps } from "@/components/tickets/assisted-resolution";
+import { decideApproval, updateTicketStatus } from "@/app/app/actions";
 import { reverseExecutionAction } from "@/app/app/executions/actions";
 import {
   MODEL_PRICING,
@@ -37,7 +37,15 @@ import {
 import { cn } from "@/lib/utils";
 import { PendingButton } from "@/components/ui/pending-button";
 
-export function TicketDetailView({ data, canApprove = false }: { data: TicketDetailData; canApprove?: boolean }) {
+export function TicketDetailView({
+  data,
+  canApprove = false,
+  assist,
+}: {
+  data: TicketDetailData;
+  canApprove?: boolean;
+  assist?: Omit<AssistProps, "ticketId">;
+}) {
   const { ticket, steps, approval, policies, auditLogs, comments, executionActions, requestingTeam, assignedTeam } = data;
   const status = displayTicketStatus(ticket.status);
   const policy = policies[0];
@@ -140,6 +148,17 @@ export function TicketDetailView({ data, canApprove = false }: { data: TicketDet
             </div>
           </div>
         </div>
+
+        {assist && (
+          <section className="mt-5">
+            <AssistedResolution
+              ticketId={ticket.id}
+              mode={assist.mode}
+              similarTickets={assist.similarTickets}
+              suggestedArticles={assist.suggestedArticles}
+            />
+          </section>
+        )}
 
         <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
           <Panel title="Execution timeline" icon={Clock3}>
