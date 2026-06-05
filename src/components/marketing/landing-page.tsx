@@ -82,6 +82,16 @@ const fadeUp = {
   viewport: { once: true, margin: "-80px" },
 };
 
+// Rotating accent palette so icon chips across the page feel colourful, not flat.
+const ICON_GRADIENTS = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 export function LandingPage() {
   return (
     <main className="min-h-screen bg-[#f4f8fb] text-[#07111f]">
@@ -92,7 +102,7 @@ export function LandingPage() {
         <AuroraField className="opacity-90" />
         <GridOverlay tone="dark" />
 
-        <div className="relative mx-auto grid min-h-[680px] max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+        <div className="relative mx-auto grid min-h-[580px] max-w-7xl gap-12 px-5 py-16 md:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
           <div>
             <motion.span
               initial={{ opacity: 0, y: 10 }}
@@ -107,7 +117,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.06 }}
-              className="mt-6 max-w-2xl text-balance text-5xl font-semibold leading-[1.02] tracking-tight md:text-7xl"
+              className="mt-5 max-w-2xl text-balance text-4xl font-semibold leading-[1.04] tracking-tight md:text-6xl"
             >
               Autonomy you can{" "}
               <span className="bg-gradient-to-r from-[#22c55e] via-[#5eead4] to-[#38bdf8] bg-clip-text text-transparent">
@@ -119,7 +129,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
-              className="mt-6 max-w-xl text-lg leading-8 text-white/68"
+              className="mt-5 max-w-xl text-base leading-7 text-white/68"
             >
               TicketOS gives lean IT teams a governed workspace where AI agents triage requests, ask for approval, and
               execute on real systems — then let you reverse any action, see what it cost, and prove what happened.
@@ -162,9 +172,17 @@ export function LandingPage() {
       <section className="border-b border-[#d8e4ee] bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px overflow-hidden px-5 md:grid-cols-4 md:px-8">
           {metrics.map(([value, label], index) => (
-            <motion.div {...fadeUp} transition={{ delay: index * 0.05 }} key={label} className="px-2 py-10 text-center md:px-6">
-              <p className="text-4xl font-semibold tracking-tight text-[#0b2a4a] md:text-5xl">{value}</p>
-              <p className="mx-auto mt-3 max-w-[18ch] text-sm leading-6 text-slate-500">{label}</p>
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ y: -3 }}
+              key={label}
+              className="px-2 py-9 text-center md:px-6"
+            >
+              <p className="bg-gradient-to-br from-[#0b5f91] to-[#5b4bc4] bg-clip-text text-4xl font-semibold tracking-tight text-transparent md:text-[2.75rem]">
+                {value}
+              </p>
+              <p className="mx-auto mt-2.5 max-w-[18ch] text-sm leading-6 text-slate-500">{label}</p>
             </motion.div>
           ))}
         </div>
@@ -173,8 +191,8 @@ export function LandingPage() {
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl px-5 py-20 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">How it works</p>
-          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">How it works</p>
+          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             From a chat message to a resolved, reversible action.
           </h2>
         </motion.div>
@@ -184,15 +202,20 @@ export function LandingPage() {
           <div className="pointer-events-none absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-[#22c55e]/30 via-[#38bdf8]/30 to-[#6366f1]/30 lg:block" />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {flow.map(([title, body, Icon], index) => (
-              <motion.div {...fadeUp} transition={{ delay: index * 0.07 }} key={title} className="relative">
-                <div className="relative z-10 flex size-14 items-center justify-center rounded-2xl border border-[#d8e4ee] bg-white text-[#0b5f91] shadow-sm">
+              <motion.div {...fadeUp} transition={{ delay: index * 0.07 }} whileHover={{ y: -4 }} key={title} className="relative">
+                <div
+                  className={cn(
+                    "relative z-10 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-sm",
+                    ICON_GRADIENTS[index % ICON_GRADIENTS.length],
+                  )}
+                >
                   <Icon size={22} />
                   <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-[#0b2a4a] text-[11px] font-bold text-white">
                     {index + 1}
                   </span>
                 </div>
-                <h3 className="mt-4 text-lg font-semibold tracking-tight">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
+                <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
+                <p className="mt-1.5 text-sm leading-6 text-slate-600">{body}</p>
               </motion.div>
             ))}
           </div>
@@ -202,11 +225,11 @@ export function LandingPage() {
       {/* Differentiators — bento */}
       <section id="features" className="mx-auto max-w-7xl px-5 pb-4 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">Why TicketOS</p>
-          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">Why TicketOS</p>
+          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             Most tools let agents act. We let you stay in control.
           </h2>
-          <p className="mt-5 text-lg leading-8 text-slate-600">
+          <p className="mt-4 text-base leading-7 text-slate-600">
             Every other platform asks you to trust the automation. TicketOS makes that trust visible, reversible, and
             measurable — the things legacy ITSM and newer agents leave out.
           </p>
@@ -221,16 +244,21 @@ export function LandingPage() {
                 transition={{ delay: (index % 4) * 0.05 }}
                 key={title}
                 className={cn(
-                  "group flex flex-col gap-4 rounded-2xl border border-[#d8e4ee] bg-white p-6 transition hover:-translate-y-1 hover:border-[#b7d8f2] hover:shadow-xl hover:shadow-[#0b2a4a]/5",
+                  "group flex flex-col gap-4 rounded-2xl border border-[#d8e4ee] bg-white p-6 transition hover:-translate-y-1.5 hover:border-[#b7d8f2] hover:shadow-xl hover:shadow-[#0b2a4a]/5",
                   wide && "lg:col-span-2 lg:flex-row lg:items-start lg:p-7",
                 )}
               >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#e7f3ff] to-[#e8f8ef] text-[#0b5f91] transition group-hover:from-[#22c55e] group-hover:to-[#0b5f91] group-hover:text-white">
+                <span
+                  className={cn(
+                    "flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br transition group-hover:scale-105",
+                    ICON_GRADIENTS[index % ICON_GRADIENTS.length],
+                  )}
+                >
                   <Icon size={22} />
                 </span>
                 <div>
-                  <h3 className={cn("font-semibold tracking-tight", wide ? "text-2xl" : "text-xl")}>{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
+                  <h3 className={cn("font-semibold tracking-tight", wide ? "text-xl" : "text-lg")}>{title}</h3>
+                  <p className="mt-2.5 text-sm leading-6 text-slate-600">{body}</p>
                 </div>
               </motion.div>
             );
@@ -251,29 +279,35 @@ export function LandingPage() {
       {/* Governance */}
       <section id="security" className="mx-auto max-w-7xl px-5 pb-20 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">Governance</p>
-          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Governance</p>
+          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             Guardrails before agents touch sensitive tools
           </h2>
-          <p className="mt-5 text-lg leading-8 text-slate-600">
+          <p className="mt-4 text-base leading-7 text-slate-600">
             Approval stops, role boundaries, policy checks, cost budgets, and a replayable audit trail — enforced on
             every workflow.
           </p>
         </motion.div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {controls.map(([title, detail, Icon], index) => (
             <motion.div
               {...fadeUp}
               transition={{ delay: (index % 3) * 0.05 }}
+              whileHover={{ y: -4 }}
               key={title}
-              className="group rounded-2xl border border-[#d8e4ee] bg-white p-6 transition hover:-translate-y-1 hover:border-[#b7d8f2] hover:shadow-xl hover:shadow-[#0b2a4a]/5"
+              className="group rounded-2xl border border-[#d8e4ee] bg-white p-6 transition hover:border-[#b7d8f2] hover:shadow-xl hover:shadow-[#0b2a4a]/5"
             >
-              <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#e7f3ff] to-[#e8f8ef] text-[#0b5f91] transition group-hover:from-[#22c55e] group-hover:to-[#0b5f91] group-hover:text-white">
+              <span
+                className={cn(
+                  "flex size-11 items-center justify-center rounded-xl bg-gradient-to-br transition group-hover:scale-105",
+                  ICON_GRADIENTS[index % ICON_GRADIENTS.length],
+                )}
+              >
                 <Icon size={21} />
               </span>
-              <h3 className="mt-5 text-lg font-semibold tracking-tight">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+              <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
+              <p className="mt-1.5 text-sm leading-6 text-slate-600">{detail}</p>
             </motion.div>
           ))}
         </div>
@@ -285,10 +319,10 @@ export function LandingPage() {
         <GridOverlay tone="dark" />
         <div className="relative mx-auto flex max-w-7xl flex-col items-start gap-8 px-5 py-20 md:px-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">
+            <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
               Run IT from one clear, governed workspace.
             </h2>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-white/68">
+            <p className="mt-4 max-w-xl text-base leading-7 text-white/68">
               Review tickets, connect apps, approve workflows, and inspect — and reverse — every agent action.
             </p>
           </div>
@@ -418,17 +452,22 @@ function FeatureGrid({
       className="grid gap-8 rounded-3xl border border-[#d8e4ee] bg-white p-6 md:grid-cols-[0.38fr_0.62fr] md:p-10"
     >
       <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">{eyebrow}</p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight">{title}</h2>
-        <p className="mt-4 text-base leading-7 text-slate-600">{body}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0e7490]">{eyebrow}</p>
+        <h2 className="mt-2.5 text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+        <p className="mt-3 text-sm leading-7 text-slate-600">{body}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map(([label, Icon]) => (
+        {items.map(([label, Icon], index) => (
           <div
             key={label}
-            className="flex items-center gap-3 rounded-xl border border-[#d8e4ee] bg-[#f8fbfe] p-3 transition hover:border-[#b7d8f2] hover:bg-white"
+            className="flex items-center gap-3 rounded-xl border border-[#d8e4ee] bg-[#f8fbfe] p-3 transition hover:-translate-y-0.5 hover:border-[#b7d8f2] hover:bg-white"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f3ff] text-[#0b5f91]">
+            <span
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br",
+                ICON_GRADIENTS[index % ICON_GRADIENTS.length],
+              )}
+            >
               <Icon size={17} />
             </span>
             <span className="text-sm font-semibold">{label}</span>
