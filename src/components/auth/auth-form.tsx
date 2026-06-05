@@ -89,13 +89,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="relative min-h-screen bg-white text-[#07111f] lg:grid lg:grid-cols-[1.05fr_1fr]">
       {/* Left — brand-blue panel */}
-      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#0b2a4a] via-[#0b5f91] to-[#1d4ed8] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
-        {/* soft highlight */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          aria-hidden
-          style={{ background: "radial-gradient(58% 50% at 28% 18%, rgba(255,255,255,0.16), transparent 70%)" }}
-        />
+      <aside className="relative hidden overflow-hidden bg-[#07111f] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+        {/* hero-matched gradient mesh (green / blue / violet) */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden style={{ background: "radial-gradient(70% 55% at 25% 0%, rgba(34,197,94,0.16), transparent 70%)" }} />
+        <div className="pointer-events-none absolute inset-0" aria-hidden style={{ background: "radial-gradient(55% 50% at 90% 12%, rgba(56,189,248,0.18), transparent 70%)" }} />
+        <div className="pointer-events-none absolute inset-0" aria-hidden style={{ background: "radial-gradient(50% 45% at 5% 95%, rgba(168,85,247,0.16), transparent 70%)" }} />
         {/* drifting ambient glows */}
         <div
           className="tos-anim-float-slow pointer-events-none absolute -left-20 top-1/3 size-72 rounded-full blur-3xl"
