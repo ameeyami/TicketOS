@@ -136,6 +136,8 @@ export default async function TicketInboxPage({
     if (state === "at_risk") atRiskOpen += 1;
     else if (state === "breached") breachedOpen += 1;
   }
+  const openCount = ticketRows.filter((t) => t.status !== "resolved").length;
+  const resolvedCount = ticketRows.filter((t) => t.status === "resolved").length;
 
   return (
     <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
@@ -178,6 +180,13 @@ export default async function TicketInboxPage({
           <QuickChip href="/app/tickets?status=blocked" label="Blocked" active={params.status === "blocked"} />
           <QuickChip href="/app/tickets?status=resolved" label="Resolved" active={params.status === "resolved"} />
         </div>
+
+        <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Open" value={openCount} bar="from-[#38bdf8] to-[#0b5f91]" />
+          <StatTile label="At risk" value={atRiskOpen} bar="from-[#fbbf24] to-[#b45309]" tone={atRiskOpen > 0 ? "amber" : undefined} />
+          <StatTile label="Breached" value={breachedOpen} bar="from-[#fb7185] to-[#be123c]" tone={breachedOpen > 0 ? "rose" : undefined} />
+          <StatTile label="Resolved" value={resolvedCount} bar="from-[#34d399] to-[#0f7a5f]" />
+        </section>
 
         <section className="mt-4 grid gap-5 xl:grid-cols-[300px_1fr]">
           <aside>
@@ -376,6 +385,23 @@ function QuickStatusForm({
         {label}
       </PendingButton>
     </form>
+  );
+}
+
+function StatTile({ label, value, bar, tone }: { label: string; value: number; bar: string; tone?: "amber" | "rose" }) {
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-black/10 bg-white p-3.5 shadow-sm">
+      <span className={cn("absolute inset-y-0 left-0 w-1 bg-gradient-to-b", bar)} />
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p
+        className={cn(
+          "mt-1 text-2xl font-semibold tracking-tight",
+          tone === "amber" ? "text-amber-600" : tone === "rose" ? "text-rose-600" : "text-[#07111f]",
+        )}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
 

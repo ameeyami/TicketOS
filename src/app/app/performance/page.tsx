@@ -160,7 +160,7 @@ function BucketTable({ title, buckets }: { title: string; buckets: Bucket[] }) {
             </thead>
             <tbody className="divide-y divide-black/5">
               {buckets.map((b) => (
-                <tr key={b.key}>
+                <tr key={b.key} className="transition hover:bg-[#f8fbfe]">
                   <td className="py-2 font-medium text-slate-700">{b.label}</td>
                   <td className="py-2 text-right tabular-nums">{b.open}</td>
                   <td className="py-2 text-right tabular-nums">{b.resolved}</td>

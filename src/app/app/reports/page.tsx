@@ -279,7 +279,7 @@ function VolumeSparkline({ trends }: { trends: TrendWeek[] }) {
           <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
             <span className="text-[11px] font-semibold text-slate-600">{t.created}</span>
             <div
-              className="w-full rounded-t-md bg-[#0b5f91]/85"
+              className="w-full rounded-t-md bg-gradient-to-t from-[#0b5f91] to-[#7dd3fc]"
               style={{ height: `${Math.max(4, Math.round((t.created / max) * 72))}px` }}
               title={`${t.label}: ${t.created} created, ${t.resolved} resolved`}
             />

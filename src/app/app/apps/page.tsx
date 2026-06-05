@@ -9,6 +9,18 @@ import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
+const CATEGORY_BLURB: Record<string, string> = {
+  Identity: "provision users and automate access.",
+  HR: "drive onboarding and offboarding from your HRIS.",
+  IT: "manage devices and run real IT actions.",
+  Security: "enforce policy and act on security signals.",
+  Productivity: "give the agent docs and collaboration context.",
+  DevOps: "automate change and incident workflows.",
+  Support: "sync tickets and deflect with knowledge.",
+  Sales: "bring CRM context into requests.",
+  Finance: "automate finance approvals and access.",
+};
+
 export default async function AppsPage({
   searchParams,
 }: {
@@ -90,8 +102,11 @@ export default async function AppsPage({
               {apps.map((app) => {
                 const existing = byProvider.get(app.slug);
                 return (
-                  <div key={app.slug} className="flex flex-col justify-between rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
+                  <div
+                    key={app.slug}
+                    className="flex flex-col rounded-xl border border-black/10 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[#b7d8f2] hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
                       <span
                         className={cn(
                           "flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
@@ -100,10 +115,16 @@ export default async function AppsPage({
                       >
                         {app.name.charAt(0)}
                       </span>
+                      <p className="font-semibold tracking-tight">{app.name}</p>
+                    </div>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-slate-500">
+                      Connect {app.name} to {CATEGORY_BLURB[app.category] ?? "automate work across your stack."}
+                    </p>
+                    <div className="mt-4">
                       {existing?.status === "connected" ? (
                         <Link
                           href={`/app/integrations/${existing.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
                         >
                           <CheckCircle2 size={12} />
                           Connected
@@ -111,14 +132,14 @@ export default async function AppsPage({
                       ) : existing?.status === "disabled" ? (
                         <Link
                           href={`/app/integrations/${existing.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-200"
+                          className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-100 px-2.5 py-1.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-200"
                         >
                           Disabled
                         </Link>
                       ) : existing ? (
                         <Link
                           href={`/app/integrations/${existing.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
                         >
                           <CircleAlert size={12} />
                           Set up
@@ -130,14 +151,13 @@ export default async function AppsPage({
                           <input type="hidden" name="category" value={activeCategory} />
                           <PendingButton
                             pendingText="..."
-                            className="h-8 rounded-md bg-[#0b2a4a] px-3 text-xs font-semibold text-white"
+                            className="h-8 rounded-md border border-black/10 bg-white px-3 text-xs font-semibold text-[#0b2a4a] transition hover:border-[#0b2a4a]"
                           >
                             Connect
                           </PendingButton>
                         </form>
                       )}
                     </div>
-                    <p className="mt-3 font-semibold tracking-tight">{app.name}</p>
                   </div>
                 );
               })}
