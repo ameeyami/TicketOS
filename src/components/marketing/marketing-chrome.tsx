@@ -7,9 +7,11 @@ import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 
 const navLinks = [
   ["Product", "/product"],
+  ["Use cases", "/use-cases"],
   ["Integrations", "/#integrations"],
-  ["Trust", "/trust"],
+  ["Docs", "/docs"],
   ["Pricing", "/pricing"],
+  ["Trust", "/trust"],
 ] as const;
 
 const ACCENT_LINE = "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#22c55e] via-[#38bdf8] to-[#a855f7]";
@@ -31,7 +33,7 @@ export function MarketingNav() {
             <Link
               key={href}
               href={href}
-              className="rounded-full px-3.5 py-1.5 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+              className="rounded-full px-3 py-1.5 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
             >
               {label}
             </Link>
