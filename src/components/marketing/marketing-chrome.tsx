@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 
 const navLinks = [
@@ -12,11 +15,13 @@ const navLinks = [
 const ACCENT_LINE = "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#22c55e] via-[#38bdf8] to-[#a855f7]";
 
 export function MarketingNav() {
+  const [open, setOpen] = useState(false);
+
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#07111f]/70 backdrop-blur-xl">
       <span className={ACCENT_LINE} aria-hidden />
       <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
           <TicketOSLogo markSize="md" tone="dark" />
         </Link>
 
@@ -47,8 +52,42 @@ export function MarketingNav() {
             Get started
             <ArrowRight size={15} className="transition group-hover:translate-x-0.5" />
           </Link>
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className="inline-flex size-9 items-center justify-center rounded-full border border-white/15 text-white/80 transition hover:bg-white/10 lg:hidden"
+          >
+            {open ? <X size={17} /> : <Menu size={17} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="border-t border-white/10 bg-[#07111f]/95 backdrop-blur-xl lg:hidden">
+          <div className="mx-auto flex max-w-7xl flex-col gap-0.5 px-4 py-3">
+            {navLinks.map(([label, href]) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
+              >
+                {label}
+              </Link>
+            ))}
+            <Link
+              href="/auth/sign-in"
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+            >
+              Log in
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

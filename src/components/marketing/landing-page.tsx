@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { animate, motion, useInView } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -190,7 +191,7 @@ export function LandingPage() {
               className="px-2 py-9 text-center md:px-6"
             >
               <p className="bg-gradient-to-br from-[#0b5f91] to-[#5b4bc4] bg-clip-text text-4xl font-semibold tracking-tight text-transparent md:text-[2.75rem]">
-                {value}
+                <CountUp value={value} />
               </p>
               <p className="mx-auto mt-2.5 max-w-[18ch] text-sm leading-6 text-slate-500">{label}</p>
             </motion.div>
@@ -370,6 +371,32 @@ export function LandingPage() {
       <MarketingFooter />
     </main>
   );
+}
+
+/** Animates a metric (e.g. "58%", "$0.21") counting up the first time it scrolls into view. */
+function CountUp({ value }: { value: string }) {
+  const match = value.match(/^([^\d]*)([\d.]+)(.*)$/);
+  const prefix = match?.[1] ?? "";
+  const numStr = match?.[2] ?? "0";
+  const suffix = match?.[3] ?? "";
+  const target = parseFloat(numStr);
+  const decimals = numStr.includes(".") ? (numStr.split(".")[1]?.length ?? 0) : 0;
+
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const [display, setDisplay] = useState(`${prefix}${(0).toFixed(decimals)}${suffix}`);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(0, target, {
+      duration: 1.1,
+      ease: "easeOut",
+      onUpdate: (v) => setDisplay(`${prefix}${v.toFixed(decimals)}${suffix}`),
+    });
+    return () => controls.stop();
+  }, [inView, target, decimals, prefix, suffix]);
+
+  return <span ref={ref}>{display}</span>;
 }
 
 /** Designed "automation network": the AI agent at the center, wired to the real systems it acts on. */
