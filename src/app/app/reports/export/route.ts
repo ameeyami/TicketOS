@@ -25,6 +25,7 @@ type TicketRow = {
   requester_email: string | null;
   ai_confidence: number | null;
   assigned_agent_id: string | null;
+  assigned_team_id: string | null;
   created_at: string;
   resolved_at: string | null;
   agents?: { name: string | null } | { name: string | null }[] | null;
@@ -46,11 +47,6 @@ function formatDate(value: string | null | undefined) {
   return new Date(value).toLocaleString([], { month: "short", day: "numeric", year: "numeric" });
 }
 
-function agentName(row: TicketRow): string {
-  const rel = Array.isArray(row.agents) ? row.agents[0] : row.agents;
-  return rel?.name ?? (row.assigned_agent_id ? "Assigned" : "Unassigned");
-}
-
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const format = params.get("format") === "pdf" ? "pdf" : "csv";
@@ -65,25 +61,62 @@ export async function GET(request: Request) {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: tickets }, { data: workflowRuns }, { data: approvals }, { data: integrations }, { data: kbQueries }] =
-    await Promise.all([
-      supabase
-        .from("tickets")
-        .select(
-          "id, external_id, title, status, priority, category, requester_name, requester_email, ai_confidence, assigned_agent_id, created_at, resolved_at, agents(name)",
-        )
-        .eq("organization_id", organization.id)
-        .order("created_at", { ascending: false }),
-      supabase.from("workflow_runs").select("id, status, ticket_id").eq("organization_id", organization.id),
-      supabase.from("approval_requests").select("id, status").eq("organization_id", organization.id),
-      supabase.from("integrations").select("id, status").eq("organization_id", organization.id),
-      supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
-    ]);
+  const [
+    { data: tickets },
+    { data: workflowRuns },
+    { data: approvals },
+    { data: integrations },
+    { data: kbQueries },
+    { data: teamRows },
+    { data: teamMemberRows },
+    { data: createdEvents },
+    { data: ownProfile },
+  ] = await Promise.all([
+    supabase
+      .from("tickets")
+      .select(
+        "id, external_id, title, status, priority, category, requester_name, requester_email, ai_confidence, assigned_agent_id, assigned_team_id, created_at, resolved_at, agents(name)",
+      )
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false }),
+    supabase.from("workflow_runs").select("id, status, ticket_id").eq("organization_id", organization.id),
+    supabase.from("approval_requests").select("id, status").eq("organization_id", organization.id),
+    supabase.from("integrations").select("id, status").eq("organization_id", organization.id),
+    supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
+    supabase.from("teams").select("id, name").eq("organization_id", organization.id),
+    supabase.from("team_members").select("user_id, member_name, member_email").eq("organization_id", organization.id),
+    supabase.from("audit_logs").select("ticket_id, actor_user_id").eq("organization_id", organization.id).eq("event_type", "created"),
+    supabase.from("profiles").select("full_name").eq("id", userData.user.id).maybeSingle(),
+  ]);
 
   const allTickets = (tickets ?? []) as TicketRow[];
   const runRows = workflowRuns ?? [];
   const approvalRows = approvals ?? [];
   const integrationRows = integrations ?? [];
+
+  // --- resolve "assigned to" (agent/team) and "created by" (human) ---
+  const teamName = new Map((teamRows ?? []).map((r) => [r.id as string, r.name as string]));
+  const userName = new Map<string, string>();
+  for (const m of teamMemberRows ?? []) {
+    if (m.user_id) userName.set(m.user_id as string, (m.member_name as string) || (m.member_email as string) || "");
+  }
+  userName.set(userData.user.id, (ownProfile?.full_name as string) || userData.user.email || "You");
+  const ticketCreator = new Map<string, string>();
+  for (const e of createdEvents ?? []) {
+    if (e.ticket_id && e.actor_user_id && !ticketCreator.has(e.ticket_id as string)) {
+      ticketCreator.set(e.ticket_id as string, e.actor_user_id as string);
+    }
+  }
+  const assignedTo = (t: TicketRow): string => {
+    const rel = Array.isArray(t.agents) ? t.agents[0] : t.agents;
+    if (rel?.name) return rel.name;
+    if (t.assigned_team_id) return teamName.get(t.assigned_team_id) ?? "Team";
+    return "Unassigned";
+  };
+  const createdBy = (t: TicketRow): string => {
+    const actor = ticketCreator.get(t.id);
+    return (actor && userName.get(actor)) || "—";
+  };
 
   // --- summary metrics (always included for context) ---
   const blockedTickets = allTickets.filter((t) => t.status === "blocked" || t.status === "failed").length;
@@ -162,15 +195,15 @@ export async function GET(request: Request) {
       title: `Tickets (${filtered.length})`,
       columns: [
         { header: "Ticket ID", width: 56 },
-        { header: "Title", width: 128 },
-        { header: "Status", width: 62 },
+        { header: "Title", width: 120 },
+        { header: "Status", width: 60 },
         { header: "Priority", width: 48 },
-        { header: "Category", width: 62 },
-        { header: "Assignee", width: 82 },
-        { header: "Requester", width: 80 },
+        { header: "Category", width: 60 },
+        { header: "Assigned to", width: 82 },
+        { header: "Created by", width: 82 },
+        { header: "Requester", width: 78 },
         { header: "Created", width: 56 },
-        { header: "SLA", width: 86 },
-        { header: "Confidence", width: 52 },
+        { header: "SLA", width: 78 },
       ],
       rows: filtered.map((t) => [
         t.external_id ?? t.id.slice(0, 8),
@@ -178,11 +211,11 @@ export async function GET(request: Request) {
         statusLabels[t.status] ?? titleCase(t.status.replaceAll("_", " ")),
         t.priority,
         t.category ?? "—",
-        agentName(t),
+        assignedTo(t),
+        createdBy(t),
         t.requester_name ?? t.requester_email ?? "—",
         formatDate(t.created_at),
         computeSla({ priority: t.priority, createdAt: t.created_at, status: t.status, resolvedAt: t.resolved_at }).label,
-        `${Math.round(Number(t.ai_confidence ?? 0))}%`,
       ]),
     };
   } else {

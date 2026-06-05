@@ -80,7 +80,7 @@ const teams = [
       { label: "Performance", href: "/app/performance", icon: Gauge },
       { label: "Executions", href: "/app/executions", icon: Undo2 },
       { label: "Audit", href: "/app/audit", icon: ChartNoAxesColumn },
-      { label: "Trust", href: "/trust", icon: Lock },
+      { label: "Trust", href: "/app/trust", icon: Lock },
     ],
   },
 ];
