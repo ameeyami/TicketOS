@@ -122,8 +122,19 @@ export async function answerFromKnowledge(
   articles: KbArticle[],
   apiKey: string | null,
 ): Promise<KbAnswer> {
-  const top = rankArticles(question, articles);
+  return groundedAnswer(question, rankArticles(question, articles), apiKey);
+}
 
+/**
+ * Ground a cited answer in an ALREADY-SELECTED set of top articles. Used by the
+ * semantic path (vector retrieval) so it isn't re-filtered by keyword overlap,
+ * and by answerFromKnowledge after keyword ranking.
+ */
+export async function groundedAnswer(
+  question: string,
+  top: KbArticle[],
+  apiKey: string | null,
+): Promise<KbAnswer> {
   if (top.length === 0) {
     return {
       answer:

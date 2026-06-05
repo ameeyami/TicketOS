@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BookOpen, Check, MessageCircleQuestion, Sparkles, ThumbsUp, Trash2, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Check, MessageCircleQuestion, RefreshCw, Search, Sparkles, ThumbsUp, Trash2, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { approveArticle, createArticle, deleteArticle } from "@/app/app/knowledge/actions";
+import { approveArticle, createArticle, deleteArticle, reindexArticles, saveVoyageKey } from "@/app/app/knowledge/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
+import { getOrgVoyageMeta } from "@/lib/ai/org-key";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -30,26 +31,34 @@ export default async function KnowledgePage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: articles }, { data: queries }, { data: membership }] = await Promise.all([
-    supabase
-      .from("knowledge_articles")
-      .select("*")
-      .eq("organization_id", organization.id)
-      .order("updated_at", { ascending: false }),
-    supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
-    supabase
-      .from("organization_members")
-      .select("role")
-      .eq("organization_id", organization.id)
-      .eq("user_id", userData.user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data: articles }, { data: queries }, { data: membership }, { count: embeddedCount }, voyage] =
+    await Promise.all([
+      supabase
+        .from("knowledge_articles")
+        .select("id, title, body, category, updated_at, status")
+        .eq("organization_id", organization.id)
+        .order("updated_at", { ascending: false }),
+      supabase.from("kb_queries").select("status, csat").eq("organization_id", organization.id),
+      supabase
+        .from("organization_members")
+        .select("role")
+        .eq("organization_id", organization.id)
+        .eq("user_id", userData.user.id)
+        .maybeSingle(),
+      supabase
+        .from("knowledge_articles")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", organization.id)
+        .not("embedding", "is", null),
+      getOrgVoyageMeta(supabase, organization.id),
+    ]);
 
   const allArticles = (articles ?? []) as ArticleRow[];
   const suggestedRows = allArticles.filter((a) => a.status === "suggested");
   const articleRows = allArticles.filter((a) => a.status !== "suggested");
   const queryRows = (queries ?? []) as QueryRow[];
   const canEdit = (membership?.role ?? "operator") !== "viewer";
+  const canManage = membership?.role === "owner" || membership?.role === "admin";
 
   const resolved = queryRows.filter((q) => q.status === "resolved").length;
   const escalated = queryRows.filter((q) => q.status === "escalated").length;
@@ -164,6 +173,60 @@ export default async function KnowledgePage() {
               <Panel title="Add article" icon={BookOpen}>
                 <p className="text-sm text-slate-500">Viewers can read the knowledge base but can&apos;t edit it.</p>
               </Panel>
+            )}
+
+            {canEdit && (
+              <div className="mt-5">
+                <Panel title="Semantic search" icon={Search}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={
+                        voyage.active
+                          ? "inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                          : "inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800"
+                      }
+                    >
+                      {voyage.active ? <Check size={12} /> : <Sparkles size={12} />}
+                      {voyage.active ? `Active (${voyage.source} key)` : "Keyword only"}
+                    </span>
+                    <span className="text-xs text-slate-400">{embeddedCount ?? 0} indexed</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    With a Voyage embeddings key, Ask matches questions by meaning, not just keywords. Without one, it
+                    uses keyword search — nothing breaks.
+                  </p>
+
+                  {canManage && (
+                    <form action={saveVoyageKey} className="mt-3 space-y-2">
+                      <input
+                        name="voyageKey"
+                        type="password"
+                        autoComplete="off"
+                        placeholder="Voyage API key (pa-…)"
+                        className={fieldClass}
+                      />
+                      <PendingButton
+                        pendingText="Saving & indexing..."
+                        className="h-9 w-full rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+                      >
+                        {voyage.source === "org" ? "Update key" : "Connect Voyage"}
+                      </PendingButton>
+                    </form>
+                  )}
+
+                  {voyage.active && (
+                    <form action={reindexArticles} className="mt-2">
+                      <PendingButton
+                        pendingText="Reindexing..."
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-black/10 bg-white px-2.5 text-xs font-semibold text-[#0b2a4a]"
+                      >
+                        <RefreshCw size={13} />
+                        Reindex articles
+                      </PendingButton>
+                    </form>
+                  )}
+                </Panel>
+              </div>
             )}
           </div>
 
