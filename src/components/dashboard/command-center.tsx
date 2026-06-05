@@ -11,6 +11,12 @@ import { ticketIcons } from "@/lib/dashboard-data";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 import { cn } from "@/lib/utils";
 
+const METRIC_ACCENTS = [
+  { card: "border-[#bfdbfe] from-[#eff6ff]", bar: "from-[#38bdf8] to-[#0b5f91]", delta: "text-[#0b5f91]" },
+  { card: "border-[#ddd6fe] from-[#f5f3ff]", bar: "from-[#a855f7] to-[#5b4bc4]", delta: "text-[#5b4bc4]" },
+  { card: "border-[#bbf7d0] from-[#ecfdf5]", bar: "from-[#34d399] to-[#0f7a5f]", delta: "text-[#0f7a5f]" },
+];
+
 export function CommandCenter({
   data,
   aiKeyConnected,
@@ -67,7 +73,7 @@ export function CommandCenter({
                   <Filter size={16} />
                   Approvals
                 </Link>
-                <Link href="/app/tickets/new" className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white">
+                <Link href="/app/tickets/new" className="inline-flex h-10 items-center gap-2 rounded-md bg-gradient-to-r from-[#0b5f91] to-[#5b4bc4] px-3 text-sm font-semibold text-white shadow-[0_8px_20px_-10px_rgba(91,75,196,0.8)] transition hover:opacity-95">
                   <Plus size={16} />
                   New ticket
                 </Link>
@@ -75,19 +81,24 @@ export function CommandCenter({
             </div>
 
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              {primaryMetrics.map((metric, index) => (
-                <motion.div
-                  key={metric.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.04 }}
-                  className="rounded-md border border-black/10 bg-[#f8fbfe] p-4"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">{metric.label}</p>
-                  <p className="mt-2 text-2xl font-semibold tracking-tight text-[#07111f]">{metric.value}</p>
-                  <p className="mt-1 text-xs font-semibold text-[#0f7a5f]">{metric.delta}</p>
-                </motion.div>
-              ))}
+              {primaryMetrics.map((metric, index) => {
+                const a = METRIC_ACCENTS[index % METRIC_ACCENTS.length];
+                return (
+                  <motion.div
+                    key={metric.label}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    whileHover={{ y: -3 }}
+                    className={cn("relative overflow-hidden rounded-lg border bg-gradient-to-br to-white p-4", a.card)}
+                  >
+                    <span className={cn("absolute inset-y-0 left-0 w-1 bg-gradient-to-b", a.bar)} />
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">{metric.label}</p>
+                    <p className="mt-2 text-2xl font-semibold tracking-tight text-[#07111f]">{metric.value}</p>
+                    <p className={cn("mt-1 text-xs font-semibold", a.delta)}>{metric.delta}</p>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
 
