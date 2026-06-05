@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { CheckCircle2, MessagesSquare, Send } from "lucide-react";
-import { submitChatRequest } from "@/app/app/channels/actions";
+import { AtSign, CheckCircle2, CircleAlert, Link2, MessagesSquare, Send, Terminal } from "lucide-react";
+import { saveSlackTeamId, submitChatRequest } from "@/app/app/channels/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PendingButton } from "@/components/ui/pending-button";
+import { hasServiceRole } from "@/lib/supabase/admin";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -32,7 +34,7 @@ export default async function ChannelsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: integrations }, { data: tickets }] = await Promise.all([
+  const [{ data: integrations }, { data: tickets }, { data: orgRow }] = await Promise.all([
     supabase
       .from("integrations")
       .select("provider_key, display_name, status")
@@ -45,11 +47,24 @@ export default async function ChannelsPage() {
       .in("source", ["slack", "teams"])
       .order("created_at", { ascending: false })
       .limit(12),
+    supabase.from("organizations").select("slack_team_id").eq("id", organization.id).maybeSingle(),
   ]);
 
   const integrationRows = integrations ?? [];
   const statusByProvider = new Map(integrationRows.map((row) => [row.provider_key, row.status]));
   const conversations = tickets ?? [];
+
+  // Two-way Slack assistant config (env lives only in the deployment).
+  const slackTeamId = (orgRow?.slack_team_id as string | null) ?? "";
+  const serviceReady = hasServiceRole();
+  const signingReady = Boolean(process.env.SLACK_SIGNING_SECRET);
+  const botReady = Boolean(process.env.SLACK_BOT_TOKEN);
+  const assistantEnabled = serviceReady && signingReady;
+
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "your-deployment.vercel.app";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const origin = `${proto}://${host}`;
 
   return (
     <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
@@ -89,6 +104,84 @@ export default async function ChannelsPage() {
               </div>
             );
           })}
+        </section>
+
+        {/* Two-way Slack assistant */}
+        <section className="mt-6 rounded-xl border border-[#d8e4ee] bg-gradient-to-br from-[#f1f7ff] to-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[#dbeafe] text-[#0b5f91]">
+                <AtSign size={18} />
+              </span>
+              <div>
+                <h2 className="text-lg font-semibold">Slack assistant (two-way)</h2>
+                <p className="text-sm text-black/52">
+                  Employees ask in Slack — TicketOS answers from your knowledge base or opens a ticket, right in-thread.
+                </p>
+              </div>
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold",
+                assistantEnabled
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-800",
+              )}
+            >
+              {assistantEnabled ? <CheckCircle2 size={12} /> : <CircleAlert size={12} />}
+              {assistantEnabled ? "Live" : "Needs setup"}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <ConfigChip label="Service role key" ready={serviceReady} hint="SUPABASE_SERVICE_ROLE_KEY" />
+            <ConfigChip label="Signing secret" ready={signingReady} hint="SLACK_SIGNING_SECRET" />
+            <ConfigChip label="Bot token (for @-mentions)" ready={botReady} hint="SLACK_BOT_TOKEN" />
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg border border-black/10 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-black/40">Slack request URLs</p>
+              <UrlRow icon={Terminal} label="Slash command" url={`${origin}/api/slack/command`} />
+              <UrlRow icon={AtSign} label="Event subscriptions" url={`${origin}/api/slack/events`} />
+              <p className="mt-3 text-xs leading-5 text-black/48">
+                In your Slack app: add a slash command (e.g. <span className="font-semibold">/ticketos</span>) pointing at the
+                command URL, and under Event Subscriptions enable <span className="font-semibold">app_mention</span> with the
+                events URL. Add the <span className="font-semibold">chat:write</span> scope so the bot can reply in-thread.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-black/10 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-black/40">Link your workspace</p>
+              <p className="mt-2 text-sm leading-6 text-black/55">
+                Enter your Slack <span className="font-semibold">Team ID</span> (looks like <code>T01ABCD23</code>, from
+                Slack → workspace settings) so requests route to this organization.
+              </p>
+              <form action={saveSlackTeamId} className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  name="slackTeamId"
+                  defaultValue={slackTeamId}
+                  placeholder="T01ABCD23"
+                  className="h-10 flex-1 rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]"
+                />
+                <PendingButton
+                  pendingText="Saving..."
+                  className="h-10 shrink-0 rounded-md bg-[#0b2a4a] px-3 text-sm font-semibold text-white"
+                >
+                  <Link2 size={15} />
+                  {slackTeamId ? "Update link" : "Link workspace"}
+                </PendingButton>
+              </form>
+              {slackTeamId ? (
+                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                  <CheckCircle2 size={12} />
+                  Linked to {slackTeamId}
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-black/45">Not linked yet.</p>
+              )}
+            </div>
+          </div>
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[.85fr_1.15fr]">
@@ -201,5 +294,40 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       {label}
       {children}
     </label>
+  );
+}
+
+function ConfigChip({ label, ready, hint }: { label: string; ready: boolean; hint: string }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
+        ready ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50",
+      )}
+    >
+      {ready ? (
+        <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+      ) : (
+        <CircleAlert size={14} className="shrink-0 text-amber-600" />
+      )}
+      <div className="min-w-0">
+        <p className={cn("font-semibold", ready ? "text-emerald-800" : "text-amber-900")}>{label}</p>
+        <p className="truncate font-mono text-[11px] text-black/45">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+function UrlRow({ icon: Icon, label, url }: { icon: typeof Terminal; label: string; url: string }) {
+  return (
+    <div className="mt-3 first:mt-2">
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-black/55">
+        <Icon size={13} className="text-[#0b5f91]" />
+        {label}
+      </p>
+      <code className="mt-1 block overflow-x-auto rounded-md border border-black/10 bg-[#f5f8fc] px-2.5 py-1.5 text-[12px] text-[#0b2a4a]">
+        {url}
+      </code>
+    </div>
   );
 }

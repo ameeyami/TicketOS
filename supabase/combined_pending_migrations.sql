@@ -7,6 +7,7 @@
 --   2) Public API + webhooks (api_keys table + organizations webhook columns)
 --   3) Embeddable widget     (organizations.widget_key + widget_enabled)
 --   4) Semantic KB search    (pgvector embedding column + match function)
+--   5) Slack assistant       (organizations.slack_team_id for two-way Slack)
 -- Prereqs already applied earlier this project: teams + knowledge base tables.
 -- =============================================================================
 
@@ -104,5 +105,16 @@ as $$
 $$;
 
 grant execute on function public.match_knowledge_articles(vector, uuid, int) to authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 5) Slack assistant: link a Slack workspace (team_id) to a TicketOS org so
+--    slash commands and @-mentions resolve to the right org with no session.
+-- ----------------------------------------------------------------------------
+alter table public.organizations
+  add column if not exists slack_team_id text;
+
+create unique index if not exists organizations_slack_team_id_idx
+  on public.organizations(slack_team_id)
+  where slack_team_id is not null;
 
 commit;

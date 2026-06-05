@@ -3,8 +3,51 @@
 import { revalidatePath } from "next/cache";
 import { getOrgAnthropicKey } from "@/lib/ai/org-key";
 import { triageTicket } from "@/lib/ai/triage";
+import { createSupabaseAdminClient, hasServiceRole } from "@/lib/supabase/admin";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+/**
+ * Link (or unlink) the Slack workspace that the two-way assistant answers for.
+ * Owner/admin only. Mirrors the API-keys pattern: writes the org integration
+ * column with the service-role client when available.
+ */
+export async function saveSlackTeamId(formData: FormData) {
+  const teamId = String(formData.get("slackTeamId") ?? "").trim();
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error } = await supabase.auth.getUser();
+  if (error || !userData.user) {
+    throw new Error("You must be signed in to link Slack.");
+  }
+
+  const organization = await ensureWorkspace(supabase, userData.user);
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organization.id)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  if (membership?.role !== "owner" && membership?.role !== "admin") {
+    throw new Error("Only an owner or admin can link Slack.");
+  }
+
+  if (hasServiceRole()) {
+    const admin = createSupabaseAdminClient();
+    await admin.from("organizations").update({ slack_team_id: teamId || null }).eq("id", organization.id);
+    await admin.from("audit_logs").insert({
+      organization_id: organization.id,
+      actor_user_id: userData.user.id,
+      event_type: teamId ? "slack_linked" : "slack_unlinked",
+      event_summary: teamId ? `Slack workspace linked (${teamId})` : "Slack workspace unlinked",
+      metadata: { source: "channels", slack_team_id: teamId || null },
+    });
+  } else {
+    await supabase.from("organizations").update({ slack_team_id: teamId || null }).eq("id", organization.id);
+  }
+
+  revalidatePath("/app/channels");
+}
 
 const chatChannels = new Set(["slack", "teams"]);
 const categoryAgents: Record<string, string> = {

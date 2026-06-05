@@ -21,7 +21,11 @@ export type SlackPostResult =
   | { ok: true; ts: string; channel: string }
   | { ok: false; error: string };
 
-export async function slackPostMessage(text: string, channel?: string): Promise<SlackPostResult> {
+export async function slackPostMessage(
+  text: string,
+  channel?: string,
+  threadTs?: string,
+): Promise<SlackPostResult> {
   const token = process.env.SLACK_BOT_TOKEN;
   const targetChannel = channel || process.env.SLACK_DEFAULT_CHANNEL;
   if (!token || !targetChannel) {
@@ -35,7 +39,11 @@ export async function slackPostMessage(text: string, channel?: string): Promise<
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json; charset=utf-8",
       },
-      body: JSON.stringify({ channel: targetChannel, text }),
+      body: JSON.stringify(
+        threadTs
+          ? { channel: targetChannel, text, thread_ts: threadTs }
+          : { channel: targetChannel, text },
+      ),
     });
     const data = (await response.json()) as { ok: boolean; ts?: string; channel?: string; error?: string };
     if (!data.ok || !data.ts) {
