@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     { data: teamRows },
     { data: teamMemberRows },
     { data: createdEvents },
-    { data: ownProfile },
+    { data: profileRows },
   ] = await Promise.all([
     supabase
       .from("tickets")
@@ -86,7 +86,7 @@ export async function GET(request: Request) {
     supabase.from("teams").select("id, name").eq("organization_id", organization.id),
     supabase.from("team_members").select("user_id, member_name, member_email").eq("organization_id", organization.id),
     supabase.from("audit_logs").select("ticket_id, actor_user_id").eq("organization_id", organization.id).eq("event_type", "created"),
-    supabase.from("profiles").select("full_name").eq("id", userData.user.id).maybeSingle(),
+    supabase.from("profiles").select("id, full_name"),
   ]);
 
   const allTickets = (tickets ?? []) as TicketRow[];
@@ -100,7 +100,11 @@ export async function GET(request: Request) {
   for (const m of teamMemberRows ?? []) {
     if (m.user_id) userName.set(m.user_id as string, (m.member_name as string) || (m.member_email as string) || "");
   }
-  userName.set(userData.user.id, (ownProfile?.full_name as string) || userData.user.email || "You");
+  // Prefer real names from profiles (now org-readable), overlaying team-member fallbacks.
+  for (const pr of profileRows ?? []) {
+    if (pr.full_name) userName.set(pr.id as string, pr.full_name as string);
+  }
+  if (!userName.get(userData.user.id)) userName.set(userData.user.id, userData.user.email || "You");
   const ticketCreator = new Map<string, string>();
   for (const e of createdEvents ?? []) {
     if (e.ticket_id && e.actor_user_id && !ticketCreator.has(e.ticket_id as string)) {
