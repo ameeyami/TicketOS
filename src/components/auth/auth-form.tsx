@@ -3,7 +3,8 @@
 import { FormEvent, type ReactNode, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Eye, EyeOff, Loader2, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Coins, Eye, EyeOff, Loader2, ScrollText, Undo2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { signInWithProvider } from "@/app/auth/actions";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { PendingButton } from "@/components/ui/pending-button";
@@ -11,10 +12,11 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
 
-const dots = (color: string): React.CSSProperties => ({
-  backgroundImage: `radial-gradient(${color} 1.1px, transparent 1.6px)`,
-  backgroundSize: "11px 11px",
-});
+const pillars: Array<[string, LucideIcon]> = [
+  ["Audit", ScrollText],
+  ["Undo", Undo2],
+  ["Afford", Coins],
+];
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -81,84 +83,93 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   const inputClass =
-    "h-12 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:ring-4 focus:ring-white/[0.06]";
+    "h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-sm outline-none transition placeholder:text-black/35 focus:border-[#0b5f91] focus:ring-4 focus:ring-[#0b5f91]/10";
 
   return (
-    <main className="relative min-h-screen bg-[#0d0d12] text-white lg:grid lg:grid-cols-[1.05fr_1fr]">
-      <span
-        className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[#22c55e] via-[#38bdf8] to-[#a855f7]"
-        aria-hidden
-      />
+    <main className="relative min-h-screen bg-white text-[#07111f] lg:grid lg:grid-cols-[1.05fr_1fr]">
+      {/* Left — brand-blue panel */}
+      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#0b2a4a] via-[#0b5f91] to-[#1d4ed8] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+        {/* soft highlight */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{ background: "radial-gradient(58% 50% at 28% 18%, rgba(255,255,255,0.16), transparent 70%)" }}
+        />
+        {/* diagonal sheen */}
+        <div className="pointer-events-none absolute -left-1/3 top-0 h-full w-1/2 rotate-12 bg-gradient-to-r from-white/0 via-white/10 to-white/0" aria-hidden />
+        {/* big circuit-T watermark */}
+        <svg viewBox="0 0 48 48" className="pointer-events-none absolute -bottom-16 -right-16 size-[460px] text-white opacity-[0.06]" fill="none" aria-hidden>
+          <g stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 13 H41" />
+            <path d="M31 13 V34 L25 40" />
+            <path d="M10 13 H15" />
+            <path d="M8 22 H31" />
+            <path d="M13 31 H25" />
+          </g>
+          <g fill="currentColor">
+            <circle cx="7" cy="13" r="2.7" />
+            <circle cx="5" cy="22" r="2.7" />
+            <circle cx="10" cy="31" r="2.7" />
+          </g>
+        </svg>
 
-      {/* Left — illustrative indigo panel */}
-      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#272451] to-[#191832] p-10 lg:flex lg:flex-col lg:justify-center xl:p-16">
-        <div
-          className="pointer-events-none absolute -left-12 -top-12 size-72 opacity-70"
-          style={{ ...dots("rgba(199,232,107,0.55)"), maskImage: "linear-gradient(135deg, #000, transparent 65%)", WebkitMaskImage: "linear-gradient(135deg, #000, transparent 65%)" }}
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-12 -right-12 size-80 opacity-60"
-          style={{ ...dots("rgba(165,180,252,0.5)"), maskImage: "linear-gradient(315deg, #000, transparent 65%)", WebkitMaskImage: "linear-gradient(315deg, #000, transparent 65%)" }}
-          aria-hidden
-        />
+        <Link href="/" className="relative w-fit">
+          <TicketOSLogo markSize="md" tone="dark" />
+        </Link>
 
         <div className="relative max-w-md">
-          <h2 className="font-serif text-4xl leading-[1.12] tracking-tight text-white xl:text-5xl">Resolve more, worry less.</h2>
-          <p className="mt-4 max-w-sm text-base leading-7 text-white/55">
-            TicketOS triages, routes, and resolves IT requests for you — and every action stays reversible and audited.
+          <h2 className="text-4xl font-semibold leading-[1.1] tracking-tight xl:text-5xl">The control room for AI-run IT.</h2>
+          <p className="mt-4 max-w-sm text-base leading-7 text-white/70">
+            Triage, approve, and execute on real systems — in a workspace built to audit, undo, and afford every action.
           </p>
-
-          {/* search + stacked result cards */}
-          <div className="relative mt-12 h-60">
-            <div className="flex w-full max-w-sm items-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.07] px-3.5 py-3 backdrop-blur">
-              <Search size={16} className="text-white/50" />
-              <span className="h-2 w-44 rounded-full bg-white/25" />
-            </div>
-            <div className="absolute left-2 top-16 h-16 w-72 -rotate-[3deg] rounded-2xl bg-[#f7c59f] shadow-2xl" />
-            <div className="absolute left-6 top-28 h-16 w-72 rotate-[1.5deg] rounded-2xl bg-[#c7e86b] shadow-2xl" />
-            <div className="absolute left-10 top-40 h-16 w-72 rotate-[4deg] rounded-2xl bg-[#a5b4fc] shadow-2xl">
-              <Sparkles size={16} className="absolute right-3 top-3 text-white/80" />
-            </div>
+          <div className="mt-8 grid max-w-sm grid-cols-3 gap-3">
+            {pillars.map(([label, Icon]) => (
+              <div key={label} className="rounded-xl border border-white/15 bg-white/[0.08] p-3 text-center backdrop-blur">
+                <Icon size={18} className="mx-auto" />
+                <p className="mt-1.5 text-xs font-semibold">{label}</p>
+              </div>
+            ))}
           </div>
         </div>
+
+        <p className="relative text-xs text-white/45">© {new Date().getFullYear()} TicketOS</p>
       </aside>
 
-      {/* Right — near-black form */}
-      <section className="flex min-h-screen flex-col bg-[#101014] px-5 py-8 md:px-10">
+      {/* Right — clean white form */}
+      <section className="flex min-h-screen flex-col px-5 py-8 md:px-10">
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[400px]">
-            <div className="mb-8 flex justify-center">
+            <div className="mb-8 flex justify-center lg:justify-start">
               <Link href="/">
-                <TicketOSLogo markSize="lg" tone="dark" />
+                <TicketOSLogo markSize="lg" />
               </Link>
             </div>
 
-            <h1 className="text-center text-2xl font-semibold tracking-tight md:text-3xl">
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
               {isSignUp ? "Create your workspace" : "Welcome back"}
             </h1>
-            <p className="mt-2 text-center text-sm leading-6 text-white/50">
+            <p className="mt-2 text-sm leading-6 text-black/52">
               {isSignUp ? "Set up TicketOS in a couple of minutes." : "Sign in to your TicketOS workspace."}
             </p>
 
-            <div className="mt-8 space-y-3">
+            <div className="mt-7 space-y-3">
               <ProviderLoginForm provider="google" label="Continue with Google" icon={<GoogleMark />} />
               <ProviderLoginForm provider="github" label="Continue with GitHub" icon={<GitHubMark />} />
               <ProviderLoginForm provider="azure" label="Continue with Microsoft / Teams" icon={<MicrosoftMark />} />
-              <div className="rounded-xl border border-white/12 bg-white/[0.04] p-3">
-                <label className="block text-xs font-semibold text-white/60">Okta company domain</label>
+              <div className="rounded-xl border border-black/10 bg-[#f8fbfe] p-3">
+                <label className="block text-xs font-semibold text-black/56">Okta company domain</label>
                 <div className="mt-2 flex gap-2">
                   <input
                     value={oktaDomain}
                     onChange={(e) => setOktaDomain(e.target.value)}
-                    className="min-w-0 flex-1 rounded-lg border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/30"
+                    className="min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none transition focus:border-[#0b5f91]"
                     placeholder="company.okta.com"
                   />
                   <button
                     type="button"
                     disabled={isPending}
                     onClick={handleOktaSSO}
-                    className="h-10 rounded-lg bg-white/[0.08] px-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="h-10 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     Okta SSO
                   </button>
@@ -167,51 +178,38 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </div>
 
             <div className="my-7 flex items-center gap-3">
-              <span className="h-px flex-1 bg-white/10" />
-              <span className="text-xs font-medium uppercase tracking-[0.12em] text-white/35">or</span>
-              <span className="h-px flex-1 bg-white/10" />
+              <span className="h-px flex-1 bg-black/10" />
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-black/38">or</span>
+              <span className="h-px flex-1 bg-black/10" />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSignUp && (
                 <label className="block">
-                  <span className="text-sm font-semibold text-white/85">Full name</span>
-                  <input
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className={`mt-2 ${inputClass}`}
-                    placeholder="Amee Yami"
-                  />
+                  <span className="text-sm font-semibold">Full name</span>
+                  <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={`mt-2 ${inputClass}`} placeholder="Amee Yami" />
                 </label>
               )}
               <label className="block">
-                <span className="text-sm font-semibold text-white/85">Work email</span>
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`mt-2 ${inputClass}`}
-                  placeholder="name@company.com"
-                />
+                <span className="text-sm font-semibold">Work email</span>
+                <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={`mt-2 ${inputClass}`} placeholder="name@company.com" />
               </label>
               <label className="block">
-                <span className="text-sm font-semibold text-white/85">Password</span>
-                <div className="mt-2 flex h-12 overflow-hidden rounded-xl border border-white/12 bg-white/[0.04] transition focus-within:border-white/30 focus-within:ring-4 focus-within:ring-white/[0.06]">
+                <span className="text-sm font-semibold">Password</span>
+                <div className="mt-2 flex h-12 overflow-hidden rounded-xl border border-black/10 bg-white transition focus-within:border-[#0b5f91] focus-within:ring-4 focus-within:ring-[#0b5f91]/10">
                   <input
                     required
                     type={showPassword ? "text" : "password"}
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="min-w-0 flex-1 bg-transparent px-4 text-sm text-white outline-none placeholder:text-white/35"
+                    className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none"
                     placeholder="Enter password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((c) => !c)}
-                    className="flex h-full items-center gap-2 px-4 text-sm font-semibold text-white/55 hover:text-white"
+                    className="flex h-full items-center gap-2 px-4 text-sm font-semibold text-black/56 hover:text-black"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -220,19 +218,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 </div>
               </label>
 
-              {error && (
-                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</div>
-              )}
-              {message && (
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-                  {message}
-                </div>
-              )}
+              {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</div>}
+              {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{message}</div>}
 
               <button
                 type="submit"
                 disabled={isPending}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a5b4fc] px-4 text-sm font-semibold text-[#0b1020] shadow-lg shadow-[#a5b4fc]/20 transition hover:bg-[#b8c2ff] disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0b5f91] to-[#1d4ed8] px-4 text-sm font-semibold text-white shadow-lg shadow-[#1d4ed8]/25 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isPending && <Loader2 size={17} className="animate-spin" />}
                 {isSignUp ? "Create account" : "Log in"}
@@ -240,9 +232,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-white/50">
+            <p className="mt-6 text-sm text-black/56">
               {isSignUp ? "Already have an account?" : "New to TicketOS?"}{" "}
-              <Link href={isSignUp ? "/auth/sign-in" : "/auth/sign-up"} className="font-semibold text-[#a5b4fc] hover:text-white">
+              <Link href={isSignUp ? "/auth/sign-in" : "/auth/sign-up"} className="font-semibold text-[#0b5f91] hover:text-[#07111f]">
                 {isSignUp ? "Log in" : "Create account"}
               </Link>
             </p>
@@ -259,7 +251,7 @@ function ProviderLoginForm({ provider, label, icon }: { provider: "google" | "gi
       <input type="hidden" name="provider" value={provider} />
       <PendingButton
         pendingText="Checking..."
-        className="h-12 w-full rounded-xl border border-white/12 bg-white/[0.05] px-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+        className="h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-[#f4f8fb] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {icon}
         {label}
