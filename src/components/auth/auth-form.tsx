@@ -16,6 +16,8 @@ const authHighlights = [
   ["Replayable audit on everything", ShieldCheck],
 ] as const;
 
+const HILITE_COLORS = ["text-[#7ef0a8]", "text-[#7dd3fc]", "text-[#c4b5fd]"];
+
 type AuthMode = "sign-in" | "sign-up";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
@@ -103,6 +105,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   return (
     <main className="relative min-h-screen bg-[#f4f8fb] text-[#07111f] lg:grid lg:grid-cols-[1.05fr_1fr]">
+      <span
+        className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[#22c55e] via-[#38bdf8] to-[#a855f7]"
+        aria-hidden
+      />
       <aside className="relative hidden overflow-hidden bg-[#07111f] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
         <AuroraField />
         <GridOverlay tone="dark" />
@@ -113,19 +119,19 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         </Link>
 
         <div className="relative max-w-md">
-          <h2 className="text-4xl font-semibold leading-[1.08] tracking-tight xl:text-5xl">
+          <h2 className="text-3xl font-semibold leading-[1.1] tracking-tight xl:text-4xl">
             The autonomy you can{" "}
             <span className="bg-gradient-to-r from-[#22c55e] to-[#38bdf8] bg-clip-text text-transparent">
               audit, undo, and afford.
             </span>
           </h2>
-          <p className="mt-5 text-base leading-7 text-white/64">
+          <p className="mt-4 text-sm leading-7 text-white/64">
             Sign in to triage tickets, approve workflows, and inspect — and reverse — every agent action.
           </p>
-          <ul className="mt-8 space-y-3">
-            {authHighlights.map(([label, Icon]) => (
+          <ul className="mt-7 space-y-3">
+            {authHighlights.map(([label, Icon], index) => (
               <li key={label} className="flex items-center gap-3 text-sm font-medium text-white/82">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] text-[#7ef0a8]">
+                <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] ${HILITE_COLORS[index % HILITE_COLORS.length]}`}>
                   <Icon size={16} />
                 </span>
                 {label}
@@ -144,8 +150,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[420px]">
-            <div className="mb-8">
-              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            <div className="mb-7">
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
                 {isSignUp ? "Create your workspace" : "Welcome back"}
               </h1>
               <p className="mt-2 text-sm leading-6 text-black/52">
@@ -246,7 +252,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               <button
                 type="submit"
                 disabled={isPending}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-black/85 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0b5f91] to-[#5b4bc4] px-4 text-sm font-semibold text-white shadow-lg shadow-[#5b4bc4]/25 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isPending && <Loader2 size={17} className="animate-spin" />}
                 {isSignUp ? "Create account" : "Log in"}

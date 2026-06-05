@@ -98,7 +98,7 @@ export function PricingPage() {
       <section className="relative overflow-hidden bg-[#07111f] text-white">
         <AuroraField intensity="soft" />
         <GridOverlay tone="dark" />
-        <div className="relative mx-auto max-w-7xl px-5 py-20 text-center md:px-8">
+        <div className="relative mx-auto max-w-7xl px-5 py-16 text-center md:px-8">
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -110,7 +110,7 @@ export function PricingPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.06 }}
-            className="mx-auto mt-6 max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl"
+            className="mx-auto mt-5 max-w-3xl text-4xl font-semibold leading-[1.07] tracking-tight md:text-5xl"
           >
             Pricing that doesn&apos;t punish you for using AI.
           </motion.h1>
@@ -118,7 +118,7 @@ export function PricingPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12 }}
-            className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/68"
+            className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/68"
           >
             Flat, predictable plans with AI usage included — no per-action credits, no overage packs, no
             surprise bills. The opposite of how legacy ITSM charges for automation.
@@ -155,7 +155,7 @@ export function PricingPage() {
                 href={tier.href}
                 className={
                   tier.featured
-                    ? "mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#0b2a4a] text-sm font-semibold text-white transition hover:bg-[#07111f]"
+                    ? "mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#0b5f91] to-[#5b4bc4] text-sm font-semibold text-white shadow-lg shadow-[#5b4bc4]/20 transition hover:opacity-95"
                     : "mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d8e4ee] text-sm font-semibold text-[#07111f] transition hover:border-[#0b2a4a]"
                 }
               >
@@ -191,8 +191,8 @@ export function PricingPage() {
       {/* Comparison */}
       <section className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">How we compare</p>
-          <h2 className="mt-3 text-4xl font-semibold tracking-tight">The control others leave out.</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">How we compare</p>
+          <h2 className="mt-2.5 text-3xl font-semibold tracking-tight">The control others leave out.</h2>
         </motion.div>
 
         <motion.div {...fadeUp} className="mt-8 overflow-hidden rounded-3xl border border-[#d8e4ee] bg-white">
@@ -247,7 +247,7 @@ export function PricingPage() {
         <AuroraField intensity="soft" />
         <GridOverlay tone="dark" />
         <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-5 py-20 text-center md:px-8">
-          <h2 className="max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">
+          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
             Start free. Stay in control.
           </h2>
           <Link

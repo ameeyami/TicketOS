@@ -25,6 +25,15 @@ const fadeUp = {
   viewport: { once: true, margin: "-80px" },
 };
 
+const ICON_GRADIENTS = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 const principles = [
   {
     icon: KeyRound,
@@ -92,7 +101,7 @@ export function TrustPage() {
       <MarketingNav />
 
       {/* Hero */}
-      <header className="relative overflow-hidden bg-[#07111f] px-5 py-20 text-white md:px-8 md:py-28">
+      <header className="relative overflow-hidden bg-[#07111f] px-5 py-16 text-white md:px-8 md:py-20">
         <AuroraField />
         <GridOverlay />
         <div className="relative mx-auto max-w-4xl text-center">
@@ -103,10 +112,10 @@ export function TrustPage() {
             <ShieldCheck size={14} />
             Security &amp; trust
           </motion.span>
-          <motion.h1 {...fadeUp} transition={{ delay: 0.05 }} className="mt-5 text-4xl font-semibold tracking-tight md:text-5xl">
+          <motion.h1 {...fadeUp} transition={{ delay: 0.05 }} className="mt-5 text-3xl font-semibold tracking-tight md:text-4xl">
             Automation you can prove, and undo.
           </motion.h1>
-          <motion.p {...fadeUp} transition={{ delay: 0.1 }} className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/64">
+          <motion.p {...fadeUp} transition={{ delay: 0.1 }} className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/64">
             TicketOS acts on real systems — so it is built to be auditable, reversible, and governed by default. Your
             data stays yours, AI runs on your own key, and every action leaves a trail.
           </motion.p>
@@ -123,9 +132,12 @@ export function TrustPage() {
                 key={p.title}
                 {...fadeUp}
                 transition={{ delay: i * 0.04 }}
+                whileHover={{ y: -4 }}
                 className="rounded-2xl border border-[#e3ebf3] bg-white p-5 shadow-sm"
               >
-                <span className="flex size-10 items-center justify-center rounded-xl bg-[#e7f0ff] text-[#0b5f91]">
+                <span
+                  className={`flex size-10 items-center justify-center rounded-xl bg-gradient-to-br ${ICON_GRADIENTS[i % ICON_GRADIENTS.length]}`}
+                >
                   <p.icon size={19} />
                 </span>
                 <h3 className="mt-4 text-base font-semibold text-[#07111f]">{p.title}</h3>
