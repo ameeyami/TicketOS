@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check, Copy, Loader2, Sparkles, Wand2 } from "lucide-react";
-import { draftTicketResolution } from "@/app/app/tickets/[ticketId]/actions";
+import { ArrowRight, BadgeCheck, BookOpen, Check, Copy, ListChecks, Loader2, Sparkles, Undo2, Wand2 } from "lucide-react";
+import { draftTicketResolution, planTicketResolution } from "@/app/app/tickets/[ticketId]/actions";
+import type { ResolutionPlan } from "@/lib/ai/assist";
 
 export type AssistProps = {
   ticketId: string;
@@ -16,6 +17,8 @@ export function AssistedResolution({ ticketId, similarTickets, suggestedArticles
   const [draft, setDraft] = useState<{ text: string; aiWritten: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [plan, setPlan] = useState<ResolutionPlan | null>(null);
+  const [planning, setPlanning] = useState(false);
 
   async function onDraft() {
     if (loading) return;
@@ -24,6 +27,16 @@ export function AssistedResolution({ ticketId, similarTickets, suggestedArticles
       setDraft(await draftTicketResolution(ticketId));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onPlan() {
+    if (planning) return;
+    setPlanning(true);
+    try {
+      setPlan(await planTicketResolution(ticketId));
+    } finally {
+      setPlanning(false);
     }
   }
 
@@ -50,16 +63,75 @@ export function AssistedResolution({ ticketId, similarTickets, suggestedArticles
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onDraft}
-          disabled={loading}
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:opacity-50"
-        >
-          {loading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-          {loading ? "Drafting…" : draft ? "Redraft" : "Draft resolution"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onPlan}
+            disabled={planning}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#0b2a4a] bg-white px-3 text-sm font-semibold text-[#0b2a4a] transition hover:bg-[#f1f7ff] disabled:opacity-50"
+          >
+            {planning ? <Loader2 size={15} className="animate-spin" /> : <ListChecks size={15} />}
+            {planning ? "Planning…" : plan ? "Re-plan" : "Plan steps"}
+          </button>
+          <button
+            type="button"
+            onClick={onDraft}
+            disabled={loading}
+            className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0b2a4a] px-3 text-sm font-semibold text-white transition hover:bg-[#07111f] disabled:opacity-50"
+          >
+            {loading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+            {loading ? "Drafting…" : draft ? "Redraft" : "Draft resolution"}
+          </button>
+        </div>
       </div>
+
+      {plan && (
+        <div className="mt-3 rounded-lg border border-[#cfe0ef] bg-white p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#0b5f91]">Resolution plan</p>
+          {plan.intents.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {plan.intents.map((intent) => (
+                <span key={intent} className="rounded-full border border-black/10 bg-[#f5f8fc] px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  {intent}
+                </span>
+              ))}
+            </div>
+          )}
+          <ol className="mt-3 space-y-2">
+            {plan.steps.map((step, i) => (
+              <li key={i} className="flex gap-2.5">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#0b2a4a] text-[10px] font-bold text-white">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-sm font-semibold text-slate-700">{step.title}</span>
+                    {step.system && (
+                      <span className="rounded-md border border-black/10 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                        {step.system}
+                      </span>
+                    )}
+                    {step.needsApproval && (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                        <BadgeCheck size={10} /> approval
+                      </span>
+                    )}
+                    {step.reversible && (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        <Undo2 size={10} /> reversible
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs leading-5 text-slate-500">{step.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {!plan.aiWritten && (
+            <p className="mt-2 text-xs text-slate-400">Heuristic plan — connect Claude for a ticket-specific plan.</p>
+          )}
+        </div>
+      )}
 
       {draft && (
         <div className="mt-3 rounded-lg border border-[#cfe0ef] bg-white p-3">
