@@ -188,8 +188,26 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Works-with strip */}
+      <section className="border-b border-[#e3ebf3] bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-8 md:px-8">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Plugs into the stack you already run
+          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {integrations.slice(0, 7).map(([label, Icon]) => (
+              <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500">
+                <Icon size={16} className="text-[#0b5f91]" />
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section id="how" className="mx-auto max-w-7xl px-5 py-20 md:px-8">
+      <section id="how" className="bg-gradient-to-b from-[#eef5ff] to-white">
+        <div className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">How it works</p>
           <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
@@ -220,10 +238,11 @@ export function LandingPage() {
             ))}
           </div>
         </div>
+        </div>
       </section>
 
       {/* Differentiators — bento */}
-      <section id="features" className="mx-auto max-w-7xl px-5 pb-4 md:px-8">
+      <section id="features" className="mx-auto max-w-7xl px-5 pb-4 pt-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">Why TicketOS</p>
           <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
@@ -277,7 +296,8 @@ export function LandingPage() {
       </section>
 
       {/* Governance */}
-      <section id="security" className="mx-auto max-w-7xl px-5 pb-20 md:px-8">
+      <section id="security" className="bg-gradient-to-b from-white to-[#f5f3ff]">
+        <div className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Governance</p>
           <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
@@ -310,6 +330,7 @@ export function LandingPage() {
               <p className="mt-1.5 text-sm leading-6 text-slate-600">{detail}</p>
             </motion.div>
           ))}
+        </div>
         </div>
       </section>
 
