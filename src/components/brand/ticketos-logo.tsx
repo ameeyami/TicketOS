@@ -50,13 +50,14 @@ export function TicketOSLogo({
     );
   }
 
-  return (
-    <Image
-      src="/images/logo.png"
-      alt="TicketOS"
-      width={1773}
-      height={887}
-      className={cn("w-auto", HEIGHT[markSize], tone === "dark" && "brightness-0 invert", className)}
-    />
+  const img = (
+    <Image src="/images/logo.png" alt="TicketOS" width={1773} height={887} className={cn("w-auto", HEIGHT[markSize])} />
   );
+
+  // The brand PNG has an opaque (white) background, so on dark surfaces we set it
+  // on a small white chip — clean and fully legible — instead of inverting it.
+  if (tone === "dark") {
+    return <span className={cn("inline-flex items-center rounded-lg bg-white px-2 py-1", className)}>{img}</span>;
+  }
+  return <span className={cn("inline-flex items-center", className)}>{img}</span>;
 }
