@@ -22,6 +22,15 @@ const statusLabels: Record<string, string> = {
 const selectClass =
   "h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold outline-none focus:border-[#0b2a4a]";
 
+const CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 export default async function ReportsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -193,8 +202,8 @@ export default async function ReportsPage() {
         </form>
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {highlights.map((item) => (
-            <MetricCard key={item.title} {...item} />
+          {highlights.map((item, i) => (
+            <MetricCard key={item.title} {...item} accent={CHIP[i % CHIP.length]} />
           ))}
         </section>
 
@@ -314,7 +323,19 @@ function DeltaCard({
   );
 }
 
-function MetricCard({ title, value, detail, icon: Icon }: { title: string; value: string; detail: string; icon: LucideIcon }) {
+function MetricCard({
+  title,
+  value,
+  detail,
+  icon: Icon,
+  accent = CHIP[0],
+}: {
+  title: string;
+  value: string;
+  detail: string;
+  icon: LucideIcon;
+  accent?: string;
+}) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -323,7 +344,7 @@ function MetricCard({ title, value, detail, icon: Icon }: { title: string; value
           <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
           <p className="mt-1 text-xs text-slate-400">{detail}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>

@@ -9,6 +9,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const WINDOW_DAYS = 14;
 
+const CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 function sinceIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
 }
@@ -70,9 +76,9 @@ export default async function IncidentsPage() {
         />
 
         <section className="mb-5 grid gap-3 sm:grid-cols-3">
-          <MetricCard label="Spikes detected" value={String(clusterDtos.length)} icon={Radar} />
-          <MetricCard label="Tickets in spikes" value={String(ticketsInSpikes)} icon={Layers} />
-          <MetricCard label="Window scanned" value={`${WINDOW_DAYS} days`} icon={AlertTriangle} />
+          <MetricCard label="Spikes detected" value={String(clusterDtos.length)} icon={Radar} accent={CHIP[0]} />
+          <MetricCard label="Tickets in spikes" value={String(ticketsInSpikes)} icon={Layers} accent={CHIP[1]} />
+          <MetricCard label="Window scanned" value={`${WINDOW_DAYS} days`} icon={AlertTriangle} accent={CHIP[2]} />
         </section>
 
         <IncidentBoard clusters={clusterDtos} />
@@ -81,7 +87,17 @@ export default async function IncidentsPage() {
   );
 }
 
-function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function MetricCard({
+  label,
+  value,
+  icon: Icon,
+  accent = CHIP[0],
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  accent?: string;
+}) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
@@ -89,7 +105,7 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
           <p className="text-xs font-medium text-slate-500">{label}</p>
           <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>

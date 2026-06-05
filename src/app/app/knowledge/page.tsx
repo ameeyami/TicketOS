@@ -22,6 +22,15 @@ type QueryRow = { status: string; csat: string | null };
 
 const fieldClass = "h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a]";
 
+const CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 export default async function KnowledgePage() {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -87,10 +96,10 @@ export default async function KnowledgePage() {
         />
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Articles" value={String(articleRows.length)} icon={BookOpen} />
-          <MetricCard label="Questions asked" value={String(queryRows.length)} icon={MessageCircleQuestion} />
-          <MetricCard label="Deflection rate" value={`${deflectionRate}%`} icon={TrendingUp} />
-          <MetricCard label="CSAT" value={csatUp + csatDown ? `${csat}%` : "—"} icon={ThumbsUp} />
+          <MetricCard label="Articles" value={String(articleRows.length)} icon={BookOpen} accent={CHIP[0]} />
+          <MetricCard label="Questions asked" value={String(queryRows.length)} icon={MessageCircleQuestion} accent={CHIP[1]} />
+          <MetricCard label="Deflection rate" value={`${deflectionRate}%`} icon={TrendingUp} accent={CHIP[2]} />
+          <MetricCard label="CSAT" value={csatUp + csatDown ? `${csat}%` : "—"} icon={ThumbsUp} accent={CHIP[3]} />
         </section>
 
         {canEdit && suggestedRows.length > 0 && (
@@ -274,7 +283,17 @@ export default async function KnowledgePage() {
   );
 }
 
-function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function MetricCard({
+  label,
+  value,
+  icon: Icon,
+  accent = CHIP[0],
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  accent?: string;
+}) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
@@ -282,7 +301,7 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
           <p className="text-xs font-medium text-slate-500">{label}</p>
           <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>
