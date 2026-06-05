@@ -4,7 +4,7 @@ import { FormEvent, type ReactNode, useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Coins, Eye, EyeOff, Loader2, ScrollText, Undo2 } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, Coins, Eye, EyeOff, FileText, Loader2, ScrollText, Undo2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signInWithProvider } from "@/app/auth/actions";
 import { TicketOSLogo } from "@/components/brand/ticketos-logo";
@@ -144,7 +144,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           </Link>
         </motion.div>
 
-        <div className="relative max-w-md">
+        <div className="relative w-full max-w-md">
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -157,23 +157,108 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12 }}
-            className="mt-4 max-w-sm text-base leading-7 text-white/70"
+            className="mt-3 max-w-sm text-base leading-7 text-white/70"
           >
-            Triage, approve, and execute on real systems — in a workspace built to audit, undo, and afford every action.
+            Triage, approve, and execute on real systems — audit, undo, and afford every action.
           </motion.p>
-          <div className="mt-8 grid max-w-sm grid-cols-3 gap-3">
+
+          {/* animated dashboard preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="relative mt-8"
+          >
+            <motion.div
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] blur-2xl"
+              style={{ background: "radial-gradient(circle, rgba(34,197,94,0.30), rgba(56,189,248,0.18) 55%, transparent 75%)" }}
+              animate={{ opacity: [0.45, 0.85, 0.45], scale: [0.96, 1.02, 0.96] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              aria-hidden
+            />
+            <div className="rounded-2xl border border-white/12 bg-white/[0.06] p-4 shadow-2xl backdrop-blur">
+              <div className="flex items-center justify-between">
+                <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#22c55e] to-[#0b5f91] text-white">
+                    <Bot size={15} />
+                  </span>
+                  AI activity
+                </p>
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-[#7ef0a8]">
+                  <span className="size-1.5 animate-pulse rounded-full bg-[#22c55e]" /> live
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center gap-4">
+                {/* animated progress ring */}
+                <div className="relative size-16 shrink-0">
+                  <svg viewBox="0 0 40 40" className="size-16 -rotate-90">
+                    <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+                    <motion.circle
+                      cx="20" cy="20" r="16" fill="none" stroke="#22c55e" strokeWidth="4" strokeLinecap="round"
+                      pathLength={1}
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: [0, 0.58, 0.58, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </svg>
+                  <span className="absolute inset-0 grid place-items-center text-sm font-bold text-white">58%</span>
+                </div>
+                {/* animated bar chart */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">Auto-resolved / wk</p>
+                  <div className="mt-2 flex h-12 items-end gap-1.5">
+                    {[[16, 28], [26, 16], [30, 22], [18, 32], [36, 24], [24, 36]].map(([a, c], i) => (
+                      <motion.span
+                        key={i}
+                        className="flex-1 rounded-sm bg-gradient-to-t from-[#22c55e]/60 to-[#5eead4]"
+                        animate={{ height: [a, c, a] }}
+                        transition={{ duration: 2.2 + i * 0.1, repeat: Infinity, ease: "easeInOut", delay: i * 0.12 }}
+                        style={{ height: a }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* feed */}
+              <div className="mt-4 space-y-2">
+                {[
+                  { Icon: CheckCircle2, tone: "text-[#7ef0a8]", title: "Triaged TOS-1923", sub: "Network · high" },
+                  { Icon: FileText, tone: "text-[#7dd3fc]", title: "Drafted resolution", sub: "Password reset" },
+                  { Icon: Undo2, tone: "text-[#c4b5fd]", title: "Action reversed", sub: "Slack message" },
+                ].map((row, i) => (
+                  <motion.div
+                    key={row.title}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + i * 0.18 }}
+                    className="flex items-center gap-2.5 rounded-lg border border-white/8 bg-white/[0.04] px-2.5 py-2"
+                  >
+                    <row.Icon size={15} className={`shrink-0 ${row.tone}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-white">{row.title}</p>
+                      <p className="truncate text-[10px] text-white/45">{row.sub}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* value pills */}
+          <div className="mt-6 flex flex-wrap gap-2">
             {pillars.map(([label, Icon], i) => (
-              <motion.div
+              <motion.span
                 key={label}
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.08 }}
-                whileHover={{ y: -3 }}
-                className="rounded-xl border border-white/15 bg-white/[0.08] p-3 text-center backdrop-blur"
+                transition={{ delay: 0.9 + i * 0.08 }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold backdrop-blur"
               >
-                <Icon size={18} className="mx-auto" />
-                <p className="mt-1.5 text-xs font-semibold">{label}</p>
-              </motion.div>
+                <Icon size={13} className="text-[#7ef0a8]" />
+                {label}
+              </motion.span>
             ))}
           </div>
         </div>
