@@ -8,7 +8,11 @@ import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { workflowTemplates } from "@/lib/workflow-templates";
 
-export default async function NewWorkflowPage() {
+export default async function NewWorkflowPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ desc?: string }>;
+}) {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -17,6 +21,7 @@ export default async function NewWorkflowPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
+  const params = await searchParams;
 
   return (
     <main className="min-h-screen px-4 py-6 text-[#151914] md:px-8">
@@ -28,7 +33,7 @@ export default async function NewWorkflowPage() {
         />
 
         <div className="mt-6">
-          <WorkflowGenerator organizationId={organization.id} />
+          <WorkflowGenerator organizationId={organization.id} initialDescription={params.desc ?? ""} />
         </div>
 
         <div className="mt-8 mb-3 flex items-center gap-3">

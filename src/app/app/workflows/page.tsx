@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Play, Plus, ShieldCheck, Workflow } from "lucide-react";
+import { ArrowRight, Play, Plus, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { runWorkflow } from "@/app/app/workflows/actions";
+import { clusterTickets, type AiopsTicket } from "@/lib/aiops";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ensureWorkspace } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PendingButton } from "@/components/ui/pending-button";
+
+function sinceIso(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}
 
 export default async function WorkflowsPage() {
   const supabase = await createSupabaseServerClient();
@@ -16,22 +21,36 @@ export default async function WorkflowsPage() {
   }
 
   const organization = await ensureWorkspace(supabase, userData.user);
-  const [{ data: workflows }, { data: runs }, { data: policies }, { data: tickets }] = await Promise.all([
-    supabase.from("workflows").select("*").eq("organization_id", organization.id).order("created_at"),
-    supabase
-      .from("workflow_runs")
-      .select("*, workflows(name), tickets(external_id, title)")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false })
-      .limit(6),
-    supabase.from("policy_rules").select("*").eq("organization_id", organization.id).order("created_at"),
-    supabase
-      .from("tickets")
-      .select("id, external_id, title, status")
-      .eq("organization_id", organization.id)
-      .order("created_at", { ascending: false })
-      .limit(12),
-  ]);
+  const [{ data: workflows }, { data: runs }, { data: policies }, { data: tickets }, { data: resolvedTickets }, { data: ranRows }] =
+    await Promise.all([
+      supabase.from("workflows").select("*").eq("organization_id", organization.id).order("created_at"),
+      supabase
+        .from("workflow_runs")
+        .select("*, workflows(name), tickets(external_id, title)")
+        .eq("organization_id", organization.id)
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase.from("policy_rules").select("*").eq("organization_id", organization.id).order("created_at"),
+      supabase
+        .from("tickets")
+        .select("id, external_id, title, status")
+        .eq("organization_id", organization.id)
+        .order("created_at", { ascending: false })
+        .limit(12),
+      supabase
+        .from("tickets")
+        .select("id, external_id, title, ai_summary, category, priority, status, created_at")
+        .eq("organization_id", organization.id)
+        .eq("status", "resolved")
+        .gte("created_at", sinceIso(45))
+        .limit(300),
+      supabase.from("workflow_runs").select("ticket_id").eq("organization_id", organization.id),
+    ]);
+
+  // Continuous learning: cluster recurring manual resolutions (no workflow ran) into automation opportunities.
+  const ranWith = new Set((ranRows ?? []).map((r) => r.ticket_id).filter(Boolean));
+  const manualResolved = ((resolvedTickets ?? []) as AiopsTicket[]).filter((t) => !ranWith.has(t.id));
+  const opportunities = clusterTickets(manualResolved, { minClusterSize: 3 }).slice(0, 3);
 
   return (
     <main className="min-h-screen bg-[#f4f8fb] px-4 py-5 text-[#07111f] md:px-8">
@@ -88,6 +107,46 @@ export default async function WorkflowsPage() {
           </div>
 
           <div className="space-y-5">
+            {opportunities.length > 0 && (
+              <div className="rounded-lg border border-[#d8e4ee] bg-gradient-to-br from-[#f1f7ff] to-white p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-[#dbeafe] text-[#0b5f91]">
+                    <Sparkles size={15} />
+                  </span>
+                  <h2 className="text-sm font-semibold">Automation opportunities</h2>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  These were resolved manually and keep recurring — automate them so they resolve themselves next time.
+                </p>
+                <div className="mt-3 space-y-2.5">
+                  {opportunities.map((opp) => {
+                    const desc = `When a ticket about "${opp.theme}" comes in${opp.topCategory ? ` (${opp.topCategory})` : ""}, automatically triage it, run the standard resolution, and notify the requester — with manager approval for any sensitive step.`;
+                    return (
+                      <div key={opp.id} className="rounded-lg border border-[#cfe0ef] bg-white p-3">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-bold text-amber-800">
+                            {opp.tickets.length}× manual
+                          </span>
+                          {opp.topCategory && (
+                            <span className="text-[11px] font-semibold text-slate-500">{opp.topCategory}</span>
+                          )}
+                        </div>
+                        <p className="mt-1.5 text-sm font-medium text-slate-700">{opp.theme}</p>
+                        <Link
+                          href={`/app/workflows/new?desc=${encodeURIComponent(desc)}`}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0b5f91] hover:underline"
+                        >
+                          <Sparkles size={12} />
+                          Automate this
+                          <ArrowRight size={12} />
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={17} className="text-[#0b5f91]" />

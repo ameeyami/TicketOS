@@ -12,8 +12,8 @@ const EXAMPLES = [
   "Reset a user's Okta password after verifying identity, then notify them.",
 ];
 
-export function WorkflowGenerator({ organizationId }: { organizationId: string }) {
-  const [description, setDescription] = useState("");
+export function WorkflowGenerator({ organizationId, initialDescription = "" }: { organizationId: string; initialDescription?: string }) {
+  const [description, setDescription] = useState(initialDescription);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
