@@ -8,7 +8,7 @@ type TicketOSLogoProps = {
   className?: string;
 };
 
-const HEIGHT = { sm: "h-8", md: "h-10", lg: "h-12" } as const;
+const HEIGHT = { sm: "h-9", md: "h-12", lg: "h-16" } as const;
 const MARK = { sm: "size-6", md: "size-8", lg: "size-10" } as const;
 
 /**

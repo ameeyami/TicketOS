@@ -117,7 +117,7 @@ export function AppShell({ children, orgName }: { children: React.ReactNode; org
     <div className="ticketos-app-shell min-h-screen bg-[#f4f8fb] text-[#07111f]">
       <div className="flex min-h-screen">
         <aside className="hidden w-[240px] shrink-0 border-r border-[#e8edf3] bg-[#fbfcfe] px-3 py-4 lg:block">
-          <Link href="/app" className="flex h-9 items-center gap-2 rounded-md px-2 transition hover:bg-[#f1f4f8]">
+          <Link href="/app" className="flex h-11 items-center gap-2 rounded-md px-2 transition hover:bg-[#f1f4f8]">
             <TicketOSLogo markSize="sm" />
             <ChevronDown size={14} className="ml-auto text-slate-400" />
           </Link>
