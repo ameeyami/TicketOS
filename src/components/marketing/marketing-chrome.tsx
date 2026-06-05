@@ -126,30 +126,8 @@ export function MarketingFooter() {
       />
 
       <div className="relative mx-auto max-w-7xl px-5 py-14 md:px-8">
-        {/* CTA band */}
-        <div className="flex flex-col gap-5 border-b border-white/10 pb-10 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="max-w-xl text-3xl font-semibold tracking-tight md:text-4xl">
-              Run IT in the open —{" "}
-              <span className="bg-gradient-to-r from-[#22c55e] via-[#5eead4] to-[#38bdf8] bg-clip-text text-transparent">
-                audit, undo, afford.
-              </span>
-            </h2>
-            <p className="mt-3 max-w-md text-sm leading-7 text-white/60">
-              Triage, approve, and execute on real systems — then reverse any action and prove what happened.
-            </p>
-          </div>
-          <Link
-            href="/auth/sign-in"
-            className="group inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#22c55e] to-[#5eead4] px-7 text-base font-semibold text-[#03120a] shadow-lg shadow-[#22c55e]/25 transition hover:opacity-95"
-          >
-            Get started free
-            <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
-          </Link>
-        </div>
-
         {/* Columns */}
-        <div className="mt-10 grid gap-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="grid gap-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <TicketOSLogo markSize="sm" tone="dark" />
             <p className="mt-3 max-w-xs text-sm leading-6 text-white/55">

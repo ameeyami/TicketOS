@@ -313,26 +313,32 @@ export function LandingPage() {
       {/* Social proof */}
       <SocialProof />
 
-      {/* Final CTA */}
-      <section className="relative overflow-hidden bg-[#07111f] text-white">
-        <AuroraField intensity="soft" />
-        <GridOverlay tone="dark" />
-        <div className="relative mx-auto flex max-w-7xl flex-col items-start gap-8 px-5 py-20 md:px-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
+      {/* Final CTA — bright gradient card */}
+      <section className="px-5 py-16 md:px-8">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0b5f91] via-[#22c55e] to-[#5eead4] px-6 py-14 text-center shadow-[0_30px_80px_-30px_rgba(11,95,145,0.6)] md:px-10 md:py-16">
+          <GridOverlay tone="dark" className="opacity-40" />
+          <div
+            className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full blur-3xl"
+            style={{ background: "radial-gradient(circle, rgba(255,255,255,0.28), transparent 70%)" }}
+            aria-hidden
+          />
+          <div className="relative">
+            <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-white md:text-5xl">
               Run IT from one clear, governed workspace.
             </h2>
-            <p className="mt-4 max-w-xl text-base leading-7 text-white/68">
-              Review tickets, connect apps, approve workflows, and inspect — and reverse — every agent action.
+            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/85">
+              Triage, approve, execute — and reverse — every agent action. Start free in minutes.
             </p>
+            <div className="mt-8 flex justify-center">
+              <Link
+                href="/auth/sign-in"
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-base font-semibold text-[#0b2a4a] shadow-lg transition hover:bg-white/90"
+              >
+                Get started free
+                <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/auth/sign-in"
-            className="group inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#22c55e] px-7 text-base font-semibold text-[#03120a] shadow-lg shadow-[#22c55e]/20 transition hover:bg-[#34d36b]"
-          >
-            Log in to TicketOS
-            <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
-          </Link>
         </div>
       </section>
 
