@@ -8,7 +8,7 @@ type TicketOSLogoProps = {
   className?: string;
 };
 
-const HEIGHT = { sm: "h-7", md: "h-8", lg: "h-10" } as const;
+const HEIGHT = { sm: "h-8", md: "h-10", lg: "h-12" } as const;
 const MARK = { sm: "size-6", md: "size-8", lg: "size-10" } as const;
 
 /**
@@ -50,14 +50,15 @@ export function TicketOSLogo({
     );
   }
 
-  const img = (
-    <Image src="/images/logo.png" alt="TicketOS" width={1773} height={887} className={cn("w-auto", HEIGHT[markSize])} />
+  // The brand PNG is transparent: render it plainly on light surfaces, and as a
+  // clean white silhouette on dark ones (so it merges with the background).
+  return (
+    <Image
+      src="/images/logo.png"
+      alt="TicketOS"
+      width={1536}
+      height={1024}
+      className={cn("w-auto", HEIGHT[markSize], tone === "dark" && "brightness-0 invert", className)}
+    />
   );
-
-  // The brand PNG has an opaque (white) background, so on dark surfaces we set it
-  // on a small white chip — clean and fully legible — instead of inverting it.
-  if (tone === "dark") {
-    return <span className={cn("inline-flex items-center rounded-lg bg-white px-2 py-1", className)}>{img}</span>;
-  }
-  return <span className={cn("inline-flex items-center", className)}>{img}</span>;
 }
