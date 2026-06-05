@@ -24,6 +24,13 @@ type TicketRow = {
 
 type Bucket = { key: string; label: string; total: number; open: number; resolved: number; breachedOpen: number; mttr: string };
 
+const METRIC_CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+];
+
 export default async function PerformancePage() {
   const supabase = await createSupabaseServerClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -95,14 +102,15 @@ export default async function PerformancePage() {
         />
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Resolved" value={String(resolved.length)} icon={BadgeCheck} />
-          <MetricCard label="Mean time to resolve" value={overallMttr} icon={Clock3} />
-          <MetricCard label="SLA met (resolved)" value={resolved.length ? `${slaMetRate}%` : "—"} icon={TrendingUp} />
+          <MetricCard label="Resolved" value={String(resolved.length)} icon={BadgeCheck} accent={METRIC_CHIP[0]} />
+          <MetricCard label="Mean time to resolve" value={overallMttr} icon={Clock3} accent={METRIC_CHIP[1]} />
+          <MetricCard label="SLA met (resolved)" value={resolved.length ? `${slaMetRate}%` : "—"} icon={TrendingUp} accent={METRIC_CHIP[2]} />
           <MetricCard
             label="Open breached"
             value={String(breachedOpenTotal)}
             icon={ShieldAlert}
             tone={breachedOpenTotal > 0 ? "rose" : "default"}
+            accent={METRIC_CHIP[3]}
           />
         </section>
 
@@ -177,11 +185,13 @@ function MetricCard({
   value,
   icon: Icon,
   tone = "default",
+  accent = METRIC_CHIP[0],
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
   tone?: "default" | "rose";
+  accent?: string;
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
@@ -192,7 +202,7 @@ function MetricCard({
             {value}
           </p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>

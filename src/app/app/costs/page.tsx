@@ -163,10 +163,10 @@ export default async function CostsPage() {
         />
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Cost per resolution" value={formatUsd(costPerResolution)} detail={`per ${resolutionLabel}`} icon={Receipt} />
-          <MetricCard label="Spend this month" value={formatUsd(monthToDate)} detail={`${budgetUsedPct}% of budget used`} icon={Coins} />
-          <MetricCard label="Projected month" value={formatUsd(projectedMonthly)} detail={`${projectedPct}% of budget`} icon={TrendingUp} />
-          <MetricCard label="Total modeled spend" value={formatUsd(totalSpend)} detail={`${costItems.length} AI events`} icon={Gauge} />
+          <MetricCard label="Cost per resolution" value={formatUsd(costPerResolution)} detail={`per ${resolutionLabel}`} icon={Receipt} accent={CHIP[0]} />
+          <MetricCard label="Spend this month" value={formatUsd(monthToDate)} detail={`${budgetUsedPct}% of budget used`} icon={Coins} accent={CHIP[1]} />
+          <MetricCard label="Projected month" value={formatUsd(projectedMonthly)} detail={`${projectedPct}% of budget`} icon={TrendingUp} accent={CHIP[2]} />
+          <MetricCard label="Total modeled spend" value={formatUsd(totalSpend)} detail={`${costItems.length} AI events`} icon={Gauge} accent={CHIP[3]} />
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[.9fr_1.1fr]">
@@ -312,16 +312,27 @@ function countByKey<T extends Record<string, unknown>>(rows: T[], key: keyof T) 
   }, {});
 }
 
+const CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 function MetricCard({
   label,
   value,
   detail,
   icon: Icon,
+  accent = CHIP[0],
 }: {
   label: string;
   value: string;
   detail: string;
   icon: LucideIcon;
+  accent?: string;
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
@@ -331,7 +342,7 @@ function MetricCard({
           <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
           <p className="mt-1 text-xs text-slate-400">{detail}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>

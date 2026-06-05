@@ -99,10 +99,10 @@ export default async function AuditPage({
         />
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Workflow runs" value={String(runs.length)} icon={Workflow} />
-          <MetricCard label="Replay snapshots" value={String(replayableRuns)} icon={ListRestart} />
-          <MetricCard label="Approvals logged" value={String(approvalEvents)} icon={ShieldCheck} />
-          <MetricCard label="Blocked actions" value={String(blockedEvents)} icon={CircleAlert} />
+          <MetricCard label="Workflow runs" value={String(runs.length)} icon={Workflow} accent={CHIP[0]} />
+          <MetricCard label="Replay snapshots" value={String(replayableRuns)} icon={ListRestart} accent={CHIP[1]} />
+          <MetricCard label="Approvals logged" value={String(approvalEvents)} icon={ShieldCheck} accent={CHIP[2]} />
+          <MetricCard label="Blocked actions" value={String(blockedEvents)} icon={CircleAlert} accent={CHIP[3]} />
         </section>
 
         <section className="mt-5 grid gap-5 xl:grid-cols-[300px_1fr]">
@@ -271,14 +271,25 @@ export default async function AuditPage({
   );
 }
 
+const CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 function MetricCard({
   label,
   value,
   icon: Icon,
+  accent = CHIP[0],
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
+  accent?: string;
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
@@ -287,7 +298,7 @@ function MetricCard({
           <p className="text-xs font-medium text-slate-500">{label}</p>
           <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>

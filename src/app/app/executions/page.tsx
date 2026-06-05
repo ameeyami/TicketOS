@@ -110,11 +110,11 @@ export default async function ExecutionsPage({
         />
 
         <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <MetricCard label="Running" value={String(runningActions)} icon={Loader2} />
-          <MetricCard label="Pending" value={String(pendingActions)} icon={Clock3} />
-          <MetricCard label="Succeeded" value={String(succeededActions)} icon={CheckCircle2} />
-          <MetricCard label="Blocked or failed" value={String(failedActions)} icon={ShieldAlert} />
-          <MetricCard label="Reversible" value={String(reversibleActions)} icon={Undo2} />
+          <MetricCard label="Running" value={String(runningActions)} icon={Loader2} accent={CHIP[0]} />
+          <MetricCard label="Pending" value={String(pendingActions)} icon={Clock3} accent={CHIP[1]} />
+          <MetricCard label="Succeeded" value={String(succeededActions)} icon={CheckCircle2} accent={CHIP[2]} />
+          <MetricCard label="Blocked or failed" value={String(failedActions)} icon={ShieldAlert} accent={CHIP[3]} />
+          <MetricCard label="Reversible" value={String(reversibleActions)} icon={Undo2} accent={CHIP[4]} />
         </section>
 
         {canRun && (
@@ -404,14 +404,25 @@ function ReversedNotice({ reversedAt, note }: { reversedAt: string; note?: strin
   );
 }
 
+const CHIP = [
+  "from-[#e0f2fe] to-[#dbeafe] text-[#0b5f91]",
+  "from-[#ede9fe] to-[#fae8ff] text-[#7c3aed]",
+  "from-[#dcfce7] to-[#d1fae5] text-[#0f7a5f]",
+  "from-[#ffedd5] to-[#fef3c7] text-[#b45309]",
+  "from-[#cffafe] to-[#ccfbf1] text-[#0e7490]",
+  "from-[#fce7f3] to-[#fae8ff] text-[#a21caf]",
+];
+
 function MetricCard({
   label,
   value,
   icon: Icon,
+  accent = CHIP[0],
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
+  accent?: string;
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
@@ -420,7 +431,7 @@ function MetricCard({
           <p className="text-xs font-medium text-slate-500">{label}</p>
           <p className="mt-1.5 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg bg-[#e7f0ff] text-[#0b5f91]">
+        <span className={`flex size-9 items-center justify-center rounded-lg bg-gradient-to-br ${accent}`}>
           <Icon size={17} />
         </span>
       </div>
