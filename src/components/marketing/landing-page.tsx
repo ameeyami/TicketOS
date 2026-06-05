@@ -93,16 +93,21 @@ export function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-[#07111f] text-white">
         <AuroraField className="opacity-90" />
-        <GridOverlay tone="dark" />
+        {/* soft gradient mesh (no grid) */}
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
-          style={{ background: "radial-gradient(55% 45% at 82% 8%, rgba(56,189,248,0.16), transparent 70%)" }}
+          style={{ background: "radial-gradient(70% 55% at 50% -8%, rgba(34,197,94,0.12), transparent 70%)" }}
         />
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
-          style={{ background: "radial-gradient(45% 40% at 8% 88%, rgba(168,85,247,0.14), transparent 70%)" }}
+          style={{ background: "radial-gradient(55% 45% at 85% 6%, rgba(56,189,248,0.18), transparent 70%)" }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{ background: "radial-gradient(50% 45% at 6% 92%, rgba(168,85,247,0.16), transparent 70%)" }}
         />
 
         <div className="relative mx-auto grid min-h-[580px] max-w-7xl gap-12 px-5 py-16 md:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
