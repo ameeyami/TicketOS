@@ -24,18 +24,10 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { TicketOSLogo } from "@/components/brand/ticketos-logo";
 import { AuroraField, GridOverlay } from "@/components/brand/backgrounds";
 import { MarketingFooter, MarketingNav } from "@/components/marketing/marketing-chrome";
+import { DashboardShowcase, HeroDashboard, WorkflowPipeline } from "@/components/marketing/landing-visuals";
 import { cn } from "@/lib/utils";
-
-const flow = [
-  ["Capture", "Requests land from Slack, Teams, or the portal and get auto-classified.", MessagesSquare],
-  ["Verify", "Identity and context are checked against your HRIS and directory.", Fingerprint],
-  ["Govern", "Policy decides in the open: allow, pause for approval, or block.", ShieldCheck],
-  ["Execute", "The agent acts on real systems — Okta, Slack, Jira, Google.", Workflow],
-  ["Reverse", "Every action is priced, audited, and one click from undo.", Undo2],
-] satisfies Array<[string, string, LucideIcon]>;
 
 const differentiators = [
   ["Undo any action", "One click reverses what an agent did on a connected system — re-add the group, restore the account, delete the message it posted.", Undo2],
@@ -128,11 +120,11 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.06 }}
-              className="mt-5 max-w-2xl text-balance text-4xl font-semibold leading-[1.04] tracking-tight md:text-6xl"
+              className="mt-5 max-w-2xl text-balance text-5xl font-semibold leading-[1.0] tracking-tight md:text-7xl"
             >
-              Autonomy you can{" "}
+              AI agents that run IT —{" "}
               <span className="bg-gradient-to-r from-[#22c55e] via-[#5eead4] to-[#38bdf8] bg-clip-text text-transparent">
-                audit, undo, and afford.
+                audit, undo, afford.
               </span>
             </motion.h1>
 
@@ -140,10 +132,10 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
-              className="mt-5 max-w-xl text-base leading-7 text-white/68"
+              className="mt-5 max-w-lg text-base leading-7 text-white/65"
             >
-              TicketOS gives lean IT teams a governed workspace where AI agents triage requests, ask for approval, and
-              execute on real systems — then let you reverse any action, see what it cost, and prove what happened.
+              TicketOS triages requests, asks for approval, and executes on real systems — then lets you reverse any
+              action, see what it cost, and prove exactly what happened.
             </motion.p>
 
             <motion.div
@@ -175,7 +167,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <HeroNetwork />
+          <HeroDashboard />
         </div>
       </section>
 
@@ -216,41 +208,13 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how" className="bg-gradient-to-b from-[#eef5ff] to-white">
-        <div className="mx-auto max-w-7xl px-5 py-16 md:px-8">
-        <motion.div {...fadeUp} className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0b5f91]">How it works</p>
-          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            From a chat message to a resolved, reversible action.
-          </h2>
-        </motion.div>
+      {/* How it works — AI pipeline */}
+      <div id="how">
+        <WorkflowPipeline />
+      </div>
 
-        <div className="relative mt-14">
-          {/* connecting line */}
-          <div className="pointer-events-none absolute left-0 right-0 top-7 hidden h-px bg-gradient-to-r from-[#22c55e]/30 via-[#38bdf8]/30 to-[#6366f1]/30 lg:block" />
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-            {flow.map(([title, body, Icon], index) => (
-              <motion.div {...fadeUp} transition={{ delay: index * 0.07 }} whileHover={{ y: -4 }} key={title} className="relative">
-                <div
-                  className={cn(
-                    "relative z-10 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-sm",
-                    ICON_GRADIENTS[index % ICON_GRADIENTS.length],
-                  )}
-                >
-                  <Icon size={22} />
-                  <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-[#0b2a4a] text-[11px] font-bold text-white">
-                    {index + 1}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
-                <p className="mt-1.5 text-sm leading-6 text-slate-600">{body}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-        </div>
-      </section>
+      {/* Product showcase */}
+      <DashboardShowcase />
 
       {/* Differentiators — bento */}
       <section id="features" className="mx-auto max-w-7xl px-5 pb-4 pt-16 md:px-8">
@@ -397,108 +361,6 @@ function CountUp({ value }: { value: string }) {
   }, [inView, target, decimals, prefix, suffix]);
 
   return <span ref={ref}>{display}</span>;
-}
-
-/** Designed "automation network": the AI agent at the center, wired to the real systems it acts on. */
-function HeroNetwork() {
-  const nodes: Array<{ label: string; Icon: LucideIcon; x: number; y: number }> = [
-    { label: "Slack", Icon: MessagesSquare, x: 14, y: 18 },
-    { label: "Okta", Icon: Fingerprint, x: 80, y: 14 },
-    { label: "Google", Icon: Cloud, x: 84, y: 58 },
-    { label: "Jira", Icon: ClipboardCheck, x: 52, y: 86 },
-    { label: "Teams", Icon: MessagesSquare, x: 12, y: 64 },
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.1 }}
-      className="relative mx-auto aspect-square w-full max-w-[460px]"
-    >
-      <div
-        className="pointer-events-none absolute inset-[22%] rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(34,197,94,0.32), transparent 70%)" }}
-        aria-hidden="true"
-      />
-
-      {/* connector lines + node pulses */}
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
-        <defs>
-          <linearGradient id="tos-net" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.2" />
-          </linearGradient>
-        </defs>
-        {nodes.map((n) => (
-          <line key={n.label} x1="50" y1="50" x2={n.x} y2={n.y} stroke="url(#tos-net)" strokeWidth="0.5" />
-        ))}
-        {nodes.map((n) => (
-          <circle key={`${n.label}-dot`} cx={n.x} cy={n.y} r="0.9" fill="#7ef0a8" />
-        ))}
-      </svg>
-
-      {/* rotating dashed ring */}
-      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
-        <circle
-          className="tos-anim-spin"
-          style={{ transformOrigin: "50px 50px" }}
-          cx="50"
-          cy="50"
-          r="32"
-          fill="none"
-          stroke="rgba(56,189,248,0.3)"
-          strokeWidth="0.35"
-          strokeDasharray="1.6 4.5"
-        />
-      </svg>
-
-      {/* central agent core */}
-      <div className="absolute left-1/2 top-1/2 flex size-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl border border-white/15 bg-[#0b1a2e]/85 shadow-2xl backdrop-blur">
-        <span className="pointer-events-none absolute inset-0 -z-10 animate-ping rounded-2xl bg-[#22c55e]/10" aria-hidden="true" />
-        <TicketOSLogo markSize="sm" showWordmark={false} />
-        <span className="mt-1.5 text-[11px] font-semibold tracking-wide text-white/80">AI agent</span>
-      </div>
-
-      {/* provider nodes */}
-      {nodes.map(({ label, Icon, x, y }) => (
-        <div
-          key={label}
-          className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl border border-white/12 bg-white/[0.07] px-2.5 py-1.5 text-xs font-semibold text-white/85 shadow-lg backdrop-blur"
-          style={{ left: `${x}%`, top: `${y}%` }}
-        >
-          <Icon size={14} className="text-[#7ef0a8]" />
-          {label}
-        </div>
-      ))}
-
-      {/* floating outcome chips */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="tos-anim-float absolute -left-3 top-[44%] hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
-      >
-        <Undo2 size={13} className="text-[#7ef0a8]" /> Reversible
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.95 }}
-        className="tos-anim-float-slow absolute -right-4 top-2 hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
-      >
-        <TrendingUp size={13} className="text-[#7dd3fc]" /> 58% auto-resolved
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.1 }}
-        className="tos-anim-float absolute -right-2 bottom-4 hidden items-center gap-1.5 rounded-lg border border-white/15 bg-[#0b1a2e]/85 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur lg:flex"
-      >
-        <GitBranch size={13} className="text-[#c4b5fd]" /> Audited
-      </motion.div>
-    </motion.div>
-  );
 }
 
 function FeatureGrid({
