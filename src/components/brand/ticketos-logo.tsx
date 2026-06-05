@@ -8,7 +8,7 @@ type TicketOSLogoProps = {
   className?: string;
 };
 
-const HEIGHT = { sm: "h-9", md: "h-12", lg: "h-16" } as const;
+const HEIGHT = { sm: "h-8", md: "h-10", lg: "h-12" } as const;
 const MARK = { sm: "size-6", md: "size-8", lg: "size-10" } as const;
 
 /**
@@ -50,14 +50,14 @@ export function TicketOSLogo({
     );
   }
 
-  // The brand PNG is transparent: render it plainly on light surfaces, and as a
-  // clean white silhouette on dark ones (so it merges with the background).
+  // Tightly-cropped transparent lockup (padding removed) so the logo displays
+  // large; plain on light surfaces, white silhouette on dark ones.
   return (
     <Image
-      src="/images/logo.png"
+      src="/images/logo-cropped.png"
       alt="TicketOS"
-      width={1536}
-      height={1024}
+      width={990}
+      height={296}
       className={cn("w-auto", HEIGHT[markSize], tone === "dark" && "brightness-0 invert", className)}
     />
   );
