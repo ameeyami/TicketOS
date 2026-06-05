@@ -117,7 +117,7 @@ export function HeroDashboard() {
       </div>
 
       {/* Approval toast */}
-      <div className="tos-anim-float absolute bottom-[14%] right-[1%] flex w-[46%] items-center gap-2 rounded-xl border border-white/12 bg-[#0b1a2e]/90 p-2.5 shadow-2xl backdrop-blur">
+      <div className="tos-anim-float absolute bottom-[14%] right-[1%] hidden w-[46%] items-center gap-2 rounded-xl border border-white/12 bg-[#0b1a2e]/90 p-2.5 shadow-2xl backdrop-blur sm:flex">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#fcd34d]/15 text-[#fcd34d]">
           <BadgeCheck size={15} />
         </span>

@@ -209,7 +209,7 @@ export function LandingPage() {
       </section>
 
       {/* How it works — AI pipeline */}
-      <div id="how">
+      <div id="how" className="scroll-mt-20">
         <WorkflowPipeline />
       </div>
 
@@ -262,7 +262,7 @@ export function LandingPage() {
       </section>
 
       {/* Integrations */}
-      <section id="integrations" className="mx-auto max-w-7xl px-5 py-16 md:px-8">
+      <section id="integrations" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-16 md:px-8">
         <FeatureGrid
           eyebrow="Integrations"
           title="Connect the systems your service desk already runs"
@@ -272,7 +272,7 @@ export function LandingPage() {
       </section>
 
       {/* Governance */}
-      <section id="security" className="bg-gradient-to-b from-white to-[#f5f3ff]">
+      <section id="security" className="scroll-mt-20 bg-gradient-to-b from-white to-[#f5f3ff]">
         <div className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Governance</p>

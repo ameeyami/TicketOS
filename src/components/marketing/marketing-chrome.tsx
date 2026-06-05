@@ -127,7 +127,7 @@ export function MarketingFooter() {
 
       <div className="relative mx-auto max-w-7xl px-5 py-14 md:px-8">
         {/* Columns */}
-        <div className="grid gap-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div>
             <TicketOSLogo markSize="sm" tone="dark" />
             <p className="mt-3 max-w-xs text-sm leading-6 text-white/55">
@@ -156,8 +156,18 @@ export function MarketingFooter() {
             title="Product"
             links={[
               ["Overview", "/product"],
+              ["Use cases", "/use-cases"],
               ["Integrations", "/#integrations"],
               ["Pricing", "/pricing"],
+            ]}
+          />
+          <FooterColumn
+            title="Resources"
+            links={[
+              ["Docs", "/docs"],
+              ["API", "/api-reference"],
+              ["Status", "/status"],
+              ["Roadmap", "/roadmap"],
             ]}
           />
           <FooterColumn
