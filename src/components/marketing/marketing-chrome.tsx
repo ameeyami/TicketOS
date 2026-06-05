@@ -20,7 +20,7 @@ export function MarketingNav() {
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#07111f]/70 backdrop-blur-xl">
       <span className={ACCENT_LINE} aria-hidden />
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
+      <div className="relative mx-auto flex h-14 max-w-7xl items-center justify-between px-5 md:px-8">
         <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
           <TicketOSLogo markSize="md" tone="dark" />
         </Link>
@@ -155,10 +155,23 @@ export function MarketingFooter() {
             <p className="mt-3 max-w-xs text-sm leading-6 text-white/55">
               AI-native IT operations you can audit, undo, and afford.
             </p>
-            <div className="mt-4 flex gap-2" aria-hidden>
-              {["#22c55e", "#38bdf8", "#a855f7"].map((c) => (
-                <span key={c} className="size-2.5 rounded-full" style={{ background: c }} />
-              ))}
+            <div className="mt-4 flex items-center gap-3">
+              <div className="flex gap-2" aria-hidden>
+                {["#22c55e", "#38bdf8", "#a855f7"].map((c) => (
+                  <span key={c} className="size-2.5 rounded-full" style={{ background: c }} />
+                ))}
+              </div>
+              <a
+                href="https://github.com/ameeyami/TicketOS"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub"
+                className="inline-flex size-8 items-center justify-center rounded-lg border border-white/12 text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden className="size-4 fill-current">
+                  <path d="M12 1.4c-5.9 0-10.6 4.8-10.6 10.7 0 4.7 3 8.7 7.3 10.1.5.1.7-.2.7-.5v-2c-3 .7-3.6-1.3-3.6-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 0 1.6 1.1 1.6 1.1.9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.7-1.4-2.4-.3-4.9-1.2-4.9-5.3 0-1.2.4-2.1 1.1-2.9-.1-.3-.5-1.4.1-2.8 0 0 .9-.3 2.9 1.1.8-.2 1.8-.4 2.7-.4s1.9.1 2.7.4c2-1.4 2.9-1.1 2.9-1.1.6 1.4.2 2.5.1 2.8.7.8 1.1 1.7 1.1 2.9 0 4.1-2.5 5-4.9 5.3.4.3.7 1 .7 2v2.9c0 .3.2.6.7.5 4.3-1.4 7.3-5.4 7.3-10.1C22.6 6.2 17.9 1.4 12 1.4z" />
+                </svg>
+              </a>
             </div>
           </div>
           <FooterColumn

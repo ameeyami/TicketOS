@@ -26,7 +26,7 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { AuroraField, GridOverlay } from "@/components/brand/backgrounds";
 import { MarketingFooter, MarketingNav } from "@/components/marketing/marketing-chrome";
-import { DashboardShowcase, HeroDashboard, WorkflowPipeline } from "@/components/marketing/landing-visuals";
+import { DashboardShowcase, FeaturePreview, HeroDashboard, SocialProof, WorkflowPipeline } from "@/components/marketing/landing-visuals";
 import { cn } from "@/lib/utils";
 
 const differentiators = [
@@ -220,7 +220,7 @@ export function LandingPage() {
       <section id="features" className="mx-auto max-w-7xl px-5 pb-4 pt-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]">Why TicketOS</p>
-          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
             Automation that keeps you in control.
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
@@ -250,9 +250,10 @@ export function LandingPage() {
                 >
                   <Icon size={22} />
                 </span>
-                <div>
+                <div className="min-w-0 flex-1">
                   <h3 className={cn("font-semibold tracking-tight", wide ? "text-xl" : "text-lg")}>{title}</h3>
                   <p className="mt-2.5 text-sm leading-6 text-slate-600">{body}</p>
+                  <FeaturePreview index={index} />
                 </div>
               </motion.div>
             );
@@ -275,7 +276,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <motion.div {...fadeUp} className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Governance</p>
-          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="mt-2.5 text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
             Guardrails before agents touch sensitive tools
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
@@ -308,6 +309,9 @@ export function LandingPage() {
         </div>
         </div>
       </section>
+
+      {/* Social proof */}
+      <SocialProof />
 
       {/* Final CTA */}
       <section className="relative overflow-hidden bg-[#07111f] text-white">

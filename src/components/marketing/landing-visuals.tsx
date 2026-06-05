@@ -14,6 +14,7 @@ import {
   MessagesSquare,
   MessageSquareText,
   Sparkles,
+  Star,
   TrendingUp,
   Undo2,
   Workflow,
@@ -341,6 +342,173 @@ export function DashboardShowcase() {
             </div>
           </div>
         </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ===================================================================== */
+/* FEATURE PREVIEW — mini UI inside each differentiator card              */
+/* ===================================================================== */
+
+export function FeaturePreview({ index }: { index: number }) {
+  const base = "mt-4 rounded-xl border border-[#e8eef5] bg-[#f8fbfe] p-3";
+  switch (index) {
+    case 0: // Undo any action
+      return (
+        <div className={base}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-slate-600">
+              <MessagesSquare size={14} className="shrink-0 text-[#0b5f91]" />
+              <span className="truncate">Posted to #it-help</span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-rose-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+              <Undo2 size={11} /> Undo
+            </span>
+          </div>
+        </div>
+      );
+    case 1: // Earned autonomy
+      return (
+        <div className={base}>
+          <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+            <span>Autonomy</span>
+            <span className="text-[#0f7a5f]">72%</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#22c55e] to-[#0f7a5f]" style={{ width: "72%" }} />
+          </div>
+          <p className="mt-2 text-[11px] text-slate-400">Suggest → Auto-run</p>
+        </div>
+      );
+    case 2: // Price every resolution
+      return (
+        <div className={base}>
+          <div className="flex items-end justify-between">
+            <span className="text-xl font-semibold tracking-tight text-[#07111f]">$0.21</span>
+            <span className="text-[11px] text-slate-400">/ resolution</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-[#0b5f91]" style={{ width: "38%" }} />
+          </div>
+          <p className="mt-1.5 text-[11px] text-slate-400">Budget 38% used</p>
+        </div>
+      );
+    case 3: // Preview blast radius
+      return (
+        <div className={base}>
+          <div className="flex flex-wrap gap-1.5">
+            {["Okta", "Slack", "Jira"].map((s) => (
+              <span
+                key={s}
+                className="inline-flex items-center gap-1 rounded-md border border-[#e8eef5] bg-white px-2 py-1 text-[11px] font-semibold text-slate-600"
+              >
+                <CheckCircle2 size={11} className="text-[#0f7a5f]" /> {s}
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-slate-400">3 systems · all reversible</p>
+        </div>
+      );
+    case 4: // Lives in chat
+      return (
+        <div className={`${base} space-y-1.5`}>
+          <span className="inline-block rounded-lg rounded-bl-sm border border-[#e8eef5] bg-white px-2.5 py-1.5 text-[11px] text-slate-600">
+            Reset my password
+          </span>
+          <div className="flex justify-end">
+            <span className="inline-block rounded-lg rounded-br-sm bg-[#0b2a4a] px-2.5 py-1.5 text-[11px] text-white">
+              Done — link sent ✓
+            </span>
+          </div>
+        </div>
+      );
+    default: // Replayable audit
+      return (
+        <div className={base}>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-500">
+            {["Triaged", "Approved", "Executed"].map((s, i) => (
+              <span key={s} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-slate-300">→</span>}
+                <span className="inline-flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-[#0b5f91]" />
+                  {s}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+  }
+}
+
+/* ===================================================================== */
+/* SOCIAL PROOF — stats + role-based quotes                               */
+/* ===================================================================== */
+
+const proofStats: Array<[string, string]> = [
+  ["50K+", "Tickets automated"],
+  ["92%", "Faster routing"],
+  ["58%", "Auto-resolved"],
+  ["100%", "Reversible actions"],
+];
+
+const testimonials = [
+  {
+    quote: "We let agents handle the routine work and still sleep at night — every action is reversible and logged.",
+    who: "Head of IT",
+    org: "mid-market SaaS",
+  },
+  {
+    quote: "Approvals that used to take a day now happen in minutes, right inside Slack.",
+    who: "IT Operations Lead",
+    org: "fintech",
+  },
+  {
+    quote: "Finally a tool where I can see exactly what the AI did — and what it cost.",
+    who: "Systems Administrator",
+    org: "300-person company",
+  },
+];
+
+export function SocialProof() {
+  return (
+    <section className="mx-auto max-w-7xl px-5 py-16 md:px-8">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {proofStats.map(([value, label]) => (
+          <motion.div
+            {...fadeUp}
+            whileHover={{ y: -3 }}
+            key={label}
+            className="rounded-2xl border border-[#d8e4ee] bg-white p-5 text-center shadow-sm"
+          >
+            <p className="bg-gradient-to-br from-[#0b5f91] to-[#5b4bc4] bg-clip-text text-3xl font-semibold tracking-tight text-transparent md:text-4xl">
+              {value}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">{label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-5 md:grid-cols-3">
+        {testimonials.map((t, i) => (
+          <motion.div
+            {...fadeUp}
+            transition={{ delay: i * 0.05 }}
+            key={t.who}
+            className="rounded-2xl border border-[#d8e4ee] bg-white p-6 shadow-sm"
+          >
+            <div className="flex gap-0.5 text-[#f59e0b]">
+              {Array.from({ length: 5 }).map((_, j) => (
+                <Star key={j} size={14} className="fill-current" />
+              ))}
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-700">“{t.quote}”</p>
+            <p className="mt-4 text-xs font-semibold text-[#07111f]">
+              {t.who} <span className="font-normal text-slate-400">· {t.org}</span>
+            </p>
+          </motion.div>
+        ))}
       </div>
     </section>
   );
