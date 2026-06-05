@@ -11,10 +11,13 @@ import { PendingButton } from "@/components/ui/pending-button";
 const fieldClass =
   "mt-2 h-12 w-full rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10";
 
+const CATEGORIES = ["Identity", "Onboarding", "Network", "Security"] as const;
+const PRIORITIES = ["low", "medium", "high", "critical"] as const;
+
 export default async function NewTicketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ title?: string }>;
+  searchParams: Promise<{ title?: string; description?: string; category?: string; priority?: string }>;
 }) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
@@ -23,7 +26,11 @@ export default async function NewTicketPage({
     redirect("/auth/sign-in?message=Sign in to create tickets.");
   }
 
-  const prefillTitle = (await searchParams).title?.slice(0, 200) ?? "";
+  const sp = await searchParams;
+  const prefillTitle = sp.title?.slice(0, 200) ?? "";
+  const prefillDescription = sp.description?.slice(0, 2000) ?? "";
+  const prefillCategory = CATEGORIES.find((c) => c === sp.category) ?? "Identity";
+  const prefillPriority = PRIORITIES.find((p) => p === sp.priority) ?? "medium";
 
   const organization = await ensureWorkspace(supabase, data.user);
   const ctx = await loadTeamContext(supabase, organization.id, data.user);
@@ -76,6 +83,7 @@ export default async function NewTicketPage({
                 required
                 name="description"
                 rows={5}
+                defaultValue={prefillDescription}
                 className="mt-2 w-full rounded-lg border border-black/10 px-3 py-3 text-sm outline-none focus:border-[#0b2a4a] focus:ring-4 focus:ring-[#0b2a4a]/10"
                 placeholder="Describe the issue, requester, system, and desired outcome."
               />
@@ -120,7 +128,7 @@ export default async function NewTicketPage({
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-semibold">Category</span>
-                <select name="category" className={fieldClass}>
+                <select name="category" defaultValue={prefillCategory} className={fieldClass}>
                   <option>Identity</option>
                   <option>Onboarding</option>
                   <option>Network</option>
@@ -129,7 +137,7 @@ export default async function NewTicketPage({
               </label>
               <label className="block">
                 <span className="text-sm font-semibold">Priority</span>
-                <select name="priority" className={fieldClass}>
+                <select name="priority" defaultValue={prefillPriority} className={fieldClass}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>

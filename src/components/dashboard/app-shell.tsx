@@ -13,6 +13,7 @@ import {
   Gauge,
   GitBranch,
   KeyRound,
+  LayoutGrid,
   LifeBuoy,
   Lock,
   MessageSquareText,
@@ -47,6 +48,7 @@ const teams = [
     accent: "#0b5f91",
     links: [
       { label: "Tickets", href: "/app/tickets", icon: MessageSquareText },
+      { label: "Catalog", href: "/app/catalog", icon: LayoutGrid },
       { label: "Incidents", href: "/app/incidents", icon: AlertTriangle },
       { label: "Ask", href: "/app/ask", icon: LifeBuoy },
       { label: "Knowledge", href: "/app/knowledge", icon: BookOpen },

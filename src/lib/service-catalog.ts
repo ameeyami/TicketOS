@@ -52,3 +52,105 @@ export const serviceCatalogItems = {
 } as const;
 
 export type ServiceCatalogKey = keyof typeof serviceCatalogItems;
+
+import { Cable, KeyRound, LifeBuoy, MessagesSquare, Network, ShieldCheck, UserPlus, UserX } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+/**
+ * Service / request catalog — structured request types employees can pick from.
+ * Each item prefills the new-ticket form (title/description/category/priority) so
+ * intake is consistent and routed correctly, then flows through triage + workflows.
+ */
+export type CatalogItem = {
+  slug: string;
+  name: string;
+  blurb: string;
+  category: "Identity" | "Onboarding" | "Network" | "Security";
+  priority: "low" | "medium" | "high" | "critical";
+  title: string;
+  description: string;
+  icon: LucideIcon;
+};
+
+export const serviceCatalog: CatalogItem[] = [
+  {
+    slug: "access-request",
+    name: "Access request",
+    blurb: "Request access to an app, system, or shared resource.",
+    category: "Identity",
+    priority: "medium",
+    title: "Access request",
+    description: "I need access to <app/system>. My role: <role>. Reason: <why it's needed>.",
+    icon: ShieldCheck,
+  },
+  {
+    slug: "password-reset",
+    name: "Password / MFA reset",
+    blurb: "Locked out, or need a password or MFA reset.",
+    category: "Identity",
+    priority: "high",
+    title: "Password / MFA reset",
+    description: "I'm locked out of <account>. Last successful login: <when>. Preferred contact: <email/phone>.",
+    icon: KeyRound,
+  },
+  {
+    slug: "onboarding",
+    name: "New hire onboarding",
+    blurb: "Provision accounts, apps, and a device for a new joiner.",
+    category: "Onboarding",
+    priority: "medium",
+    title: "New hire onboarding",
+    description: "New hire: <name>. Start date: <date>. Team/role: <team>. Apps/access needed: <list>.",
+    icon: UserPlus,
+  },
+  {
+    slug: "offboarding",
+    name: "Employee offboarding",
+    blurb: "Revoke access and deactivate accounts for a leaver.",
+    category: "Security",
+    priority: "high",
+    title: "Employee offboarding",
+    description: "Departing employee: <name>. Last day: <date>. Systems to revoke: <list>.",
+    icon: UserX,
+  },
+  {
+    slug: "software",
+    name: "Software & licenses",
+    blurb: "Install software or request a license seat.",
+    category: "Identity",
+    priority: "low",
+    title: "Software / license request",
+    description: "Software: <name>. Version: <if specific>. Business justification: <why>.",
+    icon: Cable,
+  },
+  {
+    slug: "vpn-network",
+    name: "VPN / network access",
+    blurb: "VPN, Wi-Fi, or connectivity problems and access.",
+    category: "Network",
+    priority: "medium",
+    title: "VPN / network access",
+    description: "Issue or request: <describe>. Location: <where>. Device: <laptop/phone>.",
+    icon: Network,
+  },
+  {
+    slug: "email-dl",
+    name: "Email / distribution list",
+    blurb: "New mailbox, alias, or distribution-list change.",
+    category: "Identity",
+    priority: "low",
+    title: "Email / distribution list change",
+    description: "Request: <new mailbox / alias / DL add-remove>. Members: <list>.",
+    icon: MessagesSquare,
+  },
+  {
+    slug: "security-concern",
+    name: "Report a security concern",
+    blurb: "Phishing, suspicious activity, or a possible breach.",
+    category: "Security",
+    priority: "critical",
+    title: "Security concern",
+    description: "What happened: <describe>. When: <time>. Affected account/system: <which>.",
+    icon: LifeBuoy,
+  },
+];
