@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { decideApproval } from "@/app/app/actions";
 import { PendingButton } from "@/components/ui/pending-button";
+import { SetupChecklist, type SetupStep } from "@/components/dashboard/setup-checklist";
 import { ticketIcons } from "@/lib/dashboard-data";
 import type { DashboardData } from "@/lib/supabase/bootstrap";
 import { cn } from "@/lib/utils";
@@ -14,11 +15,14 @@ export function CommandCenter({
   data,
   aiKeyConnected,
   canApprove = false,
+  setup,
 }: {
   data: DashboardData;
   aiKeyConnected: boolean;
   canApprove?: boolean;
+  setup?: SetupStep[];
 }) {
+  const showSetup = Boolean(setup && setup.some((s) => !s.done));
   const primaryMetrics = data.metrics.slice(0, 3);
   const hasFilter = Boolean(data.filters.query) || data.filters.view === "approvals";
   // The full ticket list lives on the inbox. On the dashboard, show only the
@@ -29,7 +33,8 @@ export function CommandCenter({
 
   return (
     <div className="ticketos-dashboard-content">
-      {!aiKeyConnected && (
+      {showSetup && setup && <SetupChecklist steps={setup} />}
+      {!aiKeyConnected && !showSetup && (
         <Link
           href="/app/diagnostics"
           className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"

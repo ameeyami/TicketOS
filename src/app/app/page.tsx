@@ -1,5 +1,7 @@
 import { CommandCenter } from "@/components/dashboard/command-center";
-import { getOrgAnthropicKeyMeta } from "@/lib/ai/org-key";
+import type { SetupStep } from "@/components/dashboard/setup-checklist";
+import { getOrgAnthropicKeyMeta, getOrgVoyageMeta } from "@/lib/ai/org-key";
+import { hasServiceRole } from "@/lib/supabase/admin";
 import { ensureWorkspace, getDashboardData } from "@/lib/supabase/bootstrap";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -32,5 +34,20 @@ export default async function AppPage({
     .maybeSingle();
   const canApprove = membership ? ["owner", "admin"].includes(membership.role) : false;
 
-  return <CommandCenter data={dashboardData} aiKeyConnected={aiKeyConnected} canApprove={canApprove} />;
+  const [{ count: kbCount }, { count: memberCount }, voyage] = await Promise.all([
+    supabase.from("knowledge_articles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
+    supabase.from("organization_members").select("user_id", { count: "exact", head: true }).eq("organization_id", organization.id),
+    getOrgVoyageMeta(supabase, organization.id),
+  ]);
+
+  const setup: SetupStep[] = [
+    { key: "claude", label: "Connect Claude", done: aiKeyConnected, href: "/app/diagnostics", hint: "Powers triage, Copilot, Ask & drafts" },
+    { key: "kb", label: "Add knowledge", done: (kbCount ?? 0) > 0, href: "/app/knowledge", hint: "So the assistant can deflect" },
+    { key: "team", label: "Invite your team", done: (memberCount ?? 0) > 1, href: "/app/team", hint: "Add operators & set roles" },
+    { key: "app", label: "Connect Slack or Jira", done: Boolean(process.env.SLACK_BOT_TOKEN || process.env.JIRA_BASE_URL), href: "/app/apps", hint: "Real execution with rollback" },
+    { key: "api", label: "Turn on API & widget", done: hasServiceRole(), href: "/app/api-keys", hint: "Headless API + embeddable widget" },
+    { key: "semantic", label: "Semantic search", done: voyage.active, href: "/app/knowledge", hint: "Match questions by meaning" },
+  ];
+
+  return <CommandCenter data={dashboardData} aiKeyConnected={aiKeyConnected} canApprove={canApprove} setup={setup} />;
 }
