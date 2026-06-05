@@ -17,7 +17,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { AuroraField } from "@/components/brand/backgrounds";
 import { AssistedResolution, type AssistProps } from "@/components/tickets/assisted-resolution";
-import { decideApproval, updateTicketStatus } from "@/app/app/actions";
+import { decideApproval, escalateTicket, updateTicketStatus } from "@/app/app/actions";
 import { reverseExecutionAction } from "@/app/app/executions/actions";
 import {
   MODEL_PRICING,
@@ -141,6 +141,18 @@ export function TicketDetailView({
             <div className="mt-4 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/42">Operator action</p>
               <div className="grid gap-2">
+                {(sla.state === "at_risk" || sla.state === "breached") && !["resolved", "blocked"].includes(ticket.status) && (
+                  <form action={escalateTicket}>
+                    <input type="hidden" name="ticketId" value={ticket.id} />
+                    <input type="hidden" name="organizationId" value={ticket.organization_id} />
+                    <PendingButton
+                      pendingText="Escalating..."
+                      className="h-9 w-full rounded-lg border border-amber-300 bg-amber-50 text-xs font-semibold text-amber-800"
+                    >
+                      Escalate priority ({sla.state === "breached" ? "SLA breached" : "SLA at risk"})
+                    </PendingButton>
+                  </form>
+                )}
                 <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="resolved" label="Resolve" />
                 <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="executing" label="Reopen" />
                 <TicketStatusForm ticketId={ticket.id} organizationId={ticket.organization_id} status="blocked" label="Block" />

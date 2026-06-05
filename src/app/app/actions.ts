@@ -333,6 +333,71 @@ export async function updateTicketStatus(formData: FormData) {
   revalidatePath("/app/tickets");
 }
 
+const PRIORITY_ORDER = ["low", "medium", "high", "critical"];
+
+/** Escalate a ticket one priority level (SLA action). Operators+ only. */
+export async function escalateTicket(formData: FormData) {
+  const ticketId = String(formData.get("ticketId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  if (!ticketId || !organizationId) {
+    throw new Error("Invalid escalation.");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("You must be signed in to escalate tickets.");
+  }
+
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  if ((membership?.role ?? "operator") === "viewer") {
+    throw new Error("Viewers can't escalate tickets.");
+  }
+
+  const { data: ticket } = await supabase
+    .from("tickets")
+    .select("priority")
+    .eq("id", ticketId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (!ticket) {
+    throw new Error("Ticket not found.");
+  }
+
+  const idx = PRIORITY_ORDER.indexOf(ticket.priority);
+  const next = PRIORITY_ORDER[Math.min(PRIORITY_ORDER.length - 1, idx + 1)];
+  const bumped = next !== ticket.priority;
+
+  if (bumped) {
+    await supabase.from("tickets").update({ priority: next }).eq("id", ticketId);
+  }
+
+  await supabase.from("audit_logs").insert({
+    organization_id: organizationId,
+    actor_user_id: userData.user.id,
+    ticket_id: ticketId,
+    event_type: "ticket_escalated",
+    event_summary: bumped ? `Escalated priority ${ticket.priority} → ${next}` : "Escalation requested (already critical)",
+    metadata: { source: "sla_escalate", from: ticket.priority, to: next },
+  });
+
+  await supabase.from("ticket_comments").insert({
+    organization_id: organizationId,
+    ticket_id: ticketId,
+    author_user_id: userData.user.id,
+    body: bumped ? `Escalated to ${next} priority to protect the SLA.` : "Escalation requested — already at critical priority.",
+    metadata: { source: "sla_escalate" },
+  });
+
+  revalidatePath(`/app/tickets/${ticketId}`);
+  revalidatePath("/app/tickets");
+}
+
 /** Best-effort outbound webhook for a ticket event (skips when none configured). */
 async function fireTicketWebhook(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
