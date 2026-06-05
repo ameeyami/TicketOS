@@ -171,7 +171,15 @@ export default async function TicketInboxPage({
           </Link>
         )}
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[300px_1fr]">
+        <div className="mt-4 flex flex-wrap gap-2">
+          <QuickChip href="/app/tickets?sla=attention" label="SLA attention" active={params.sla === "attention"} />
+          <QuickChip href="/app/tickets?status=approval_required" label="Needs approval" active={params.status === "approval_required"} />
+          <QuickChip href="/app/tickets?priority=critical" label="Critical" active={params.priority === "critical"} />
+          <QuickChip href="/app/tickets?status=blocked" label="Blocked" active={params.status === "blocked"} />
+          <QuickChip href="/app/tickets?status=resolved" label="Resolved" active={params.status === "resolved"} />
+        </div>
+
+        <section className="mt-4 grid gap-5 xl:grid-cols-[300px_1fr]">
           <aside>
             <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-2">
@@ -368,6 +376,20 @@ function QuickStatusForm({
         {label}
       </PendingButton>
     </form>
+  );
+}
+
+function QuickChip({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+        active ? "border-[#0b2a4a] bg-[#0b2a4a] text-white" : "border-black/10 bg-white text-slate-600 hover:bg-[#f1f7ff]",
+      )}
+    >
+      {label}
+    </Link>
   );
 }
 
