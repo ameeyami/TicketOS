@@ -7,6 +7,11 @@ type TicketOSLogoProps = {
   className?: string;
 };
 
+/**
+ * TicketOS brand lockup — a blue circuit-"T" mark + the Ticket/OS wordmark.
+ * Source of truth for the logo across the whole app; the matching standalone
+ * assets live in /public/images (ticketos-mark.svg, ticketos-logo.svg).
+ */
 export function TicketOSLogo({
   markSize = "md",
   showWordmark = true,
@@ -20,38 +25,36 @@ export function TicketOSLogo({
   }[markSize];
 
   return (
-    <span className={cn("inline-flex items-center gap-3", className)}>
-      <span
-        className={cn(
-          "relative inline-flex shrink-0 items-center justify-center rounded-lg bg-[#22c55e] text-[#03120a]",
-          sizeClass,
-        )}
-        aria-hidden="true"
-      >
-        <svg viewBox="0 0 40 40" className="h-[72%] w-[72%]" fill="none">
-          <path
-            d="M10 14.5C10 11.5 12.5 9 15.5 9h9C27.5 9 30 11.5 30 14.5v11C30 28.5 27.5 31 24.5 31h-9C12.5 31 10 28.5 10 25.5v-11Z"
-            stroke="currentColor"
-            strokeWidth="3.2"
-          />
-          <path
-            d="M14.5 15.5h6.75c2.35 0 4.25 1.9 4.25 4.25S23.6 24 21.25 24H18"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="3.2"
-          />
-          <path
-            d="M14.5 24h3.25c2.35 0 4.25-1.9 4.25-4.25"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="3.2"
-          />
-        </svg>
-      </span>
+    <span className={cn("inline-flex items-center gap-2.5", className)} aria-label="TicketOS">
+      <svg viewBox="0 0 48 48" className={cn("shrink-0", sizeClass)} fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="ticketos-mark-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </linearGradient>
+        </defs>
+        <g
+          stroke="url(#ticketos-mark-grad)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M15 13 H41" />
+          <path d="M31 13 V34 L25 40" />
+          <path d="M10 13 H15" />
+          <path d="M8 22 H31" />
+          <path d="M13 31 H25" />
+        </g>
+        <g fill="url(#ticketos-mark-grad)">
+          <circle cx="7" cy="13" r="2.7" />
+          <circle cx="5" cy="22" r="2.7" />
+          <circle cx="10" cy="31" r="2.7" />
+        </g>
+      </svg>
       {showWordmark && (
-        <span className={cn("font-semibold tracking-tight", tone === "dark" ? "text-white" : "text-[#07111f]")}>
-          TicketOS
+        <span className="font-semibold tracking-tight">
+          <span className={tone === "dark" ? "text-white" : "text-[#0b1220]"}>Ticket</span>
+          <span className={tone === "dark" ? "text-[#38bdf8]" : "text-[#1d4ed8]"}>OS</span>
         </span>
       )}
     </span>

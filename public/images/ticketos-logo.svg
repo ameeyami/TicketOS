@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 48" fill="none" role="img" aria-label="TicketOS">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#38bdf8"/>
@@ -17,4 +17,7 @@
     <circle cx="5" cy="22" r="2.7"/>
     <circle cx="10" cy="31" r="2.7"/>
   </g>
+  <text x="56" y="33" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" letter-spacing="-1">
+    <tspan fill="#0b1220">Ticket</tspan><tspan fill="#1d4ed8">OS</tspan>
+  </text>
 </svg>
