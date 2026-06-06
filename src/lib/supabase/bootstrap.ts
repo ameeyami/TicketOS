@@ -405,7 +405,13 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
   });
 
   const slug = `ticketos-${user.id.slice(0, 8)}`;
-  const { data: organization, error: orgError } = await supabase
+
+  // First-time bootstrap. The /app layout and page render concurrently and BOTH
+  // call ensureWorkspace, so two requests can reach here at once for a brand-new
+  // user. The slug is deterministic, so the loser of the race hits a unique
+  // violation (23505) — instead of throwing a 500, recover by reading the org we
+  // own (organizations RLS lets the creator read it before membership exists).
+  const { data: created, error: orgError } = await supabase
     .from("organizations")
     .insert({
       name: deriveWorkspaceName(user),
@@ -415,22 +421,46 @@ export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
     .select("id, name, slug")
     .single();
 
-  if (orgError) {
-    throw orgError;
+  let organization = created as { id: string; name: string; slug: string } | null;
+  const justCreated = Boolean(created);
+
+  if (!organization) {
+    if (orgError && orgError.code !== "23505") {
+      throw orgError;
+    }
+    const { data: mine } = await supabase
+      .from("organizations")
+      .select("id, name, slug")
+      .eq("slug", slug)
+      .eq("created_by", user.id)
+      .maybeSingle();
+    organization = mine ?? null;
   }
 
-  const { error: membershipError } = await supabase.from("organization_members").insert({
-    organization_id: organization.id,
-    user_id: user.id,
-    role: "owner",
-  });
+  if (!organization) {
+    throw orgError ?? new Error("Could not initialize workspace.");
+  }
 
-  if (membershipError) {
+  // Idempotent: the race winner already inserted this; ignore the duplicate.
+  const { error: membershipError } = await supabase
+    .from("organization_members")
+    .upsert(
+      { organization_id: organization.id, user_id: user.id, role: "owner" },
+      { onConflict: "organization_id,user_id", ignoreDuplicates: true },
+    );
+
+  if (membershipError && membershipError.code !== "23505") {
     throw membershipError;
   }
 
-  await ensureTeams(supabase, organization, user);
-  await ensureKnowledge(supabase, organization, user);
+  // Only the request that actually created the org seeds defaults, so a
+  // concurrent first load doesn't double-insert starter teams/knowledge. The
+  // existing-membership path (next load) backfills if anything is missing.
+  if (justCreated) {
+    await ensureTeams(supabase, organization, user);
+    await ensureKnowledge(supabase, organization, user);
+  }
+
   return organization;
 }
 
