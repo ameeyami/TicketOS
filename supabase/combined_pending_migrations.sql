@@ -8,6 +8,7 @@
 --   3) Embeddable widget     (organizations.widget_key + widget_enabled)
 --   4) Semantic KB search    (pgvector embedding column + match function)
 --   5) Slack assistant       (organizations.slack_team_id for two-way Slack)
+--   6) Team-invite claim     (claim_pending_team_invites so invitees join the org)
 -- Prereqs already applied earlier this project: teams + knowledge base tables.
 -- =============================================================================
 
@@ -116,5 +117,88 @@ alter table public.organizations
 create unique index if not exists organizations_slack_team_id_idx
   on public.organizations(slack_team_id)
   where slack_team_id is not null;
+
+-- ----------------------------------------------------------------------------
+-- 6) Team-invite claim: let an authenticated user join the org they were added
+--    to (by email) on first login, and link their pending team_members rows.
+--    Fixes invitees landing in a brand-new personal org. SECURITY DEFINER so it
+--    can cross RLS safely; only ever acts for the calling user's own email.
+-- ----------------------------------------------------------------------------
+create or replace function public.claim_pending_team_invites()
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid   uuid := (select auth.uid());
+  v_email text := lower(coalesce((select auth.jwt() ->> 'email'), ''));
+  v_org   uuid;
+  v_role  public.member_role;
+  v_name  text;
+begin
+  if v_uid is null or v_email = '' then
+    return null;
+  end if;
+
+  select tm.organization_id
+    into v_org
+  from public.team_members tm
+  where lower(tm.member_email) = v_email
+    and not exists (
+      select 1 from public.organization_members om
+      where om.organization_id = tm.organization_id
+        and om.user_id = v_uid
+    )
+  order by tm.created_at asc
+  limit 1;
+
+  if v_org is null then
+    return null;
+  end if;
+
+  select case when bool_or(tm.role <> 'viewer') then 'operator'::public.member_role
+              else 'viewer'::public.member_role end
+    into v_role
+  from public.team_members tm
+  where tm.organization_id = v_org
+    and lower(tm.member_email) = v_email;
+
+  select tm.member_name
+    into v_name
+  from public.team_members tm
+  where tm.organization_id = v_org
+    and lower(tm.member_email) = v_email
+    and tm.member_name is not null
+  order by tm.created_at asc
+  limit 1;
+
+  insert into public.profiles (id, full_name)
+  values (
+    v_uid,
+    coalesce(
+      nullif((select auth.jwt() -> 'user_metadata' ->> 'full_name'), ''),
+      nullif((select auth.jwt() -> 'user_metadata' ->> 'name'), ''),
+      v_name,
+      v_email
+    )
+  )
+  on conflict (id) do nothing;
+
+  insert into public.organization_members (organization_id, user_id, role)
+  values (v_org, v_uid, v_role)
+  on conflict (organization_id, user_id) do nothing;
+
+  update public.team_members
+     set user_id = v_uid
+   where organization_id = v_org
+     and lower(member_email) = v_email
+     and user_id is null;
+
+  return v_org;
+end;
+$$;
+
+grant execute on function public.claim_pending_team_invites() to authenticated;
 
 commit;

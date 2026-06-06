@@ -332,26 +332,64 @@ function filterTickets<T extends { title: string; ai_summary: string | null; des
 const LEGACY_DEFAULT_WORKSPACE_NAME = "Amee Labs";
 const DEFAULT_WORKSPACE_BRAND = "TicketOS";
 
+type OrgRow = { id: string; name: string; slug: string; created_by: string | null };
+
+/**
+ * Link any pending team invitations addressed to this user's email so an invited
+ * teammate joins the org they were added to — instead of getting a brand-new
+ * personal workspace on first login. Runs a SECURITY DEFINER RPC (it can cross
+ * RLS safely and only ever acts on the caller's own email). Best-effort: returns
+ * the joined org id, or null if there was nothing to claim / the migration isn't
+ * applied yet.
+ */
+async function claimPendingInvites(supabase: SupabaseClient): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc("claim_pending_team_invites");
+    if (error) return null;
+    return (data as string | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function ensureWorkspace(supabase: SupabaseClient, user: User) {
-  const { data: existingMembership } = await supabase
+  // First, claim any invitations for this email (joins the inviting org).
+  const claimedOrgId = await claimPendingInvites(supabase);
+
+  const { data: memberships } = await supabase
     .from("organization_members")
-    .select("organizations(id, name, slug)")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
+    .select("organizations(id, name, slug, created_by)")
+    .eq("user_id", user.id);
 
-  const existingOrganization = existingMembership?.organizations;
-  if (existingOrganization) {
-    const org = Array.isArray(existingOrganization) ? existingOrganization[0] : existingOrganization;
-    let resolved = org;
+  const orgs = (memberships ?? [])
+    .map((m) => (Array.isArray(m.organizations) ? m.organizations[0] : m.organizations))
+    .filter((o): o is OrgRow => Boolean(o));
 
-    if (org?.name === LEGACY_DEFAULT_WORKSPACE_NAME) {
+  if (orgs.length > 0) {
+    // Prefer the org we just claimed, then any org the user did NOT create (a
+    // company workspace they were invited to), then a non-personal one, else the
+    // first. This keeps invited members on the company org and off any stray
+    // personal workspace created before this fix.
+    const personalSlug = `ticketos-${user.id.slice(0, 8)}`;
+    const org =
+      orgs.find((o) => o.id === claimedOrgId) ??
+      orgs.find((o) => o.created_by !== user.id) ??
+      orgs.find((o) => o.slug !== personalSlug) ??
+      orgs[0];
+
+    let resolved: { id: string; name: string; slug: string } = {
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+    };
+
+    if (org.name === LEGACY_DEFAULT_WORKSPACE_NAME) {
       const { error } = await supabase
         .from("organizations")
         .update({ name: DEFAULT_WORKSPACE_BRAND })
         .eq("id", org.id);
       if (!error) {
-        resolved = { ...org, name: DEFAULT_WORKSPACE_BRAND };
+        resolved = { ...resolved, name: DEFAULT_WORKSPACE_BRAND };
       }
     }
 
